@@ -8,7 +8,7 @@
 <!-- You can turn off the Compile on Save (or Deploy on Save) setting -->
 <!-- in the project's Project Properties dialog box.-->
 <project name="iSPD" default="default" basedir=".">
-    <description>Builds, tests, and runs the project iSPD.</description>
+    <description>Builds, test, and runs the project iSPD.</description>
     <import file="nbproject/build-impl.xml"/>
     <!--
 
@@ -22,8 +22,8 @@
       -post-compile:             called after javac compilation
       -pre-compile-single:       called before javac compilation of single file
       -post-compile-single:      called after javac compilation of single file
-      -pre-compile-test:         called before javac compilation of JUnit tests
-      -post-compile-test:        called after javac compilation of JUnit tests
+      -pre-compile-test:         called before javac compilation of JUnit test
+      -post-compile-test:        called after javac compilation of JUnit test
       -pre-compile-test-single:  called before javac compilation of single JUnit test
       -post-compile-test-single: called after javac compilation of single JUunit test
       -pre-jar:                  called before JAR building

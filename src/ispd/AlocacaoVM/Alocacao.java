@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package ispd.alocacaoVM;
+package ispd.AlocacaoVM;
 
 import ispd.motor.filas.servidores.CS_Processamento;
 import ispd.motor.filas.servidores.CentroServico;
@@ -16,8 +16,8 @@ import java.util.List;
  * @author Diogo Tavares
  */
 public abstract class Alocacao {
-    protected List<CS_Processamento> maquinasFisicas; //lista de "escravos"
-    protected List<CS_VirtualMac> maquinasVirtuais; //lista de vms "tarefas"
+    private List<CS_Processamento> maquinasFisicas; //lista de "escravos"
+    private List<CS_VirtualMac> maquinasVirtuais; //lista de vms "tarefas"
     private CS_VMM hypervisor; //vmm responsável por implementar a política de alocação
     
     protected List<List> caminhoMaquinas;
