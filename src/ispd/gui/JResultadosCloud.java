@@ -10,39 +10,16 @@
  */
 package ispd.gui;
 
-import ispd.gui.auxiliar.ParesOrdenadosUso;
 import ispd.arquivo.SalvarResultadosHTML;
 import ispd.arquivo.interpretador.cargas.Interpretador;
 import ispd.gui.auxiliar.FiltroDeArquivos;
 import ispd.gui.auxiliar.HtmlPane;
+import ispd.gui.auxiliar.ParesOrdenadosUso;
 import ispd.motor.filas.RedeDeFilasCloud;
 import ispd.motor.filas.Tarefa;
 import ispd.motor.filas.servidores.CS_Processamento;
 import ispd.motor.filas.servidores.implementacao.CS_VMM;
-import ispd.motor.metricas.Metricas;
-import ispd.motor.metricas.MetricasComunicacao;
-import ispd.motor.metricas.MetricasGlobais;
-import ispd.motor.metricas.MetricasProcessamento;
-import ispd.motor.metricas.MetricasUsuarios;
-import ispd.motor.metricas.MetricasAlocacao;
-import ispd.motor.metricas.MetricasCusto;
-import java.awt.Dimension;
-import java.awt.Toolkit;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.JFileChooser;
+import ispd.motor.metricas.*;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -56,6 +33,18 @@ import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.general.DefaultPieDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.List;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
