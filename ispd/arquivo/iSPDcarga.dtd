@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- TODO define your own vocabulary/syntax. Example follows:  -->
+<!ELEMENT system (trace|random|node+)>
+
+<!ELEMENT random (size,size)>
+<!ATTLIST random owner CDATA "user1">
+<!ATTLIST random tasks CDATA "0">
+<!ATTLIST random time_arrival CDATA "0">
+
+<!ELEMENT node (size,size)>
+<!ATTLIST node application CDATA "application0">
+<!ATTLIST node owner CDATA "user1">
+<!ATTLIST node id_master CDATA "???">
+<!ATTLIST node tasks CDATA "0">
+
+<!ELEMENT size EMPTY>
+<!ATTLIST size type (computing|communication) #REQUIRED>
+<!ATTLIST size maximum CDATA "0">
+<!ATTLIST size average CDATA "0">
+<!ATTLIST size minimum CDATA "0">
+<!ATTLIST size probability CDATA "0.0">
+
+<!ELEMENT trace (format,task+)>
+<!ELEMENT format EMPTY>
+<!ATTLIST format kind CDATA "iSPD" >
+<!ELEMENT task EMPTY>
+<!ATTLIST task id CDATA "task1">
+<!ATTLIST task arr CDATA "0.0">
+<!ATTLIST task sts CDATA "1">
+<!ATTLIST task cpsz CDATA "-1">
+<!ATTLIST task cmsz CDATA "-1">
+<!ATTLIST task usr CDATA "user1">
