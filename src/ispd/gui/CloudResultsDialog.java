@@ -67,7 +67,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-class JResultadosCloud extends JDialog {
+class CloudResultsDialog extends JDialog {
     private final List<? extends Tarefa> tarefas;
     private final Object[][] tabelaRecurso;
     private final ChartPanel graficoProcessamentoTempoUser1;
@@ -99,9 +99,9 @@ class JResultadosCloud extends JDialog {
     private ChartPanel graficoBarraCustoProc;
     private double poderComputacionalTotal = 0;
 
-    JResultadosCloud(final Frame parent,
-                     final Metricas metricas,
-                     final RedeDeFilasCloud rdf, final List<?
+    CloudResultsDialog(final Frame parent,
+                       final Metricas metricas,
+                       final RedeDeFilasCloud rdf, final List<?
             extends Tarefa> tarefas) {
         super(parent, true);
         this.tarefas = tarefas;
@@ -109,11 +109,11 @@ class JResultadosCloud extends JDialog {
         this.gerarGraficosComunicacao(metricas.getMetricasComunicacao());
         this.gerarGraficosAlocacao(metricas.getMetricasAlocacao());
         this.gerarGraficosCusto(metricas.getMetricasCusto());
-        this.tabelaRecurso = JResultadosCloud.setTabelaRecurso(metricas);
+        this.tabelaRecurso = CloudResultsDialog.setTabelaRecurso(metricas);
         this.initComponents();
-        this.jTextAreaGlobal.setText(JResultadosCloud.getResultadosGlobais(metricas.getMetricasGlobais()));
+        this.jTextAreaGlobal.setText(CloudResultsDialog.getResultadosGlobais(metricas.getMetricasGlobais()));
         this.html.setMetricasGlobais(metricas.getMetricasGlobais());
-        this.jTextAreaTarefa.setText(JResultadosCloud.getResultadosTarefas(metricas));
+        this.jTextAreaTarefa.setText(CloudResultsDialog.getResultadosTarefas(metricas));
         this.html.setMetricasTarefas(metricas);
         final CS_VMM mestre = (CS_VMM) rdf.getMestres().get(0);
         this.setResultadosUsuario(mestre.getEscalonador().getMetricaUsuarios(),
@@ -1170,7 +1170,7 @@ class JResultadosCloud extends JDialog {
             try {
                 HtmlPane.openDefaultBrowser(new URL("file://" + file.getAbsolutePath() + "/result.html"));
             } catch (final MalformedURLException ex) {
-                Logger.getLogger(JResultadosCloud.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(CloudResultsDialog.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
@@ -1306,7 +1306,7 @@ class JResultadosCloud extends JDialog {
         try {
             this.html.gerarHTML(file);
         } catch (final IOException ex) {
-            Logger.getLogger(JResultadosCloud.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(CloudResultsDialog.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }
