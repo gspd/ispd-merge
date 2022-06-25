@@ -906,7 +906,7 @@ public class JPrincipal extends JFrame implements KeyListener {
             this.saveChanges();
 
         //janela de escolha de qual tipo de serviço irá ser modelado
-        final var classPickWindow = new EscolherClasse(this, true);
+        final var classPickWindow = new PickModelTypeDialog(this, true);
         this.showSubWindow(classPickWindow);
 
         this.drawingArea = JPrincipal.emptyDrawingArea();
@@ -915,14 +915,14 @@ public class JPrincipal extends JFrame implements KeyListener {
         this.onModelTypeChange(classPickWindow);
     }
 
-    private void onModelTypeChange(final EscolherClasse classPickWindow) {
+    private void onModelTypeChange(final PickModelTypeDialog classPickWindow) {
         this.modelType = classPickWindow.getEscolha();
         this.drawingArea.setTipoModelo(this.modelType);
         this.updateVmConfigButtonVisibility();
     }
 
     private void updateVmConfigButtonVisibility() {
-        this.jButtonConfigVM.setVisible(this.modelType == EscolherClasse.IAAS);
+        this.jButtonConfigVM.setVisible(this.modelType == PickModelTypeDialog.IAAS);
     }
 
     private void jMenuItemOpenActionPerformed(final ActionEvent evt) {
@@ -1266,12 +1266,12 @@ public class JPrincipal extends JFrame implements KeyListener {
     }
 
     private void jMenuItemGenerateActionPerformed(final ActionEvent evt) {
-        if (this.modelType == EscolherClasse.GRID) {
+        if (this.modelType == PickModelTypeDialog.GRID) {
             this.generateSchedulerGrid();
             return;
         }
 
-        if (this.modelType == EscolherClasse.IAAS) {
+        if (this.modelType == PickModelTypeDialog.IAAS) {
             this.generateSchedulerCloud();
             this.generateSchedulerAlloc();
         }

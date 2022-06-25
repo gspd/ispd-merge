@@ -41,7 +41,7 @@ package ispd.arquivo.xml;
 
 import ispd.gui.iconico.Vertex;
 import ispd.utils.ValidaValores;
-import ispd.gui.EscolherClasse;
+import ispd.gui.PickModelTypeDialog;
 import ispd.gui.iconico.Edge;
 import ispd.gui.iconico.grade.Cluster;
 import ispd.gui.iconico.grade.Internet;
@@ -124,11 +124,11 @@ public class IconicoXML {
          * author: Diogo Tavares
          */
         system = descricao.createElement("system");
-        if (tipoModelo == EscolherClasse.GRID) {
+        if (tipoModelo == PickModelTypeDialog.GRID) {
             system.setAttribute("version", "2.1");
-        } else if (tipoModelo == EscolherClasse.IAAS) {
+        } else if (tipoModelo == PickModelTypeDialog.IAAS) {
             system.setAttribute("version", "2.2");
-        } else if (tipoModelo == EscolherClasse.PAAS) {
+        } else if (tipoModelo == PickModelTypeDialog.PAAS) {
             system.setAttribute("version", "2.3");
         }
 

@@ -154,7 +154,7 @@ public class JSimulacao extends JDialog implements Runnable {
             this.progressTracker.print("Mounting network queue.");
             this.progressTracker.print(" -> ");
             List<Tarefa> tasks = null;
-            if (this.gridOrCloud == EscolherClasse.GRID) {
+            if (this.gridOrCloud == PickModelTypeDialog.GRID) {
                 final RedeDeFilas queueNetwork =
                         IconicoXML.newRedeDeFilas(this.model);
                 this.incrementProgress(10);//[10%] --> 35%
@@ -196,7 +196,7 @@ public class JSimulacao extends JDialog implements Runnable {
                 janelaResultados.setLocationRelativeTo(this);
                 janelaResultados.setVisible(true);
 
-            } else if (this.gridOrCloud == EscolherClasse.IAAS) {
+            } else if (this.gridOrCloud == PickModelTypeDialog.IAAS) {
                 final RedeDeFilasCloud cloudQueueNetwork =
                         IconicoXML.newRedeDeFilasCloud(this.model);
                 this.incrementProgress(10);//[10%] --> 35%
