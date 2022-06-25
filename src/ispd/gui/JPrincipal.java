@@ -1542,7 +1542,7 @@ public class JPrincipal extends JFrame implements KeyListener {
             return;
         }
 
-        final var vmConfigWindow = new ConfigurarVMs(
+        final var vmConfigWindow = new VmConfiguration(
                 this,
                 true,
                 this.drawingArea.getUsuarios().toArray(),
@@ -1555,12 +1555,12 @@ public class JPrincipal extends JFrame implements KeyListener {
         this.modificar();
     }
 
-    private void updateVirtualMachines(final ConfigurarVMs vmConfigWindow) {
+    private void updateVirtualMachines(final VmConfiguration vmConfigWindow) {
         this.virtualMachines = vmConfigWindow.getMaqVirtuais();
         this.updateDrawingVms(vmConfigWindow);
     }
 
-    private void updateDrawingVms(final ConfigurarVMs vmConfigWindow) {
+    private void updateDrawingVms(final VmConfiguration vmConfigWindow) {
         // TODO: Feature envy
         this.drawingArea.setUsuarios(vmConfigWindow.atualizaUsuarios());
         this.drawingArea.setMaquinasVirtuais(vmConfigWindow.getMaqVirtuais());
