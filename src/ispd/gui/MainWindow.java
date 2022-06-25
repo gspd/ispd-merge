@@ -1313,7 +1313,7 @@ public class MainWindow extends JFrame implements KeyListener {
     }
 
     private void jMenuItemHelpActionPerformed(final ActionEvent evt) {
-        this.showSubWindow(new TreeHelp());
+        this.showSubWindow(new HelpWindow());
     }
 
     private void jMenuItemToTxtActionPerformed(final ActionEvent evt) {
