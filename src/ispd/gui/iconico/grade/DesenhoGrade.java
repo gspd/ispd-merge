@@ -39,19 +39,24 @@
  */
 package ispd.gui.iconico.grade;
 
-import ispd.utils.ValidaValores;
 import ispd.arquivo.xml.IconicoXML;
-import ispd.gui.PickModelTypeDialog;
 import ispd.gui.MainWindow;
-import ispd.gui.iconico.AreaDesenho;
+import ispd.gui.PickModelTypeDialog;
+import ispd.gui.iconico.DrawingArea;
 import ispd.gui.iconico.Edge;
 import ispd.gui.iconico.Icon;
 import ispd.gui.iconico.Vertex;
+import ispd.motor.carga.CargaForNode;
 import ispd.motor.carga.CargaList;
 import ispd.motor.carga.CargaRandom;
-import ispd.motor.carga.CargaForNode;
 import ispd.motor.carga.CargaTrace;
 import ispd.motor.carga.GerarCarga;
+import ispd.utils.ValidaValores;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import javax.swing.ImageIcon;
+import javax.swing.JOptionPane;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
@@ -69,16 +74,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.Set;
-import javax.swing.ImageIcon;
-import javax.swing.JOptionPane;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
 /**
  *
  * @author denison
  */
-public class DesenhoGrade extends AreaDesenho {
+public class DesenhoGrade extends DrawingArea {
 
     protected static Image IMACHINE;
     protected static Image ICLUSTER;
@@ -192,12 +193,12 @@ public class DesenhoGrade extends AreaDesenho {
         numArestas++;
         numIcones++;
         ValidaValores.addNomeIcone(link.getId().getNome());
-        arestas.add(link);
-        for (Icon icon : selecionados) {
+        edges.add(link);
+        for (Icon icon : selectedIcons) {
             icon.setSelected(false);
         }
-        selecionados.clear();
-        selecionados.add(link);
+        selectedIcons.clear();
+        selectedIcons.add(link);
         this.janelaPrincipal.appendNotificacao(palavras.getString("Network connection added."));
         this.janelaPrincipal.modificar();
         this.setLabelAtributos(link);
@@ -227,7 +228,7 @@ public class DesenhoGrade extends AreaDesenho {
             vertices.add((Vertex) vertice);
             numVertices++;
             numIcones++;
-            selecionados.add((Icon) vertice);
+            selectedIcons.add((Icon) vertice);
             this.janelaPrincipal.modificar();
             this.setLabelAtributos(vertice);
         }
@@ -302,32 +303,32 @@ public class DesenhoGrade extends AreaDesenho {
 
     @Override
     public void botaoIconeActionPerformed(ActionEvent evt) {
-        if (selecionados.isEmpty()) {
+        if (selectedIcons.isEmpty()) {
             JOptionPane.showMessageDialog(null, palavras.getString("No icon selected."), palavras.getString("WARNING"), JOptionPane.WARNING_MESSAGE);
         } else {
             int opcao = JOptionPane.showConfirmDialog(null, palavras.getString("Remove this icon?"), palavras.getString("Remove"), JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (opcao == JOptionPane.YES_OPTION) {
-                for (Icon iconeRemover : selecionados) {
+                for (Icon iconeRemover : selectedIcons) {
                     if (iconeRemover instanceof Edge) {
                         ItemGrade or = (ItemGrade) ((Edge) iconeRemover).getSource();
                         or.getConexoesSaida().remove((ItemGrade) iconeRemover);
                         ItemGrade de = (ItemGrade) ((Edge) iconeRemover).getDestination();
                         de.getConexoesEntrada().remove((ItemGrade) iconeRemover);
                         ValidaValores.removeNomeIcone(((ItemGrade) iconeRemover).getId().getNome());
-                        arestas.remove((Edge) iconeRemover);
+                        edges.remove((Edge) iconeRemover);
                         this.janelaPrincipal.modificar();
                     } else {
                         int cont = 0;
                         //Remover dados das conexoes q entram
                         Set<ItemGrade> listanos = ((ItemGrade) iconeRemover).getConexoesEntrada();
                         for (ItemGrade I : listanos) {
-                            arestas.remove((Edge) I);
+                            edges.remove((Edge) I);
                             ValidaValores.removeNomeIcone(I.getId().getNome());
                         }
                         //Remover dados das conexoes q saem
                         listanos = ((ItemGrade) iconeRemover).getConexoesSaida();
                         for (ItemGrade I : listanos) {
-                            arestas.remove((Edge) I);
+                            edges.remove((Edge) I);
                             ValidaValores.removeNomeIcone(I.getId().getNome());
                         }
                         ValidaValores.removeNomeIcone(((ItemGrade) iconeRemover).getId().getNome());
@@ -343,19 +344,19 @@ public class DesenhoGrade extends AreaDesenho {
     @Override
     public void botaoVerticeActionPerformed(java.awt.event.ActionEvent evt) {
         //Não copia conexão de rede
-        if (selecionados.isEmpty()) {
+        if (selectedIcons.isEmpty()) {
             JOptionPane.showMessageDialog(null, palavras.getString("No icon selected."), palavras.getString("WARNING"), JOptionPane.WARNING_MESSAGE);
-        } else if (selecionados.size() == 1) {
-            Icon item = selecionados.iterator().next();
+        } else if (selectedIcons.size() == 1) {
+            Icon item = selectedIcons.iterator().next();
             if (item instanceof Vertex) {
                 iconeCopiado = (Vertex) item;
-                this.popupGeral.getComponent(0).setEnabled(true);
+                this.generalPopup.getComponent(0).setEnabled(true);
             } else {
                 iconeCopiado = null;
             }
         }
         if (iconeCopiado == null) {
-            this.popupGeral.getComponent(0).setEnabled(false);
+            this.generalPopup.getComponent(0).setEnabled(false);
         }
     }
 
@@ -367,7 +368,7 @@ public class DesenhoGrade extends AreaDesenho {
             ValidaValores.addNomeIcone(copy.getId().getNome());
             numIcones++;
             numVertices++;
-            selecionados.add((Icon) copy);
+            selectedIcons.add((Icon) copy);
             this.janelaPrincipal.modificar();
             this.setLabelAtributos(copy);
             repaint();
@@ -376,9 +377,9 @@ public class DesenhoGrade extends AreaDesenho {
 
     @Override
     public void botaoArestaActionPerformed(java.awt.event.ActionEvent evt) {
-        if (!selecionados.isEmpty() && selecionados.size() == 1) {
-            Link link = (Link) selecionados.iterator().next();
-            selecionados.remove(link);
+        if (!selectedIcons.isEmpty() && selectedIcons.size() == 1) {
+            Link link = (Link) selectedIcons.iterator().next();
+            selectedIcons.remove(link);
             link.setSelected(false);
             Link temp = link.criarCopia(0, 0, numIcones, numArestas);
             numArestas++;
@@ -386,8 +387,8 @@ public class DesenhoGrade extends AreaDesenho {
             temp.setPosition(link.getDestination(), link.getSource());
             ((ItemGrade) temp.getSource()).getConexoesSaida().add(temp);
             ((ItemGrade) temp.getDestination()).getConexoesSaida().add(temp);
-            selecionados.add(temp);
-            arestas.add(temp);
+            selectedIcons.add(temp);
+            edges.add(temp);
             ValidaValores.addNomeIcone(temp.getId().getNome());
             this.janelaPrincipal.appendNotificacao(palavras.getString("Network connection added."));
             this.janelaPrincipal.modificar();
@@ -428,7 +429,7 @@ public class DesenhoGrade extends AreaDesenho {
                 saida.append(String.format("INET %s %f %f %f\n", I.getId().getNome(), I.getBanda(), I.getLatencia(), I.getTaxaOcupacao()));
             }
         }
-        for (Edge icon : arestas) {
+        for (Edge icon : edges) {
             Link I = (Link) icon;
             saida.append(String.format("REDE %s %f %f %f CONECTA", I.getId().getNome(), I.getBanda(), I.getLatencia(), I.getTaxaOcupacao()));
             saida.append(" ").append(((ItemGrade) icon.getSource()).getId().getNome());
@@ -578,7 +579,7 @@ public class DesenhoGrade extends AreaDesenho {
                         I.getBanda(), I.getTaxaOcupacao(), I.getLatencia());
             }
         }
-        for (Edge link : arestas) {
+        for (Edge link : edges) {
             Link I = (Link) link;
             xml.addLink(I.getSource().getX(), I.getSource().getY(), I.getDestination().getX(), I.getDestination().getY(),
                     I.getId().getIdLocal(), I.getId().getIdGlobal(), I.getId().getNome(),
@@ -646,7 +647,7 @@ public class DesenhoGrade extends AreaDesenho {
             }
         }
         // Desenhamos todos os icones
-        for (Icon I : arestas) {
+        for (Icon I : edges) {
             I.draw(gc);
         }
         for (Icon I : vertices) {
@@ -660,13 +661,13 @@ public class DesenhoGrade extends AreaDesenho {
      * especifica informada pelo usuário para as demais conexões de rede.
      */
     public void matchNetwork() {
-        if (!selecionados.isEmpty() && selecionados.size() == 1) {
-            Link link = (Link) selecionados.iterator().next();
+        if (!selectedIcons.isEmpty() && selectedIcons.size() == 1) {
+            Link link = (Link) selectedIcons.iterator().next();
             double banda, taxa, latencia;
             banda = link.getBanda();
             taxa = link.getTaxaOcupacao();
             latencia = link.getLatencia();
-            for (Edge I : arestas) {
+            for (Edge I : edges) {
                 ((Link) I).setBanda(banda);
                 ((Link) I).setTaxaOcupacao(taxa);
                 ((Link) I).setLatencia(latencia);
@@ -884,11 +885,11 @@ public class DesenhoGrade extends AreaDesenho {
             tipoModelo = PickModelTypeDialog.PAAS;
         this.perfis = IconicoXML.newListPerfil(descricao);
         //Realiza leitura dos icones
-        IconicoXML.newGrade(descricao, vertices, arestas);
+        IconicoXML.newGrade(descricao, vertices, edges);
         //Realiza leitura da configuração de carga do modelo
         this.cargasConfiguracao = IconicoXML.newGerarCarga(descricao);
         //Atuasliza número de vertices e arestas
-        for (Icon icone : arestas) {
+        for (Icon icone : edges) {
             Link link = (Link) icone;
             if (this.numArestas < link.getId().getIdLocal()) {
                 this.numArestas = link.getId().getIdLocal();

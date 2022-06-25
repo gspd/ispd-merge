@@ -39,7 +39,7 @@
  */
 package ispd.gui.iconico.simulacao;
 
-import ispd.gui.iconico.AreaDesenho;
+import ispd.gui.iconico.DrawingArea;
 import ispd.gui.iconico.Icon;
 import ispd.gui.iconico.Vertex;
 import ispd.motor.GraphicSimulation;
@@ -61,7 +61,7 @@ import java.util.HashMap;
  *
  * @author denison
  */
-public class DesenhoSimulacao extends AreaDesenho {
+public class DesenhoSimulacao extends DrawingArea {
 
     private final int INCREMENTO = 100;
     private Font fonte;
@@ -135,14 +135,14 @@ public class DesenhoSimulacao extends AreaDesenho {
             if (cs_link instanceof CS_Link) {
                 CS_Link link = (CS_Link) cs_link;
                 Link lk = new Link(posicoes.get(link.getConexoesEntrada()), posicoes.get(link.getConexoesSaida()), link, this);
-                arestas.add(lk);
+                edges.add(lk);
             } else {
                 Vertex origm = posicoes.get(cs_link);
                 for (CentroServico destino : ((CS_Switch) cs_link).getConexoesSaida()) {
                     Vertex destn = posicoes.get(destino);
                     if (destn != null) {
                         Link lk = new Link(origm, destn, null, this);
-                        arestas.add(lk);
+                        edges.add(lk);
                     }
                 }
             }
