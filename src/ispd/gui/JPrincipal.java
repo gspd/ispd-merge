@@ -96,8 +96,8 @@ public class JPrincipal extends JFrame implements KeyListener {
     private final JFileChooser jFileChooser = new JFileChooser();
     private final GerenciarEscalonador jFrameManager =
             new GerenciarEscalonador();
-    private final GerenciarAlocadores jFrameAllocManager =
-            new GerenciarAlocadores();
+    private final ManageAllocationPolicies jFrameAllocManager =
+            new ManageAllocationPolicies();
     private final GerenciarEscalonadorCloud jFrameCloudManager =
             new GerenciarEscalonadorCloud();
     private final SimplePanel jPanelSimple = new SimplePanel();

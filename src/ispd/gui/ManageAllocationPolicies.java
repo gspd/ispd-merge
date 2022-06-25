@@ -44,7 +44,7 @@ import java.util.Collection;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-public class GerenciarAlocadores extends JFrame {
+class ManageAllocationPolicies extends JFrame {
     private final UndoableEdit undo = new UndoManager();
     private final ManipularArquivosAlloc allocators;
     private final ResourceBundle words =
@@ -56,7 +56,7 @@ public class GerenciarAlocadores extends JFrame {
     private boolean wasCurrentFileModified;
     private String openAllocator;
 
-    public GerenciarAlocadores() {
+    ManageAllocationPolicies() {
         //Inicia o editor
         this.initComponents();
         //Define a linguagem do editor
@@ -678,15 +678,15 @@ public class GerenciarAlocadores extends JFrame {
     private class SomeDocumentListener implements DocumentListener {
         @Override
         public void insertUpdate(final DocumentEvent e) {
-            if (!GerenciarAlocadores.this.wasCurrentFileModified) {
-                GerenciarAlocadores.this.modificar();
+            if (!ManageAllocationPolicies.this.wasCurrentFileModified) {
+                ManageAllocationPolicies.this.modificar();
             }
         }
 
         @Override
         public void removeUpdate(final DocumentEvent e) {
-            if (!GerenciarAlocadores.this.wasCurrentFileModified) {
-                GerenciarAlocadores.this.modificar();
+            if (!ManageAllocationPolicies.this.wasCurrentFileModified) {
+                ManageAllocationPolicies.this.modificar();
             }
         }
 
@@ -698,21 +698,21 @@ public class GerenciarAlocadores extends JFrame {
     private class SomeWindowAdapter extends WindowAdapter {
         @Override
         public void windowClosing(final WindowEvent e) {
-            if (GerenciarAlocadores.this.wasCurrentFileModified) {
+            if (ManageAllocationPolicies.this.wasCurrentFileModified) {
                 final int escolha =
-                        GerenciarAlocadores.this.savarAlteracao();
+                        ManageAllocationPolicies.this.savarAlteracao();
                 if (escolha != JOptionPane.CANCEL_OPTION && escolha != JOptionPane.CLOSED_OPTION) {
-                    GerenciarAlocadores.this.setVisible(false);
+                    ManageAllocationPolicies.this.setVisible(false);
                 }
             } else {
-                GerenciarAlocadores.this.setVisible(false);
+                ManageAllocationPolicies.this.setVisible(false);
             }
         }
     }
 
     private class SomeMouseAdapter extends java.awt.event.MouseAdapter {
         public void mouseClicked(final java.awt.event.MouseEvent evt) {
-            GerenciarAlocadores.this.jListAlocadoresMouseClicked(evt);
+            ManageAllocationPolicies.this.jListAlocadoresMouseClicked(evt);
         }
     }
 }
