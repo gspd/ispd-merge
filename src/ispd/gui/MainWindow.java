@@ -883,7 +883,7 @@ public class MainWindow extends JFrame implements KeyListener {
     }
 
     private void jButtonSimulateActionPerformed(final ActionEvent evt) {
-        final var simulationWindow = new JSimulacao(
+        final var simulationWindow = new SimulationDialog(
                 this,
                 true,
                 this.drawingArea.getGrade(),

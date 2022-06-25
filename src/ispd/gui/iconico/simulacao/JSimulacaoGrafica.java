@@ -43,7 +43,7 @@ import ispd.arquivo.xml.ConfiguracaoISPD;
 import ispd.motor.GraphicSimulation;
 import ispd.arquivo.xml.IconicoXML;
 import ispd.gui.ResultsDialog;
-import ispd.gui.JSimulacao;
+import ispd.gui.SimulationDialog;
 import ispd.motor.ProgressoSimulacao;
 import ispd.motor.filas.RedeDeFilas;
 import ispd.motor.filas.Tarefa;
@@ -104,7 +104,7 @@ public class JSimulacaoGrafica extends javax.swing.JDialog implements Runnable {
                         doc.insertString(doc.getLength(), text, configuraCor);
                     }
                 } catch (BadLocationException ex) {
-                    Logger.getLogger(JSimulacao.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(SimulationDialog.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         };
