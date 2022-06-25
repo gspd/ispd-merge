@@ -811,17 +811,17 @@ public class IconicoXML {
         if (elementsByTagName.getLength() > 0 && clust != null) {
             Element caracteristicas = (Element) elementsByTagName.item(0);
             Element process = (Element) caracteristicas.getElementsByTagName("process").item(0);
-            clust.setPoderComputacional(Double.valueOf(process.getAttribute("power")));
-            clust.setNucleosProcessador(Integer.valueOf(process.getAttribute("number")));
+            clust.setComputationalPower(Double.valueOf(process.getAttribute("power")));
+            clust.setProcessorCores(Integer.valueOf(process.getAttribute("number")));
             Element memory = (Element) caracteristicas.getElementsByTagName("memory").item(0);
-            clust.setMemoriaRAM(Double.valueOf(memory.getAttribute("size")));
+            clust.setRamMemory(Double.valueOf(memory.getAttribute("size")));
             Element disk = (Element) caracteristicas.getElementsByTagName("hard_disk").item(0);
-            clust.setDiscoRigido(Double.valueOf(disk.getAttribute("size")));
+            clust.setHardDisk(Double.valueOf(disk.getAttribute("size")));
             if (caracteristicas.getElementsByTagName("cost").getLength() > 0) {
                 Element cost = (Element) caracteristicas.getElementsByTagName("cost").item(0);
-                clust.setCostperprocessing(Double.valueOf(cost.getAttribute("cost_proc")));
-                clust.setCostpermemory(Double.valueOf(cost.getAttribute("cost_mem")));
-                clust.setCostperdisk(Double.valueOf(cost.getAttribute("cost_disk")));
+                clust.setCostPerProcessing(Double.valueOf(cost.getAttribute("cost_proc")));
+                clust.setCostPerMemory(Double.valueOf(cost.getAttribute("cost_mem")));
+                clust.setCostPerDisk(Double.valueOf(cost.getAttribute("cost_disk")));
             }
         } else if (elementsByTagName.getLength() > 0 && maq != null) {
             Element caracteristicas = (Element) elementsByTagName.item(0);
@@ -863,15 +863,15 @@ public class IconicoXML {
             icones.put(global, clust);
             clust.getId().setNome(cluster.getAttribute("id"));
             ValidaValores.addNomeIcone(clust.getId().getNome());
-            clust.setPoderComputacional(Double.parseDouble(cluster.getAttribute("power")));
+            clust.setComputationalPower(Double.parseDouble(cluster.getAttribute("power")));
             setCaracteristicas(clust, cluster.getElementsByTagName("characteristic"));
-            clust.setNumeroEscravos(Integer.parseInt(cluster.getAttribute("nodes")));
-            clust.setBanda(Double.parseDouble(cluster.getAttribute("bandwidth")));
-            clust.setLatencia(Double.parseDouble(cluster.getAttribute("latency")));
-            clust.setAlgoritmo(cluster.getAttribute("scheduler"));
-            clust.setVMMallocpolicy(cluster.getAttribute("vm_alloc"));
-            clust.setProprietario(cluster.getAttribute("owner"));
-            clust.setMestre(Boolean.parseBoolean(cluster.getAttribute("master")));
+            clust.setSlaveCount(Integer.parseInt(cluster.getAttribute("nodes")));
+            clust.setBandwidth(Double.parseDouble(cluster.getAttribute("bandwidth")));
+            clust.setLatency(Double.parseDouble(cluster.getAttribute("latency")));
+            clust.setAlgorithm(cluster.getAttribute("scheduler"));
+            clust.setVmmAllocationPolicy(cluster.getAttribute("vm_alloc"));
+            clust.setOwner(cluster.getAttribute("owner"));
+            clust.setIsMaster(Boolean.parseBoolean(cluster.getAttribute("master")));
         }
         //Realiza leitura dos icones de internet
         for (int i = 0; i < internet.getLength(); i++) {

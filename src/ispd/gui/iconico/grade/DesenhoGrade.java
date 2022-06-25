@@ -420,7 +420,7 @@ public class DesenhoGrade extends DrawingArea {
         for (Icon icon : vertices) {
             if (icon instanceof Cluster) {
                 Cluster I = (Cluster) icon;
-                saida.append(String.format("CLUSTER %s %d %f %f %f %s\n", I.getId().getNome(), I.getNumeroEscravos(), I.getPoderComputacional(), I.getBanda(), I.getLatencia(), I.getAlgoritmo()));
+                saida.append(String.format("CLUSTER %s %d %f %f %f %s\n", I.getId().getNome(), I.getSlaveCount(), I.getPoderComputacional(), I.getBandwidth(), I.getLatency(), I.getAlgorithm()));
             }
         }
         for (Icon icon : vertices) {
@@ -539,22 +539,22 @@ public class DesenhoGrade extends DrawingArea {
                     Cluster I = (Cluster) vertice;
                     xml.addCluster(I.getX(), I.getY(),
                             I.getId().getIdLocal(), I.getId().getIdGlobal(), I.getId().getNome(),
-                            I.getNumeroEscravos(), I.getPoderComputacional(), I.getNucleosProcessador(),
-                            I.getMemoriaRAM(), I.getDiscoRigido(),
-                            I.getBanda(), I.getLatencia(),
-                            I.getAlgoritmo(), I.getProprietario(), I.isMestre());
+                            I.getSlaveCount(), I.getPoderComputacional(), I.getProcessorCores(),
+                            I.getRamMemory(), I.getHardDisk(),
+                            I.getBandwidth(), I.getLatency(),
+                            I.getAlgorithm(), I.getProprietario(), I.isMaster());
                 }
                 else if(tipoModelo == PickModelTypeDialog.IAAS){
                     Cluster I = (Cluster) vertice;
                     xml.addClusterIaaS(I.getX(), I.getY(),
                             I.getId().getIdLocal(), I.getId().getIdGlobal(),
-                            I.getId().getNome(), I.getNumeroEscravos(),
-                            I.getPoderComputacional(), I.getNucleosProcessador(),
-                            I.getMemoriaRAM(), I.getDiscoRigido(),
-                            I.getBanda(), I.getLatencia(),
-                            I.getAlgoritmo(),I.getVMMallocpolicy(), I.getCostperprocessing(),
-                            I.getCostpermemory(), I.getCostperdisk(),
-                            I.getProprietario(), I.isMestre());
+                            I.getId().getNome(), I.getSlaveCount(),
+                            I.getPoderComputacional(), I.getProcessorCores(),
+                            I.getRamMemory(), I.getHardDisk(),
+                            I.getBandwidth(), I.getLatency(),
+                            I.getAlgorithm(),I.getVmmAllocationPolicy(), I.getCostPerProcessing(),
+                            I.getCostPerMemory(), I.getCostPerDisk(),
+                            I.getProprietario(), I.isMaster());
                 }
 /* TODO: Para GRID
                 xml.addMachine(I.getX(), I.getY(),
@@ -815,7 +815,7 @@ public class DesenhoGrade extends DrawingArea {
             if (icon instanceof Machine && ((Machine) icon).isMestre()) {
                 maquinas.add(((ItemGrade) icon).getId().getNome());
             }
-            if (icon instanceof Cluster && ((Cluster) icon).isMestre()) {
+            if (icon instanceof Cluster && ((Cluster) icon).isMaster()) {
                 maquinas.add(((ItemGrade) icon).getId().getNome());
             }
         }
