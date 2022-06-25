@@ -1,6 +1,7 @@
 package ispd.gui;
 
 import ispd.arquivo.xml.IconicoXML;
+import ispd.gui.utils.ButtonBuilder;
 import ispd.motor.ProgressoSimulacao;
 import ispd.motor.SimulacaoSequencial;
 import ispd.motor.SimulacaoSequencialCloud;

@@ -1,6 +1,7 @@
 package ispd.gui;
 
 import ispd.gui.iconico.grade.VirtualMachine;
+import ispd.gui.utils.ButtonBuilder;
 
 import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;

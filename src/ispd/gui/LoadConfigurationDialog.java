@@ -46,8 +46,8 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static ispd.gui.ButtonBuilder.aButton;
-import static ispd.gui.ButtonBuilder.basicButton;
+import static ispd.gui.utils.ButtonBuilder.aButton;
+import static ispd.gui.utils.ButtonBuilder.basicButton;
 
 public class LoadConfigurationDialog extends JDialog {
     private static final ActionListener DO_NOTHING = evt -> {

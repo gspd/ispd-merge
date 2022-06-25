@@ -17,6 +17,7 @@ import ispd.gui.iconico.grade.DesenhoGrade;
 import ispd.gui.iconico.grade.ItemGrade;
 import ispd.gui.iconico.grade.Machine;
 import ispd.gui.iconico.grade.VirtualMachine;
+import ispd.gui.utils.ButtonBuilder;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 

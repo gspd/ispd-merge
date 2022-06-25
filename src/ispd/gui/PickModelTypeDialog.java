@@ -1,5 +1,7 @@
 package ispd.gui;
 
+import ispd.gui.utils.ButtonBuilder;
+
 import javax.swing.GroupLayout;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
