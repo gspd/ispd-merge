@@ -23,8 +23,8 @@ public abstract class DrawingArea extends JPanel
         implements MouseListener, MouseMotionListener {
     private static final Color RECTANGLE_FILL_COLOR =
             new Color(0.0f, 0.0f, 1.0f, 0.2f);
-    private static final Ruler.RulerUnit DEFAULT_UNIT =
-            Ruler.RulerUnit.CENTIMETERS;
+    private static final RulerUnit DEFAULT_UNIT =
+            RulerUnit.CENTIMETERS;
     protected final Set<Icon> selectedIcons = new HashSet<>(0);
     protected final Set<Vertex> vertices = new HashSet<>(0);
     protected final Set<Edge> edges = new HashSet<>(0);
@@ -40,7 +40,7 @@ public abstract class DrawingArea extends JPanel
     private JMenuItem jMenuEdge;
     private JMenuItem jMenuPanel;
     private boolean isGridOn;
-    private Ruler.RulerUnit unit = null;
+    private RulerUnit unit = null;
     private Ruler columnRuler;
     private Ruler rowRuler;
     private JPanel cornerUnitButton;
@@ -104,10 +104,10 @@ public abstract class DrawingArea extends JPanel
         this.updateUnitTo(DrawingArea.DEFAULT_UNIT);
 
         this.columnRuler = new Ruler(
-                Ruler.RulerOrientation.HORIZONTAL, this.unit);
+                RulerOrientation.HORIZONTAL, this.unit);
         this.columnRuler.setPreferredWidth(this.getWidth());
         this.rowRuler = new Ruler(
-                Ruler.RulerOrientation.VERTICAL, this.unit);
+                RulerOrientation.VERTICAL, this.unit);
         this.rowRuler.setPreferredHeight(this.getHeight());
 
         final var unitButton = new JButton(this.unit.getSymbol());
@@ -159,7 +159,7 @@ public abstract class DrawingArea extends JPanel
      *
      * @param newUnit the unit to be updated to
      */
-    private void updateUnitTo(final Ruler.RulerUnit newUnit) {
+    private void updateUnitTo(final RulerUnit newUnit) {
         this.unit = newUnit;
 
         if (!this.isPositionFixed) {
@@ -220,7 +220,7 @@ public abstract class DrawingArea extends JPanel
         return this.cornerUnitButton;
     }
 
-    protected Ruler.RulerUnit getUnit() {
+    protected RulerUnit getUnit() {
         return this.unit;
     }
 
