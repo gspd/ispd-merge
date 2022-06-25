@@ -2,8 +2,8 @@ package ispd.gui;
 
 import ispd.arquivo.Escalonadores;
 import ispd.escalonador.ManipularArquivos;
-import ispd.gui.auxiliar.TextEditorStyle;
 import ispd.gui.auxiliar.MultipleExtensionFileFilter;
+import ispd.gui.auxiliar.TextEditorStyle;
 import ispd.utils.ValidaValores;
 
 import javax.swing.GroupLayout;
@@ -44,7 +44,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-public class GerenciarEscalonador extends JFrame {
+public class ManageSchedulers extends JFrame {
     private final UndoableEdit undo = new UndoManager();
     private final ManipularArquivos escalonadores;
     private final ResourceBundle palavras;
@@ -55,7 +55,7 @@ public class GerenciarEscalonador extends JFrame {
     private boolean modificado;//indica se arquivo atual foi modificado
     private String escalonadorAberto;
 
-    public GerenciarEscalonador() {
+    ManageSchedulers() {
         final Locale locale = Locale.getDefault();
         this.palavras = ResourceBundle.getBundle("ispd.idioma.Idioma", locale);
         //Gerenciamento dos escalonadores
@@ -195,7 +195,7 @@ public class GerenciarEscalonador extends JFrame {
         this.jListEscalonadores.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         this.jListEscalonadores.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(final java.awt.event.MouseEvent evt) {
-                GerenciarEscalonador.this.jListEscalonadoresMouseClicked(evt);
+                ManageSchedulers.this.jListEscalonadoresMouseClicked(evt);
             }
         });
         jScrollPane3.setViewportView(this.jListEscalonadores);
@@ -435,7 +435,8 @@ public class GerenciarEscalonador extends JFrame {
                     }
                 } else if (result.equals(ops[1])) {
                     //Carregar classe para construir escalonador automaticamente
-                    final CreateSchedulerDialog ge = new CreateSchedulerDialog(this,
+                    final CreateSchedulerDialog ge =
+                            new CreateSchedulerDialog(this,
                             true,
                             this.escalonadores.getDiretorio().getAbsolutePath(), this.palavras);
                     ge.setLocationRelativeTo(this);
@@ -534,7 +535,9 @@ public class GerenciarEscalonador extends JFrame {
                                                                 "want " +
                                                                 "delete " +
                                                                 "this " +
-                                                                "scheduler: \n" + aux, null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                                                                "scheduler: " +
+                                                                "\n" + aux,
+                null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
         if (escolha == JOptionPane.YES_OPTION) {
             if (!this.escalonadores.remover(aux)) {
                 JOptionPane.showMessageDialog(this,
@@ -702,14 +705,14 @@ public class GerenciarEscalonador extends JFrame {
     private class SomeWindowAdapter extends WindowAdapter {
         @Override
         public void windowClosing(final WindowEvent e) {
-            if (GerenciarEscalonador.this.modificado) {
+            if (ManageSchedulers.this.modificado) {
                 final int escolha =
-                        GerenciarEscalonador.this.savarAlteracao();
+                        ManageSchedulers.this.savarAlteracao();
                 if (escolha != JOptionPane.CANCEL_OPTION && escolha != JOptionPane.CLOSED_OPTION) {
-                    GerenciarEscalonador.this.setVisible(false);
+                    ManageSchedulers.this.setVisible(false);
                 }
             } else {
-                GerenciarEscalonador.this.setVisible(false);
+                ManageSchedulers.this.setVisible(false);
             }
         }
     }
@@ -717,15 +720,15 @@ public class GerenciarEscalonador extends JFrame {
     private class SomeDocumentListener implements DocumentListener {
         @Override
         public void insertUpdate(final DocumentEvent e) {
-            if (!GerenciarEscalonador.this.modificado) {
-                GerenciarEscalonador.this.modificar();
+            if (!ManageSchedulers.this.modificado) {
+                ManageSchedulers.this.modificar();
             }
         }
 
         @Override
         public void removeUpdate(final DocumentEvent e) {
-            if (!GerenciarEscalonador.this.modificado) {
-                GerenciarEscalonador.this.modificar();
+            if (!ManageSchedulers.this.modificado) {
+                ManageSchedulers.this.modificar();
             }
         }
 
