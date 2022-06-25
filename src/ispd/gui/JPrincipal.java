@@ -874,7 +874,7 @@ public class JPrincipal extends JFrame implements KeyListener {
 
     private void jMenuItem1ActionPerformed(final ActionEvent evt) {
         this.showSubWindow(
-                new JPreferences(
+                new SettingsDialog(
                         this,
                         true,
                         this.configure
