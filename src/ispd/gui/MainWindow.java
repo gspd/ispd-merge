@@ -771,7 +771,7 @@ public class MainWindow extends JFrame implements KeyListener {
         this.words = ResourceBundle.getBundle("ispd.idioma.Idioma", locale);
         this.initTexts();
         if (this.drawingArea != null) {
-            this.drawingArea.setIdioma(this.words);
+            this.drawingArea.setTranslator(this.words);
         }
     }
 
@@ -835,7 +835,7 @@ public class MainWindow extends JFrame implements KeyListener {
                 true,
                 this.drawingArea.getUsuarios().toArray(),
                 this.drawingArea.getNosEscalonadores().toArray(),
-                this.drawingArea.getCargasConfiguracao(),
+                this.drawingArea.getLoadConfiguration(),
                 this.words
         );
 
@@ -850,8 +850,8 @@ public class MainWindow extends JFrame implements KeyListener {
     }
 
     private void updateDrawingLoad(final LoadConfigurationDialog loadConfigWindow) {
-        this.drawingArea.setCargasConfiguracao(loadConfigWindow.getCargasConfiguracao());
-        this.drawingArea.setUsuarios(loadConfigWindow.getUsuarios());
+        this.drawingArea.setLoadConfiguration(loadConfigWindow.getCargasConfiguracao());
+        this.drawingArea.setUsers(loadConfigWindow.getUsuarios());
     }
 
     public void modificar() {
@@ -888,7 +888,7 @@ public class MainWindow extends JFrame implements KeyListener {
                 this,
                 true,
                 this.drawingArea.getGrade(),
-                this.drawingArea.toString(),
+                this.drawingArea.makeDescriptiveModel(),
                 this.words,
                 this.modelType
         );
@@ -918,7 +918,7 @@ public class MainWindow extends JFrame implements KeyListener {
 
     private void onModelTypeChange(final PickModelTypeDialog classPickWindow) {
         this.modelType = classPickWindow.getEscolha();
-        this.drawingArea.setTipoModelo(this.modelType);
+        this.drawingArea.setModelType(this.modelType);
         this.updateVmConfigButtonVisibility();
     }
 
@@ -990,7 +990,7 @@ public class MainWindow extends JFrame implements KeyListener {
 
     private void updateGuiWithOpenFile(final String message, final File file) {
         this.drawingArea.addKeyListener(this);
-        this.drawingArea.setPaineis(this);
+        this.drawingArea.setMainWindow(this);
         this.jScrollPaneSideBar.setViewportView(null);
         this.jPanelProperties.setText("");
         this.jScrollPaneDrawingArea.setViewportView(this.drawingArea);
@@ -1001,8 +1001,8 @@ public class MainWindow extends JFrame implements KeyListener {
     private void readFileNewExtension(final File file) throws ParserConfigurationException, IOException, SAXException {
         final var doc = IconicoXML.ler(file);
         this.startNewDrawing(doc);
-        this.modelType = this.drawingArea.getTipoModelo();
-        this.virtualMachines = this.drawingArea.getMaquinasVirtuais();
+        this.modelType = this.drawingArea.getModelType();
+        this.virtualMachines = this.drawingArea.getVirtualMachines();
         this.updateVmConfigButtonVisibility();
     }
 
@@ -1016,12 +1016,11 @@ public class MainWindow extends JFrame implements KeyListener {
 
     private void startNewDrawingOld(final DescreveSistema description) {
         this.drawingArea = MainWindow.emptyDrawingArea();
-        this.drawingArea.setGrade(description);
     }
 
     private void startNewDrawing(final Document doc) {
         this.drawingArea = MainWindow.emptyDrawingArea();
-        this.drawingArea.setGrade(doc);
+        this.drawingArea.setGrid(doc);
     }
 
     private boolean shouldContinueEditingCurrentlyOpenedFile() {
@@ -1208,7 +1207,7 @@ public class MainWindow extends JFrame implements KeyListener {
                 this.jCheckBoxMenuConnectedItem,
                 "Connected Nodes unhidden.",
                 "Connected Nodes hidden.",
-                this.drawingArea::setConectados,
+                this.drawingArea::setShouldPrintDirectConnections,
                 evt
         );
     }
@@ -1218,7 +1217,7 @@ public class MainWindow extends JFrame implements KeyListener {
                 this.jCheckBoxIndirectMenuItem,
                 "Indirectly Connected Nodes are now being shown",
                 "Indirectly Connected Nodes are now not being shown",
-                this.drawingArea::setIndiretos,
+                this.drawingArea::setShouldPrintIndirectConnections,
                 evt
         );
     }
@@ -1228,7 +1227,7 @@ public class MainWindow extends JFrame implements KeyListener {
                 this.jCheckBoxMenuSchedulableItem,
                 "Schedulable Nodes unhidden.",
                 "Schedulable Nodes hidden.",
-                this.drawingArea::setEscalonaveis,
+                this.drawingArea::setShouldPrintSchedulableNodes,
                 evt
         );
     }
@@ -1326,7 +1325,7 @@ public class MainWindow extends JFrame implements KeyListener {
 
         try (final var fw = new FileWriter(this.getFileWithExtension(".txt"));
              final var pw = new PrintWriter(fw, true)) {
-            pw.print(this.drawingArea.toString());
+            pw.print(this.drawingArea.makeDescriptiveModel());
         } catch (final IOException ex) {
             Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE,
                     null, ex);
@@ -1364,7 +1363,7 @@ public class MainWindow extends JFrame implements KeyListener {
                 true,
                 this.drawingArea.getUsuarios(),
                 this.words,
-                this.drawingArea.getPerfil()
+                this.drawingArea.getProfiles()
         );
 
         this.showSubWindow(users);
@@ -1373,8 +1372,8 @@ public class MainWindow extends JFrame implements KeyListener {
     }
 
     private void updateDrawingAreaUsers(final UserConfigurationDialog users) {
-        this.drawingArea.setUsuarios(users.getUsuarios());
-        this.drawingArea.setPerfil(users.getLimite());
+        this.drawingArea.setUsers(users.getUsuarios());
+        this.drawingArea.setProfiles(users.getLimite());
     }
 
     private void formWindowClosing() {
@@ -1448,7 +1447,7 @@ public class MainWindow extends JFrame implements KeyListener {
         final int gridSize = Math.max(interpreter.getW(),
                 MainWindow.DRAWING_AREA_START_SIZE);
         this.drawingArea = new DesenhoGrade(gridSize, gridSize);
-        this.drawingArea.setGrade(interpreter.getDescricao());
+        this.drawingArea.setGrid(interpreter.getDescricao());
         this.updateGuiWithOpenFile("model opened", null);
         this.modificar();
     }
@@ -1459,7 +1458,6 @@ public class MainWindow extends JFrame implements KeyListener {
 
         if (this.jMenuItemSort.getDisplayedMnemonicIndex() == 2) {
             this.jMenuItemSort.setDisplayedMnemonicIndex(1);
-            this.drawingArea.iconArrangeType();
         } else {
             this.jMenuItemSort.setDisplayedMnemonicIndex(2);
             this.drawingArea.iconArrange();
@@ -1563,8 +1561,8 @@ public class MainWindow extends JFrame implements KeyListener {
 
     private void updateDrawingVms(final VmConfiguration vmConfigWindow) {
         // TODO: Feature envy
-        this.drawingArea.setUsuarios(vmConfigWindow.atualizaUsuarios());
-        this.drawingArea.setMaquinasVirtuais(vmConfigWindow.getMaqVirtuais());
+        this.drawingArea.setUsers(vmConfigWindow.atualizaUsuarios());
+        this.drawingArea.setVirtualMachines(vmConfigWindow.getMaqVirtuais());
     }
 
     private void jMenuItemManageCloudActionPerformed(final ActionEvent evt) {
@@ -1753,9 +1751,9 @@ public class MainWindow extends JFrame implements KeyListener {
     }
 
     private void updateDrawingWithViewMenuOptions() {
-        this.drawingArea.setConectados(this.jCheckBoxMenuConnectedItem.isSelected());
-        this.drawingArea.setIndiretos(this.jCheckBoxIndirectMenuItem.isSelected());
-        this.drawingArea.setEscalonaveis(this.jCheckBoxMenuSchedulableItem.isSelected());
+        this.drawingArea.setShouldPrintDirectConnections(this.jCheckBoxMenuConnectedItem.isSelected());
+        this.drawingArea.setShouldPrintIndirectConnections(this.jCheckBoxIndirectMenuItem.isSelected());
+        this.drawingArea.setShouldPrintSchedulableNodes(this.jCheckBoxMenuSchedulableItem.isSelected());
         this.drawingArea.setGridOn(this.jCheckBoxMenuGridItem.isSelected());
     }
 

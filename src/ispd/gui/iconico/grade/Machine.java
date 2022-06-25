@@ -171,11 +171,11 @@ public class Machine extends Vertex implements ItemGrade {
 
     @Override
     public void draw(Graphics g) {
-        g.drawImage(DesenhoGrade.IMACHINE, getX() - 15, getY() - 15, null);
+        g.drawImage(DesenhoGrade.machineIcon, getX() - 15, getY() - 15, null);
         if (isConfigurado()) {
-            g.drawImage(DesenhoGrade.IVERDE, getX() + 15, getY() + 15, null);
+            g.drawImage(DesenhoGrade.greenIcon, getX() + 15, getY() + 15, null);
         } else {
-            g.drawImage(DesenhoGrade.IVERMELHO, getX() + 15, getY() + 15, null);
+            g.drawImage(DesenhoGrade.redIcon, getX() + 15, getY() + 15, null);
         }
 
         g.setColor(Color.BLACK);

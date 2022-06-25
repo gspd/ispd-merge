@@ -60,12 +60,12 @@ public class Cluster extends Vertex implements ItemGrade {
 
     @Override
     public void draw(final Graphics g) {
-        g.drawImage(DesenhoGrade.ICLUSTER,
+        g.drawImage(DesenhoGrade.clusterIcon,
                 this.getX() - Cluster.SOME_OFFSET,
                 this.getY() - Cluster.SOME_OFFSET, null);
         final var image = this.isConfigured
-                ? DesenhoGrade.IVERDE
-                : DesenhoGrade.IVERMELHO;
+                ? DesenhoGrade.greenIcon
+                : DesenhoGrade.redIcon;
         g.drawImage(image, this.getX() + Cluster.SOME_OFFSET,
                 this.getY() + Cluster.SOME_OFFSET, null);
 

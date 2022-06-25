@@ -18,6 +18,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Stream;
 
 public abstract class DrawingArea extends JPanel
         implements MouseListener, MouseMotionListener {
@@ -50,7 +51,7 @@ public abstract class DrawingArea extends JPanel
     private int rectangleWidth = 0;
     private int rectangleHeight = 0;
     private boolean addVertex = false;
-    private boolean addEdge = false;
+    private boolean isDrawingEdge = false;
     private Vertex edgeOrigin = null;
     private int mousePosX = 0;
     private int mousePosY = 0;
@@ -77,11 +78,6 @@ public abstract class DrawingArea extends JPanel
         final JPanel corner = new JPanel();
         corner.add(component);
         return corner;
-    }
-
-    private static boolean isInRange(
-            final int pos, final int start, final int size) {
-        return start <= pos && pos <= start + size;
     }
 
     private static int clampPosition(
@@ -226,7 +222,7 @@ public abstract class DrawingArea extends JPanel
 
     @Override
     public void mouseClicked(final MouseEvent me) {
-        if (this.addEdge) {
+        if (this.isDrawingEdge) {
             if (this.edgeOrigin != null) {
                 final Icon destinoAresta = this.getSelectedIcon(me.getX(),
                         me.getY());
@@ -262,8 +258,10 @@ public abstract class DrawingArea extends JPanel
             }
         } else if (this.addVertex) {
             if (this.isPositionFixed) {
-                this.adicionarVertice(this.getPosFixaX(me.getX()),
-                        this.getPosFixaY(me.getY()));
+                this.adicionarVertice(
+                        this.getPosFixaX(me.getX()),
+                        this.getPosFixaY(me.getY())
+                );
             } else {
                 this.adicionarVertice(me.getX(), me.getY());
             }
@@ -452,65 +450,87 @@ public abstract class DrawingArea extends JPanel
 
     @Override
     public void mouseDragged(final MouseEvent me) {
-        //Arrasta icones selecionados pelo retangulo
-        if (!this.selectedIcons.isEmpty()) {
-            for (final Icon icon : this.selectedIcons) {
-                if (icon instanceof Vertex) {
-                    final int posX = me.getX();
-                    final int posY = me.getY();
-                    ((Vertex) icon).setPosition(posX + ((Vertex) icon).getBaseX(), posY + ((Vertex) icon).getBaseY());
-                }
-            }
-        } else if (this.shouldDrawRect && this.isRectOn) {
-            //Redefine dimensões do retangulo
-            this.rectangleWidth = me.getX() - this.rectangleX;
-            this.rectangleHeight = me.getY() - this.rectangleY;
-            final int retX;
-            final int retY;
-            final int retLag;
-            final int retAlt;
-            if (this.rectangleWidth < 0) {
-                retX = this.rectangleX + this.rectangleWidth;
-                retLag = this.rectangleWidth * -1;
-            } else {
-                retX = this.rectangleX;
-                retLag = this.rectangleWidth;
-            }
-            if (this.rectangleHeight < 0) {
-                retY = this.rectangleY + this.rectangleHeight;
-                retAlt = this.rectangleHeight * -1;
-            } else {
-                retY = this.rectangleY;
-                retAlt = this.rectangleHeight;
-            }
-            //Seleciona icones dentro do retangulo
-            for (final Icon icon : this.vertices) {
-                icon.setSelected(retX < icon.getX()
-                                  && icon.getX() < (retX + retLag)
-                                  && retY < icon.getY()
-                                  && icon.getY() < (retY + retAlt));
-            }
-            for (final Icon icon : this.edges) {
-                icon.setSelected(retX < icon.getX()
-                                  && icon.getX() < (retX + retLag)
-                                  && retY < icon.getY()
-                                  && icon.getY() < (retY + retAlt));
-            }
-        }
+        this.updateIcons(me.getX(), me.getY());
         this.repaint();
+    }
+
+    private void updateIcons(final int x, final int y) {
+        if (!this.selectedIcons.isEmpty()) {
+            this.dragSelectedIcons(x, y);
+            return;
+        }
+
+        if (!this.shouldDrawRect || !this.isRectOn) {
+            return;
+        }
+
+        this.updateRectangleAndSelectIcons(x, y);
+    }
+
+    private void updateRectangleAndSelectIcons(final int x, final int y) {
+        this.rectangleWidth = x - this.rectangleX;
+        this.rectangleHeight = y - this.rectangleY;
+
+        // TODO: This logic is duplicated in many places
+        final int retX;
+        final int retLag;
+        if (this.rectangleWidth < 0) {
+            retX = this.rectangleX + this.rectangleWidth;
+            retLag = this.rectangleWidth * -1;
+        } else {
+            retX = this.rectangleX;
+            retLag = this.rectangleWidth;
+        }
+
+        final int retY;
+        final int retAlt;
+        if (this.rectangleHeight < 0) {
+            retY = this.rectangleY + this.rectangleHeight;
+            retAlt = this.rectangleHeight * -1;
+        } else {
+            retY = this.rectangleY;
+            retAlt = this.rectangleHeight;
+        }
+
+        Stream.concat(this.vertices.stream(), this.edges.stream())
+                .filter(icon -> DrawingArea.isIconWithinRect(
+                        icon, retX, retY, retLag, retAlt))
+                .forEach(icon -> icon.setSelected(true));
+    }
+
+    private void dragSelectedIcons(final int x, final int y) {
+        this.selectedIcons.stream()
+                .filter(Vertex.class::isInstance)
+                .map(Vertex.class::cast)
+                .forEach(v -> v.setPosition(
+                        x + v.getBaseX(),
+                        y + v.getBaseY()
+                ));
+    }
+
+    private static boolean isIconWithinRect(final Icon icon,
+                                            final int x, final int y,
+                                            final int w, final int h) {
+        return DrawingArea.isInRange(icon.getX(), x, w)
+               && DrawingArea.isInRange(icon.getY(), y, h);
+    }
+
+    private static boolean isInRange(
+            final int pos, final int start, final int size) {
+        return start <= pos && pos <= start + size;
     }
 
     @Override
     public void mouseMoved(final MouseEvent e) {
         this.mousePosX = e.getX();
         this.mousePosY = e.getY();
-        if (this.addEdge) {
+        if (this.isDrawingEdge) {
             this.repaint();
         }
     }
 
-    protected void setAddAresta(final boolean addAresta) {
-        this.addEdge = addAresta;
+    protected void setIsDrawingEdge(final boolean isDrawingEdge) {
+        this.isDrawingEdge = isDrawingEdge;
         this.edgeOrigin = null;
     }
 

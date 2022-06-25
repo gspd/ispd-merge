@@ -119,11 +119,11 @@ public class Internet extends Vertex implements ItemGrade {
 
     @Override
     public void draw(Graphics g) {
-        g.drawImage(DesenhoGrade.IINTERNET, getX() - 15, getY() - 15, null);
+        g.drawImage(DesenhoGrade.internetIcon, getX() - 15, getY() - 15, null);
         if (isConfigurado()) {
-            g.drawImage(DesenhoGrade.IVERDE, getX() + 15, getY() + 15, null);
+            g.drawImage(DesenhoGrade.greenIcon, getX() + 15, getY() + 15, null);
         } else {
-            g.drawImage(DesenhoGrade.IVERMELHO, getX() + 15, getY() + 15, null);
+            g.drawImage(DesenhoGrade.redIcon, getX() + 15, getY() + 15, null);
         }
 
         g.setColor(Color.BLACK);
