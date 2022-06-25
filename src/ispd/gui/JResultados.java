@@ -4,7 +4,7 @@ import ispd.arquivo.SalvarResultadosHTML;
 import ispd.arquivo.xml.ConfiguracaoISPD;
 import ispd.arquivo.xml.TraceXML;
 import ispd.gui.auxiliar.MultipleExtensionFileFilter;
-import ispd.gui.auxiliar.Graficos;
+import ispd.gui.auxiliar.SimulationResultChartMaker;
 import ispd.gui.auxiliar.HtmlPane;
 import ispd.gui.auxiliar.ParesOrdenadosUso;
 import ispd.gui.auxiliar.UserOperationTime;
@@ -112,7 +112,7 @@ public class JResultados extends JDialog {
     private double poderComputacionalTotal = 0;
     private JTextField jTextFieldLerID = null;
     private JTextField jTextFieldLerID1 = null;
-    private Graficos charts = null;
+    private SimulationResultChartMaker charts = null;
 
     /**
      * Create JResultado without graphical interface for use in CLI.
@@ -126,7 +126,7 @@ public class JResultados extends JDialog {
         this.gerarGraficosProcessamento(metricas.getMetricasProcessamento());
         this.gerarGraficosComunicacao(metricas.getMetricasComunicacao());
 
-        this.charts = new Graficos();
+        this.charts = new SimulationResultChartMaker();
         this.charts.criarProcessamento(metricas.getMetricasProcessamento());
         this.charts.criarComunicacao(metricas.getMetricasComunicacao());
     }
@@ -1402,7 +1402,7 @@ public class JResultados extends JDialog {
                        final ConfiguracaoISPD config) {
         super(parent, ModalityType.APPLICATION_MODAL);
         this.tarefas = tarefas;
-        this.charts = new Graficos();
+        this.charts = new SimulationResultChartMaker();
         if (config.getCreateProcessingChart()) {
             this.charts.criarProcessamento(metricas.getMetricasProcessamento());
         }
