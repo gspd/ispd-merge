@@ -23,7 +23,7 @@ import java.util.Vector;
 /**
  * Window to add and remove users from modeled simulation.
  */
-public class JUsuarios extends JDialog {
+public class UserConfigurationDialog extends JDialog {
     private static final Dimension BUTTON_PREFERRED_SIZE =
             new Dimension(45, 45);
     private final ResourceBundle translator;
@@ -33,10 +33,10 @@ public class JUsuarios extends JDialog {
     private JScrollPane jScrollPane1;
     private JTable table;
 
-    JUsuarios(final Frame parent, final boolean modal,
-              final Set<? super String> users,
-              final ResourceBundle translator,
-              final Map<String, Double> profiles) {
+    UserConfigurationDialog(final Frame parent, final boolean modal,
+                            final Set<? super String> users,
+                            final ResourceBundle translator,
+                            final Map<String, Double> profiles) {
         super(parent, modal);
 
         this.users = new Vector<>(0);
@@ -71,7 +71,7 @@ public class JUsuarios extends JDialog {
                 .nonFocusable()
                 .withIcon(new ImageIcon(this.getResource(
                         "/ispd/gui/imagens/insert-object.png")))
-                .withSize(JUsuarios.BUTTON_PREFERRED_SIZE)
+                .withSize(UserConfigurationDialog.BUTTON_PREFERRED_SIZE)
                 .withCenterBottomTextPosition()
                 .build());
 
@@ -80,7 +80,7 @@ public class JUsuarios extends JDialog {
                 .nonFocusable()
                 .withIcon(new ImageIcon(this.getResource(
                         "/ispd/gui/imagens/window-close.png")))
-                .withSize(JUsuarios.BUTTON_PREFERRED_SIZE)
+                .withSize(UserConfigurationDialog.BUTTON_PREFERRED_SIZE)
                 .withCenterBottomTextPosition()
                 .build());
 

@@ -1358,7 +1358,7 @@ public class MainWindow extends JFrame implements KeyListener {
         if (this.drawingArea == null)
             return;
 
-        final var users = new JUsuarios(
+        final var users = new UserConfigurationDialog(
                 this,
                 true,
                 this.drawingArea.getUsuarios(),
@@ -1371,7 +1371,7 @@ public class MainWindow extends JFrame implements KeyListener {
         this.modificar();
     }
 
-    private void updateDrawingAreaUsers(final JUsuarios users) {
+    private void updateDrawingAreaUsers(final UserConfigurationDialog users) {
         this.drawingArea.setUsuarios(users.getUsuarios());
         this.drawingArea.setPerfil(users.getLimite());
     }
