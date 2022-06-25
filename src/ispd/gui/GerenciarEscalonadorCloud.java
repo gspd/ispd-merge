@@ -2,7 +2,7 @@ package ispd.gui;
 
 import ispd.arquivo.EscalonadoresCloud;
 import ispd.escalonadorCloud.ManipularArquivosCloud;
-import ispd.gui.auxiliar.DocumentColor;
+import ispd.gui.auxiliar.TextEditorStyle;
 import ispd.gui.auxiliar.MultipleExtensionFileFilter;
 import ispd.utils.ValidaValores;
 
@@ -63,7 +63,7 @@ public class GerenciarEscalonadorCloud extends javax.swing.JFrame {
         //Inicia o editor
         this.initComponents();
         //Define a linguagem do editor
-        final DocumentColor estiloJava = new DocumentColor();
+        final TextEditorStyle estiloJava = new TextEditorStyle();
         estiloJava.configurarTextComponent(this.jTextPane1);
         this.jScrollPane2.setRowHeaderView(estiloJava.getLinhas());
         this.jScrollPane2.setColumnHeaderView(estiloJava.getCursor());

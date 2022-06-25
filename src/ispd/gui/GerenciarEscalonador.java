@@ -2,7 +2,7 @@ package ispd.gui;
 
 import ispd.arquivo.Escalonadores;
 import ispd.escalonador.ManipularArquivos;
-import ispd.gui.auxiliar.DocumentColor;
+import ispd.gui.auxiliar.TextEditorStyle;
 import ispd.gui.auxiliar.MultipleExtensionFileFilter;
 import ispd.utils.ValidaValores;
 
@@ -63,7 +63,7 @@ public class GerenciarEscalonador extends JFrame {
         //Inicia o editor
         this.initComponents();
         //Define a linguagem do editor
-        final DocumentColor estiloJava = new DocumentColor();
+        final TextEditorStyle estiloJava = new TextEditorStyle();
         estiloJava.configurarTextComponent(this.jTextPane1);
         this.jScrollPane2.setRowHeaderView(estiloJava.getLinhas());
         this.jScrollPane2.setColumnHeaderView(estiloJava.getCursor());
@@ -658,7 +658,7 @@ public class GerenciarEscalonador extends JFrame {
         this.escalonadorAberto = null;
         try {
             final AbstractDocument doc =
-                    (DocumentColor) this.jTextPane1.getDocument();
+                    (TextEditorStyle) this.jTextPane1.getDocument();
             doc.remove(0, doc.getLength());
         } catch (final BadLocationException ex) {
         }
@@ -670,7 +670,7 @@ public class GerenciarEscalonador extends JFrame {
         this.escalonadorAberto = nome;
         try {
             final AbstractDocument doc =
-                    (DocumentColor) this.jTextPane1.getDocument();
+                    (TextEditorStyle) this.jTextPane1.getDocument();
             if (doc.getLength() > 0) {
                 doc.remove(0, doc.getLength());
             }

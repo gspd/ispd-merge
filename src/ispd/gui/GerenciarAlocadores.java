@@ -2,7 +2,7 @@ package ispd.gui;
 
 import ispd.alocacaoVM.ManipularArquivosAlloc;
 import ispd.arquivo.Alocadores;
-import ispd.gui.auxiliar.DocumentColor;
+import ispd.gui.auxiliar.TextEditorStyle;
 import ispd.gui.auxiliar.MultipleExtensionFileFilter;
 import ispd.utils.ValidaValores;
 
@@ -60,7 +60,7 @@ public class GerenciarAlocadores extends JFrame {
         //Inicia o editor
         this.initComponents();
         //Define a linguagem do editor
-        final DocumentColor javaStyle = new DocumentColor();
+        final TextEditorStyle javaStyle = new TextEditorStyle();
         javaStyle.configurarTextComponent(this.jTextPane1);
         this.jScrollPane2.setRowHeaderView(javaStyle.getLinhas());
         this.jScrollPane2.setColumnHeaderView(javaStyle.getCursor());
@@ -633,8 +633,8 @@ public class GerenciarAlocadores extends JFrame {
         this.setTitle(this.translate("Manage Schedulers"));
         this.openAllocator = null;
         try {
-            final DocumentColor doc =
-                    (DocumentColor) this.jTextPane1.getDocument();
+            final TextEditorStyle doc =
+                    (TextEditorStyle) this.jTextPane1.getDocument();
             doc.remove(0, doc.getLength());
         } catch (final BadLocationException ex) {
         }
@@ -645,8 +645,8 @@ public class GerenciarAlocadores extends JFrame {
     private void abrirEdicao(final String nome, final String conteudo) {
         this.openAllocator = nome;
         try {
-            final DocumentColor doc =
-                    (DocumentColor) this.jTextPane1.getDocument();
+            final TextEditorStyle doc =
+                    (TextEditorStyle) this.jTextPane1.getDocument();
             if (doc.getLength() > 0) {
                 doc.remove(0, doc.getLength());
             }
