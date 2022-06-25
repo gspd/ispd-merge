@@ -42,7 +42,7 @@ package ispd.gui.iconico.grade;
 import ispd.utils.ValidaValores;
 import ispd.arquivo.xml.IconicoXML;
 import ispd.gui.PickModelTypeDialog;
-import ispd.gui.JPrincipal;
+import ispd.gui.MainWindow;
 import ispd.gui.iconico.AreaDesenho;
 import ispd.gui.iconico.Edge;
 import ispd.gui.iconico.Icon;
@@ -122,7 +122,7 @@ public class DesenhoGrade extends AreaDesenho {
      */
     private int numIcones;
     //Objetos advindo da classe JanelaPrincipal
-    private JPrincipal janelaPrincipal;
+    private MainWindow janelaPrincipal;
     //Objetos do cursor
     private Cursor hourglassCursor = new Cursor(Cursor.CROSSHAIR_CURSOR);
     private Cursor normalCursor = new Cursor(Cursor.DEFAULT_CURSOR);
@@ -159,7 +159,7 @@ public class DesenhoGrade extends AreaDesenho {
         this.tipoModelo = PickModelTypeDialog.GRID;
     }
 
-    public void setPaineis(JPrincipal janelaPrincipal) {
+    public void setPaineis(MainWindow janelaPrincipal) {
         this.janelaPrincipal = janelaPrincipal;
         this.initTexts();
     }
@@ -914,15 +914,15 @@ public class DesenhoGrade extends AreaDesenho {
 
     private static void criarImagens() {
         if (IMACHINE == null) {
-            ImageIcon maq = new ImageIcon(JPrincipal.class.getResource("imagens/botao_no.gif"));
+            ImageIcon maq = new ImageIcon(MainWindow.class.getResource("imagens/botao_no.gif"));
             IMACHINE = maq.getImage();
-            ImageIcon clt = new ImageIcon(JPrincipal.class.getResource("imagens/botao_cluster.gif"));
+            ImageIcon clt = new ImageIcon(MainWindow.class.getResource("imagens/botao_cluster.gif"));
             ICLUSTER = clt.getImage();
-            ImageIcon net = new ImageIcon(JPrincipal.class.getResource("imagens/botao_internet.gif"));
+            ImageIcon net = new ImageIcon(MainWindow.class.getResource("imagens/botao_internet.gif"));
             IINTERNET = net.getImage();
-            ImageIcon verd = new ImageIcon(JPrincipal.class.getResource("imagens/verde.png"));
+            ImageIcon verd = new ImageIcon(MainWindow.class.getResource("imagens/verde.png"));
             IVERDE = verd.getImage();
-            ImageIcon verm = new ImageIcon(JPrincipal.class.getResource("imagens/vermelho.png"));
+            ImageIcon verm = new ImageIcon(MainWindow.class.getResource("imagens/vermelho.png"));
             IVERMELHO = verm.getImage();
         }
     }

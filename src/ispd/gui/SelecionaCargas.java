@@ -1199,7 +1199,7 @@ public class SelecionaCargas extends JDialog {
             }
 
             final var url =
-                    JPrincipal.class.getResource("imagens/Logo_iSPD_25.png");
+                    MainWindow.class.getResource("imagens/Logo_iSPD_25.png");
 
             if (url == null) {
                 return null;
