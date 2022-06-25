@@ -755,7 +755,7 @@ public class MainWindow extends JFrame implements KeyListener {
     }
 
     private void jMenuItemAboutActionPerformed(final ActionEvent evt) {
-        this.showSubWindow(new JSobre(this, true));
+        this.showSubWindow(new AboutDialog(this, true));
     }
 
     private void jMenuItemEnglishActionPerformed(final ActionEvent evt) {
