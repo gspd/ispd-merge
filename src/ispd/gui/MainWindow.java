@@ -292,7 +292,7 @@ public class MainWindow extends JFrame implements KeyListener {
     }
 
     private static void jButtonInjectFaultsActionPerformed(final ActionEvent evt) {
-        new JSelecionarFalhas().setVisible(true);
+        new PickSimulationFaultsDialog().setVisible(true);
     }
 
     private static DesenhoGrade emptyDrawingArea() {
