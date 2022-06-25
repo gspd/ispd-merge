@@ -410,7 +410,7 @@ public class GerenciarEscalonadorCloud extends javax.swing.JFrame {
                     }
                 } else if (result.equals(ops[1])) {
                     //Carregar classe para construir escalonador automaticamente
-                    final GerarEscalonador ge = new GerarEscalonador(this,
+                    final CreateSchedulerDialog ge = new CreateSchedulerDialog(this,
                             true,
                             this.escalonadores.getDiretorio().getAbsolutePath(), this.palavras);
                     ge.setLocationRelativeTo(this);

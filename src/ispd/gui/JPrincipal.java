@@ -1279,9 +1279,9 @@ public class JPrincipal extends JFrame implements KeyListener {
 
     private void generateScheduler(
             final String path,
-            final Consumer<? super GerarEscalonador> transferSchedulers,
+            final Consumer<? super CreateSchedulerDialog> transferSchedulers,
             final Runnable updateSchedulers) {
-        final var ge = new GerarEscalonador(this, true, path, this.words);
+        final var ge = new CreateSchedulerDialog(this, true, path, this.words);
         transferSchedulers.accept(ge);
         this.showSubWindow(ge);
         if (ge.getParse() != null)

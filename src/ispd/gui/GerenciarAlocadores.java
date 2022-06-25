@@ -404,7 +404,7 @@ public class GerenciarAlocadores extends JFrame {
                     } else if (result.equals(ops[1])) {
                         //Carregar classe para construir alocador
                         // automaticamente
-                        final GerarEscalonador ge = new GerarEscalonador(this
+                        final CreateSchedulerDialog ge = new CreateSchedulerDialog(this
                                 , true
                                 ,
                                 this.allocators.getDiretorio().getAbsolutePath()
