@@ -42,7 +42,7 @@ package ispd.gui.iconico.simulacao;
 import ispd.arquivo.xml.ConfiguracaoISPD;
 import ispd.motor.GraphicSimulation;
 import ispd.arquivo.xml.IconicoXML;
-import ispd.gui.JResultados;
+import ispd.gui.ResultsDialog;
 import ispd.gui.JSimulacao;
 import ispd.motor.ProgressoSimulacao;
 import ispd.motor.filas.RedeDeFilas;
@@ -71,7 +71,7 @@ public class JSimulacaoGrafica extends javax.swing.JDialog implements Runnable {
     private SimpleAttributeSet configuraCor = new SimpleAttributeSet();
     private Thread threadSim;
     private GraphicSimulation sim = null;
-    JResultados janelaResultados = null;
+    ResultsDialog janelaResultados = null;
     private boolean error;
     private ConfiguracaoISPD configuracao;
 
@@ -281,7 +281,7 @@ public class JSimulacaoGrafica extends javax.swing.JDialog implements Runnable {
                 progrSim.println("  Simulation Execution Time = " + ((t2 - t1) / 1000) + "seconds");
                 progrSim.print("Showing results.");
                 progrSim.print(" -> ");
-                janelaResultados = new JResultados(this, metrica, redeDeFilas, tarefas, configuracao);
+                janelaResultados = new ResultsDialog(this, metrica, redeDeFilas, tarefas, configuracao);
                 progrSim.println("OK", Color.green);
                 janelaResultados.setLocationRelativeTo(this);
                 jButtonResults.setEnabled(true);

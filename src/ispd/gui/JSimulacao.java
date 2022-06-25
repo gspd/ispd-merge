@@ -188,7 +188,7 @@ public class JSimulacao extends JDialog implements Runnable {
                 //Apresentar resultados
                 this.progressTracker.print("Showing results.");
                 this.progressTracker.print(" -> ");
-                final Window janelaResultados = new JResultados(null, metrica,
+                final Window janelaResultados = new ResultsDialog(null, metrica,
                         queueNetwork, tasks);
                 this.incrementProgress(10);//[10%] --> 100%
                 this.progressTracker.println("OK", Color.green);

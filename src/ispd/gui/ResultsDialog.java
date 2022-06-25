@@ -71,7 +71,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class JResultados extends JDialog {
+public class ResultsDialog extends JDialog {
     private static final Dimension CHART_PREFERRED_SIZE = new Dimension(600,
             300);
     private static final Font COURIER_NEW_FONT_BOLD = new Font("Courier New",
@@ -118,10 +118,10 @@ public class JResultados extends JDialog {
      * Create JResultado without graphical interface for use in CLI.
      * Initialized entirely from class Metricas
      */
-    public JResultados(final Metricas metricas) {
+    public ResultsDialog(final Metricas metricas) {
         this.html.setMetricasGlobais(metricas.getMetricasGlobais());
-        this.resourceTable = JResultados.setTabelaRecurso(metricas);
-        JResultados.getResultadosTarefas(metricas);
+        this.resourceTable = ResultsDialog.setTabelaRecurso(metricas);
+        ResultsDialog.getResultadosTarefas(metricas);
         this.html.setMetricasTarefas(metricas);
         this.gerarGraficosProcessamento(metricas.getMetricasProcessamento());
         this.gerarGraficosComunicacao(metricas.getMetricasComunicacao());
@@ -237,14 +237,14 @@ public class JResultados extends JDialog {
             jfc.getCategoryPlot().getDomainAxis().setCategoryLabelPositions(CategoryLabelPositions.UP_45);
         }
         this.graficoBarraProcessamento = new ChartPanel(jfc);
-        this.graficoBarraProcessamento.setPreferredSize(JResultados.CHART_PREFERRED_SIZE);
+        this.graficoBarraProcessamento.setPreferredSize(ResultsDialog.CHART_PREFERRED_SIZE);
 
         jfc = ChartFactory.createPieChart(
                 "Total processed on each resource", //Titulo
                 dadosGraficoPizzaProcessamento, // Dados para o grafico
                 true, false, false);
         this.graficoPizzaProcessamento = new ChartPanel(jfc);
-        this.graficoPizzaProcessamento.setPreferredSize(JResultados.CHART_PREFERRED_SIZE);
+        this.graficoPizzaProcessamento.setPreferredSize(ResultsDialog.CHART_PREFERRED_SIZE);
 
     }
 
@@ -278,27 +278,27 @@ public class JResultados extends JDialog {
             jfc.getCategoryPlot().getDomainAxis().setCategoryLabelPositions(CategoryLabelPositions.UP_45);
         }
         this.graficoBarraComunicacao = new ChartPanel(jfc);
-        this.graficoBarraComunicacao.setPreferredSize(JResultados.CHART_PREFERRED_SIZE);
+        this.graficoBarraComunicacao.setPreferredSize(ResultsDialog.CHART_PREFERRED_SIZE);
 
         jfc = ChartFactory.createPieChart(
                 "Total communication in each resource", //Titulo
                 dadosGraficoPizzaComunicacao, // Dados para o grafico
                 true, false, false);
         this.graficoPizzaComunicacao = new ChartPanel(jfc);
-        this.graficoPizzaComunicacao.setPreferredSize(JResultados.CHART_PREFERRED_SIZE);
+        this.graficoPizzaComunicacao.setPreferredSize(ResultsDialog.CHART_PREFERRED_SIZE);
     }
 
-    JResultados(final Frame parent, final Metricas metricas,
-                final RedeDeFilas rdf, final List<Tarefa> tarefas) {
+    ResultsDialog(final Frame parent, final Metricas metricas,
+                  final RedeDeFilas rdf, final List<Tarefa> tarefas) {
         super(parent, true);
         this.tarefas = tarefas;
         this.gerarGraficosProcessamento(metricas.getMetricasProcessamento());
         this.gerarGraficosComunicacao(metricas.getMetricasComunicacao());
-        this.resourceTable = JResultados.setTabelaRecurso(metricas);
+        this.resourceTable = ResultsDialog.setTabelaRecurso(metricas);
         this.initComponents();
-        this.jTextAreaGlobal.setText(JResultados.getResultadosGlobais(metricas.getMetricasGlobais()));
+        this.jTextAreaGlobal.setText(ResultsDialog.getResultadosGlobais(metricas.getMetricasGlobais()));
         this.html.setMetricasGlobais(metricas.getMetricasGlobais());
-        this.jTextAreaTarefa.setText(JResultados.getResultadosTarefas(metricas));
+        this.jTextAreaTarefa.setText(ResultsDialog.getResultadosTarefas(metricas));
         this.html.setMetricasTarefas(metricas);
         final CS_Mestre mestre = (CS_Mestre) rdf.getMestres().get(0);
         this.setResultadosUsuario(mestre.getEscalonador().getMetricaUsuarios(),
@@ -307,7 +307,7 @@ public class JResultados extends JDialog {
         if (rdf.getMaquinas().size() < 21) {
             this.graficoProcessamentoTempo =
                     new ChartPanel(this.criarGraficoProcessamentoTempo(rdf));
-            this.graficoProcessamentoTempo.setPreferredSize(JResultados.CHART_PREFERRED_SIZE);
+            this.graficoProcessamentoTempo.setPreferredSize(ResultsDialog.CHART_PREFERRED_SIZE);
         } else {
             this.jButtonProcessamentoMaquina.setVisible(false);
             for (final CS_Processamento maq : rdf.getMaquinas()) {
@@ -317,16 +317,16 @@ public class JResultados extends JDialog {
         if (tarefas.size() < 50) {
             this.graficoProcessamentoTempoTarefa =
                     new ChartPanel(this.criarGraficoProcessamentoTempoTarefa(tarefas));
-            this.graficoProcessamentoTempoTarefa.setPreferredSize(JResultados.CHART_PREFERRED_SIZE);
+            this.graficoProcessamentoTempoTarefa.setPreferredSize(ResultsDialog.CHART_PREFERRED_SIZE);
         } else {
             this.jButtonProcessamentoTarefa.setVisible(false);
         }
         final JFreeChart[] temp =
                 this.gerarGraficoProcessamentoTempoUser(tarefas, rdf);
         this.graficoProcessamentoTempoUser1 = new ChartPanel(temp[0]);
-        this.graficoProcessamentoTempoUser1.setPreferredSize(JResultados.CHART_PREFERRED_SIZE);
+        this.graficoProcessamentoTempoUser1.setPreferredSize(ResultsDialog.CHART_PREFERRED_SIZE);
         this.graficoProcessamentoTempoUser2 = new ChartPanel(temp[1]);
-        this.graficoProcessamentoTempoUser2.setPreferredSize(JResultados.CHART_PREFERRED_SIZE);
+        this.graficoProcessamentoTempoUser2.setPreferredSize(ResultsDialog.CHART_PREFERRED_SIZE);
 
         this.jScrollPaneProcessamento.setViewportView(this.graficoBarraProcessamento);
         this.jScrollPaneComunicacao.setViewportView(this.graficoBarraComunicacao);
@@ -438,7 +438,7 @@ public class JResultados extends JDialog {
 
         this.jTextAreaGlobal.setEditable(false);
         this.jTextAreaGlobal.setColumns(20);
-        this.jTextAreaGlobal.setFont(JResultados.COURIER_NEW_FONT_BOLD);
+        this.jTextAreaGlobal.setFont(ResultsDialog.COURIER_NEW_FONT_BOLD);
 
         this.jTextAreaGlobal.setRows(5);
         jScrollPaneGobal.setViewportView(this.jTextAreaGlobal);
@@ -495,7 +495,7 @@ public class JResultados extends JDialog {
 
         this.jTextAreaTarefa.setEditable(false);
         this.jTextAreaTarefa.setColumns(20);
-        this.jTextAreaTarefa.setFont(JResultados.COURIER_NEW_FONT);
+        this.jTextAreaTarefa.setFont(ResultsDialog.COURIER_NEW_FONT);
 
         this.jTextAreaTarefa.setRows(5);
         jScrollPaneTarefa.setViewportView(this.jTextAreaTarefa);
@@ -505,7 +505,7 @@ public class JResultados extends JDialog {
 
         this.jTextAreaUsuario.setColumns(20);
         this.jTextAreaUsuario.setEditable(false);
-        this.jTextAreaUsuario.setFont(JResultados.COURIER_NEW_FONT);
+        this.jTextAreaUsuario.setFont(ResultsDialog.COURIER_NEW_FONT);
 
         this.jTextAreaUsuario.setRows(5);
         this.jScrollPaneUsuario.setViewportView(this.jTextAreaUsuario);
@@ -1205,7 +1205,7 @@ public class JResultados extends JDialog {
             try {
                 HtmlPane.openDefaultBrowser(new URL("file://" + file.getAbsolutePath() + "/result.html"));
             } catch (final MalformedURLException ex) {
-                Logger.getLogger(JResultados.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(ResultsDialog.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
@@ -1392,14 +1392,14 @@ public class JResultados extends JDialog {
         try {
             this.html.gerarHTML(dir);
         } catch (final IOException ex) {
-            Logger.getLogger(JResultados.class.getName()).log(Level.SEVERE,
+            Logger.getLogger(ResultsDialog.class.getName()).log(Level.SEVERE,
                     null, ex);
         }
     }
 
-    public JResultados(final java.awt.Window parent, final Metricas metricas,
-                       final RedeDeFilas rdf, final List<Tarefa> tarefas,
-                       final ConfiguracaoISPD config) {
+    public ResultsDialog(final java.awt.Window parent, final Metricas metricas,
+                         final RedeDeFilas rdf, final List<Tarefa> tarefas,
+                         final ConfiguracaoISPD config) {
         super(parent, ModalityType.APPLICATION_MODAL);
         this.tarefas = tarefas;
         this.charts = new SimulationResultChartMaker();
@@ -1409,12 +1409,12 @@ public class JResultados extends JDialog {
         if (config.getCreateCommunicationChart()) {
             this.charts.criarComunicacao(metricas.getMetricasComunicacao());
         }
-        this.resourceTable = JResultados.setTabelaRecurso(metricas);
+        this.resourceTable = ResultsDialog.setTabelaRecurso(metricas);
         this.initComponents();
         this.setButtons(config);
-        this.jTextAreaGlobal.setText(JResultados.getResultadosGlobais(metricas.getMetricasGlobais()));
+        this.jTextAreaGlobal.setText(ResultsDialog.getResultadosGlobais(metricas.getMetricasGlobais()));
         this.html.setMetricasGlobais(metricas.getMetricasGlobais());
-        this.jTextAreaTarefa.setText(JResultados.getResultadosTarefas(metricas));
+        this.jTextAreaTarefa.setText(ResultsDialog.getResultadosTarefas(metricas));
         this.html.setMetricasTarefas(metricas);
         final CS_Mestre mestre = (CS_Mestre) rdf.getMestres().get(0);
         this.setResultadosUsuario(mestre.getEscalonador().getMetricaUsuarios(),
@@ -1423,7 +1423,7 @@ public class JResultados extends JDialog {
         if (rdf.getMaquinas().size() < 21) {
             this.graficoProcessamentoTempo =
                     new ChartPanel(this.criarGraficoProcessamentoTempo(rdf));
-            this.graficoProcessamentoTempo.setPreferredSize(JResultados.CHART_PREFERRED_SIZE);
+            this.graficoProcessamentoTempo.setPreferredSize(ResultsDialog.CHART_PREFERRED_SIZE);
         } else {
             this.jButtonProcessamentoMaquina.setVisible(false);
             for (final CS_Processamento maq : rdf.getMaquinas()) {
@@ -1433,16 +1433,16 @@ public class JResultados extends JDialog {
         if (tarefas.size() < 50) {
             this.graficoProcessamentoTempoTarefa =
                     new ChartPanel(this.criarGraficoProcessamentoTempoTarefa(tarefas));
-            this.graficoProcessamentoTempoTarefa.setPreferredSize(JResultados.CHART_PREFERRED_SIZE);
+            this.graficoProcessamentoTempoTarefa.setPreferredSize(ResultsDialog.CHART_PREFERRED_SIZE);
         } else {
             this.jButtonProcessamentoTarefa.setVisible(false);
         }
         final JFreeChart[] temp =
                 this.gerarGraficoProcessamentoTempoUser(tarefas, rdf);
         this.graficoProcessamentoTempoUser1 = new ChartPanel(temp[0]);
-        this.graficoProcessamentoTempoUser1.setPreferredSize(JResultados.CHART_PREFERRED_SIZE);
+        this.graficoProcessamentoTempoUser1.setPreferredSize(ResultsDialog.CHART_PREFERRED_SIZE);
         this.graficoProcessamentoTempoUser2 = new ChartPanel(temp[1]);
-        this.graficoProcessamentoTempoUser2.setPreferredSize(JResultados.CHART_PREFERRED_SIZE);
+        this.graficoProcessamentoTempoUser2.setPreferredSize(ResultsDialog.CHART_PREFERRED_SIZE);
 
         if (config.getCreateMachineThroughTimeChart()) {
             this.charts.criarProcessamentoTempoMaquina(rdf);
@@ -1492,13 +1492,13 @@ public class JResultados extends JDialog {
 
     private class SomeFocusAdapter extends FocusAdapter {
         public void focusGained(final FocusEvent evt) {
-            JResultados.this.jTextFieldLerIDFocusGained(evt);
+            ResultsDialog.this.jTextFieldLerIDFocusGained(evt);
         }
     }
 
     private class SomeOtherFocusAdapter extends FocusAdapter {
         public void focusGained(final FocusEvent evt) {
-            JResultados.this.jTextFieldLerID1FocusGained(evt);
+            ResultsDialog.this.jTextFieldLerID1FocusGained(evt);
         }
     }
 }
