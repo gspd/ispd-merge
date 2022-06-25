@@ -11,6 +11,7 @@ import javax.swing.GroupLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -46,7 +47,7 @@ import java.util.Collection;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-public class GerenciarEscalonadorCloud extends javax.swing.JFrame {
+public class ManageCloudSchedulers extends JFrame {
     private final AbstractUndoableEdit undo = new UndoManager();
     private final ManipularArquivosCloud escalonadores;
     private final ResourceBundle palavras;
@@ -57,7 +58,7 @@ public class GerenciarEscalonadorCloud extends javax.swing.JFrame {
     private boolean modificado;//indica se arquivo atual foi modificado
     private String escalonadorAberto;
 
-    public GerenciarEscalonadorCloud() {
+    ManageCloudSchedulers() {
         final Locale locale = Locale.getDefault();
         this.palavras = ResourceBundle.getBundle("ispd.idioma.Idioma", locale);
         //Inicia o editor
@@ -673,15 +674,15 @@ public class GerenciarEscalonadorCloud extends javax.swing.JFrame {
     private class SomeDocumentListener implements DocumentListener {
         @Override
         public void insertUpdate(final DocumentEvent e) {
-            if (!GerenciarEscalonadorCloud.this.modificado) {
-                GerenciarEscalonadorCloud.this.modificar();
+            if (!ManageCloudSchedulers.this.modificado) {
+                ManageCloudSchedulers.this.modificar();
             }
         }
 
         @Override
         public void removeUpdate(final DocumentEvent e) {
-            if (!GerenciarEscalonadorCloud.this.modificado) {
-                GerenciarEscalonadorCloud.this.modificar();
+            if (!ManageCloudSchedulers.this.modificado) {
+                ManageCloudSchedulers.this.modificar();
             }
         }
 
@@ -693,15 +694,15 @@ public class GerenciarEscalonadorCloud extends javax.swing.JFrame {
     private class SomeWindowAdapter extends WindowAdapter {
         @Override
         public void windowClosing(final WindowEvent e) {
-            if (GerenciarEscalonadorCloud.this.modificado) {
+            if (ManageCloudSchedulers.this.modificado) {
                 final int escolha =
-                        GerenciarEscalonadorCloud.this.savarAlteracao();
+                        ManageCloudSchedulers.this.savarAlteracao();
                 if (escolha != JOptionPane.CANCEL_OPTION && escolha != JOptionPane.CLOSED_OPTION) {
-                    GerenciarEscalonadorCloud.this.setVisible(false);//System
+                    ManageCloudSchedulers.this.setVisible(false);//System
                     // .exit(0);
                 }
             } else {
-                GerenciarEscalonadorCloud.this.setVisible(false);//System
+                ManageCloudSchedulers.this.setVisible(false);//System
                 // .exit(0);
             }
         }
@@ -709,7 +710,7 @@ public class GerenciarEscalonadorCloud extends javax.swing.JFrame {
 
     private class SomeMouseAdapter extends java.awt.event.MouseAdapter {
         public void mouseClicked(final MouseEvent evt) {
-            GerenciarEscalonadorCloud.this.jListEscalonadoresMouseClicked(evt);
+            ManageCloudSchedulers.this.jListEscalonadoresMouseClicked(evt);
         }
     }
 }

@@ -98,8 +98,8 @@ public class JPrincipal extends JFrame implements KeyListener {
             new ManageSchedulers();
     private final ManageAllocationPolicies jFrameAllocManager =
             new ManageAllocationPolicies();
-    private final GerenciarEscalonadorCloud jFrameCloudManager =
-            new GerenciarEscalonadorCloud();
+    private final ManageCloudSchedulers jFrameCloudManager =
+            new ManageCloudSchedulers();
     private final SimplePanel jPanelSimple = new SimplePanel();
     private final JScrollPane jScrollPaneDrawingArea = new JScrollPane();
     private final JScrollPane jScrollPaneSideBar = new JScrollPane();
