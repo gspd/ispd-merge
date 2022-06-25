@@ -829,7 +829,7 @@ public class MainWindow extends JFrame implements KeyListener {
         if (this.drawingArea == null)
             return;
 
-        final var loadConfigWindow = new SelecionaCargas(
+        final var loadConfigWindow = new LoadConfigurationDialog(
                 this,
                 true,
                 this.drawingArea.getUsuarios().toArray(),
@@ -848,7 +848,7 @@ public class MainWindow extends JFrame implements KeyListener {
         w.setVisible(true);
     }
 
-    private void updateDrawingLoad(final SelecionaCargas loadConfigWindow) {
+    private void updateDrawingLoad(final LoadConfigurationDialog loadConfigWindow) {
         this.drawingArea.setCargasConfiguracao(loadConfigWindow.getCargasConfiguracao());
         this.drawingArea.setUsuarios(loadConfigWindow.getUsuarios());
     }

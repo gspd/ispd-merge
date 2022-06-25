@@ -49,7 +49,7 @@ import java.util.logging.Logger;
 import static ispd.gui.ButtonBuilder.aButton;
 import static ispd.gui.ButtonBuilder.basicButton;
 
-public class SelecionaCargas extends JDialog {
+public class LoadConfigurationDialog extends JDialog {
     private static final ActionListener DO_NOTHING = evt -> {
     };
     private static final Dimension PREFERRED_BUTTON_SIZE =
@@ -107,10 +107,10 @@ public class SelecionaCargas extends JDialog {
     private int traceTaskNumber = 0;
     private String traceType = "";
 
-    SelecionaCargas(final Frame parent, final boolean modal,
-                    final Object[] users, final Object[] schedulers,
-                    final GerarCarga loadGenerator,
-                    final ResourceBundle translator) {
+    LoadConfigurationDialog(final Frame parent, final boolean modal,
+                            final Object[] users, final Object[] schedulers,
+                            final GerarCarga loadGenerator,
+                            final ResourceBundle translator) {
         super(parent, modal);
 
         this.translator = translator;
@@ -204,7 +204,7 @@ public class SelecionaCargas extends JDialog {
 
         this.jPanelRandom.setBorder(BorderFactory.createLineBorder(new Color(0, 0, 0)));
         this.jPanelRandom.setMaximumSize(null);
-        this.jPanelRandom.setPreferredSize(SelecionaCargas.PREFERRED_PANEL_SIZE);
+        this.jPanelRandom.setPreferredSize(LoadConfigurationDialog.PREFERRED_PANEL_SIZE);
 
         final var taskCount = new JLabel(
                 this.translate("Number of tasks"));
@@ -378,12 +378,12 @@ public class SelecionaCargas extends JDialog {
 
         this.jPanelForNode.setBorder(BorderFactory.createLineBorder(new Color(0, 0, 0)));
         this.jPanelForNode.setMaximumSize(null);
-        this.jPanelForNode.setPreferredSize(SelecionaCargas.PREFERRED_PANEL_SIZE);
+        this.jPanelForNode.setPreferredSize(LoadConfigurationDialog.PREFERRED_PANEL_SIZE);
 
         final var userLabel = new JLabel(this.translate("User"));
 
         this.comboBoxUsers.setModel(new DefaultComboBoxModel(this.users));
-        this.comboBoxUsers.addActionListener(SelecionaCargas.DO_NOTHING);
+        this.comboBoxUsers.addActionListener(LoadConfigurationDialog.DO_NOTHING);
 
         final var scheduler = new JLabel(this.translate("Scheduler"));
 
@@ -525,7 +525,7 @@ public class SelecionaCargas extends JDialog {
                                 .addContainerGap())
         );
 
-        this.jPanelTrace.setPreferredSize(SelecionaCargas.PREFERRED_PANEL_SIZE);
+        this.jPanelTrace.setPreferredSize(LoadConfigurationDialog.PREFERRED_PANEL_SIZE);
 
         this.jRadioButtonWmsx.setSelected(true);
         this.jRadioButtonWmsx.setText(this.translate("Open an existing iSPD " +
@@ -588,7 +588,7 @@ public class SelecionaCargas extends JDialog {
         );
 
         this.jPanelConvertTrace.setBorder(BorderFactory.createLineBorder(new Color(0, 0, 0)));
-        this.jPanelConvertTrace.setPreferredSize(SelecionaCargas.PREFERRED_PANEL_SIZE);
+        this.jPanelConvertTrace.setPreferredSize(LoadConfigurationDialog.PREFERRED_PANEL_SIZE);
 
         final var externalSelect = new JLabel(this.translate(
                 "Select a external format trace file to convert:"));
@@ -601,7 +601,7 @@ public class SelecionaCargas extends JDialog {
         final var convertExternal = basicButton(
                 this.translate("Convert"), this::onConvertExternalClicked);
 
-        this.jTextFieldCaminhoTrace.addActionListener(SelecionaCargas.DO_NOTHING);
+        this.jTextFieldCaminhoTrace.addActionListener(LoadConfigurationDialog.DO_NOTHING);
 
         this.jTextNotifTrace.setColumns(20);
         this.jTextNotifTrace.setRows(5);
@@ -665,7 +665,7 @@ public class SelecionaCargas extends JDialog {
         this.jOpenTrace.setFileView(new SomeFileView());
 
         this.jPanelPickTrace.setCursor(new Cursor(Cursor.TEXT_CURSOR));
-        this.jPanelPickTrace.setPreferredSize(SelecionaCargas.PREFERRED_PANEL_SIZE);
+        this.jPanelPickTrace.setPreferredSize(LoadConfigurationDialog.PREFERRED_PANEL_SIZE);
 
         final var jLabel20 = new JLabel(this.translate("Select an iSPD trace " +
                                                        "file to open:"));
@@ -673,7 +673,7 @@ public class SelecionaCargas extends JDialog {
         final var jLabel21 = new JLabel(this.translate("Notifications"));
 
         this.jTextNotification.setColumns(20);
-        this.jTextNotification.setFont(SelecionaCargas.TAHOMA_FONT);
+        this.jTextNotification.setFont(LoadConfigurationDialog.TAHOMA_FONT);
         this.jTextNotification.setRows(5);
         this.jTextNotification.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
 
@@ -790,7 +790,7 @@ public class SelecionaCargas extends JDialog {
                                 .addGap(9, 9, 9))
         );
 
-        this.jScrollPaneSelecionado.setPreferredSize(SelecionaCargas.PREFERRED_PANEL_SIZE);
+        this.jScrollPaneSelecionado.setPreferredSize(LoadConfigurationDialog.PREFERRED_PANEL_SIZE);
 
         final GroupLayout jPanel1Layout =
                 new GroupLayout(jPanel1);
@@ -1008,17 +1008,17 @@ public class SelecionaCargas extends JDialog {
     private void makeLayoutAndPack(final Component panel) {
         final var addUser =
                 aButton(this.translate("Add user"), this::onAddUserClick)
-                        .withPreferredSize(SelecionaCargas.PREFERRED_BUTTON_SIZE)
+                        .withPreferredSize(LoadConfigurationDialog.PREFERRED_BUTTON_SIZE)
                         .build();
 
         final var ok =
                 aButton(this.translate("OK"), this::onOkClick)
-                        .withPreferredSize(SelecionaCargas.PREFERRED_BUTTON_SIZE)
+                        .withPreferredSize(LoadConfigurationDialog.PREFERRED_BUTTON_SIZE)
                         .build();
 
         final var cancel =
                 aButton(this.translate("Cancel"), this::onCancelClick)
-                        .withSize(SelecionaCargas.PREFERRED_BUTTON_SIZE)
+                        .withSize(LoadConfigurationDialog.PREFERRED_BUTTON_SIZE)
                         .build();
 
         final var layout = new GroupLayout(this.getContentPane());
@@ -1142,19 +1142,19 @@ public class SelecionaCargas extends JDialog {
                         aveComp, probComp, minComun, maxComun, aveComun,
                         probComun, timeArriv);
             } catch (final Exception ex) {
-                Logger.getLogger(SelecionaCargas.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(LoadConfigurationDialog.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else if (this.jRadioButtonForNode.isSelected()) {
             try {
                 final List<GerarCarga> configuracaoNo =
                         new ArrayList(this.tableRow.size());
                 for (final List item : this.tableRow) {
-                    configuracaoNo.add(SelecionaCargas.loadGeneratorFromTableRow(item));
+                    configuracaoNo.add(LoadConfigurationDialog.loadGeneratorFromTableRow(item));
                 }
                 this.loadGenerator = new CargaList(configuracaoNo,
                         GerarCarga.FORNODE);
             } catch (final Exception ex) {
-                Logger.getLogger(SelecionaCargas.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(LoadConfigurationDialog.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else if (this.jRadioButtonTraces.isSelected()) {
             //configura a carga apartir do arquivo aberto..
