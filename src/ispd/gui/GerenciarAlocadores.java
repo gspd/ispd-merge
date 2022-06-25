@@ -3,7 +3,7 @@ package ispd.gui;
 import ispd.alocacaoVM.ManipularArquivosAlloc;
 import ispd.arquivo.Alocadores;
 import ispd.gui.auxiliar.DocumentColor;
-import ispd.gui.auxiliar.FiltroDeArquivos;
+import ispd.gui.auxiliar.MultipleExtensionFileFilter;
 import ispd.utils.ValidaValores;
 
 import javax.swing.BorderFactory;
@@ -128,7 +128,7 @@ public class GerenciarAlocadores extends JFrame {
         jPopupMenuTexto.add(jMenuItemPaste1);
 
         this.fileChooser.setAcceptAllFileFilterUsed(false);
-        this.fileChooser.setFileFilter(new FiltroDeArquivos(this.translate(
+        this.fileChooser.setFileFilter(new MultipleExtensionFileFilter(this.translate(
                 "Java" +
                 " Source Files (. java)"), ".java", true));
 

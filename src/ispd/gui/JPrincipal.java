@@ -7,7 +7,7 @@ import ispd.arquivo.interpretador.simgrid.InterpretadorSimGrid;
 import ispd.arquivo.xml.ConfiguracaoISPD;
 import ispd.arquivo.xml.IconicoXML;
 import ispd.gui.auxiliar.Corner;
-import ispd.gui.auxiliar.FiltroDeArquivos;
+import ispd.gui.auxiliar.MultipleExtensionFileFilter;
 import ispd.gui.auxiliar.HtmlPane;
 import ispd.gui.auxiliar.Stalemate;
 import ispd.gui.configuracao.JPanelConfigIcon;
@@ -177,7 +177,7 @@ public class JPrincipal extends JFrame implements KeyListener {
     private int modelType = 0; //define se o modelo é GRID, IAAS ou PAAS;
     private ResourceBundle words = ResourceBundle.getBundle(
             "ispd.idioma.Idioma", Locale.getDefault());
-    private final FiltroDeArquivos fileFilter = new FiltroDeArquivos(
+    private final MultipleExtensionFileFilter fileFilter = new MultipleExtensionFileFilter(
             this.translate("Iconic Model of Simulation"),
             JPrincipal.ALL_FILE_EXTENSIONS,
             true

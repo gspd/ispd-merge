@@ -1,7 +1,7 @@
 package ispd.gui;
 
 import ispd.arquivo.xml.TraceXML;
-import ispd.gui.auxiliar.FiltroDeArquivos;
+import ispd.gui.auxiliar.MultipleExtensionFileFilter;
 import ispd.motor.carga.CargaForNode;
 import ispd.motor.carga.CargaList;
 import ispd.motor.carga.CargaRandom;
@@ -58,8 +58,8 @@ public class SelecionaCargas extends JDialog {
             new Dimension(500, 300);
     private static final Font TAHOMA_FONT =
             new Font("Tahoma", Font.PLAIN, 11);
-    private final FiltroDeArquivos traceFileFilter;
-    private final FiltroDeArquivos workloadFileFilter;
+    private final MultipleExtensionFileFilter traceFileFilter;
+    private final MultipleExtensionFileFilter workloadFileFilter;
     private final Vector<String> users;
     private final Vector<String> schedulers;
     private final Vector<Vector> tableRow = new Vector<>(0);
@@ -136,12 +136,12 @@ public class SelecionaCargas extends JDialog {
         this.tableColumn.add(this.translate("Maximum communication"));
         this.tableColumn.add(this.translate("Minimum communication"));
 
-        this.workloadFileFilter = new FiltroDeArquivos(
+        this.workloadFileFilter = new MultipleExtensionFileFilter(
                 "Workload Model of Sumulation",
                 "wmsx",
                 true
         );
-        this.traceFileFilter = new FiltroDeArquivos(
+        this.traceFileFilter = new MultipleExtensionFileFilter(
                 "External Trace Files",
                 new String[] { "swf", "gwf" },
                 true

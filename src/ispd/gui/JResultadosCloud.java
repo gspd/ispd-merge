@@ -2,7 +2,7 @@ package ispd.gui;
 
 import ispd.arquivo.SalvarResultadosHTML;
 import ispd.arquivo.interpretador.cargas.Interpretador;
-import ispd.gui.auxiliar.FiltroDeArquivos;
+import ispd.gui.auxiliar.MultipleExtensionFileFilter;
 import ispd.gui.auxiliar.HtmlPane;
 import ispd.gui.auxiliar.ParesOrdenadosUso;
 import ispd.gui.auxiliar.UserOperationTime;
@@ -1176,8 +1176,8 @@ class JResultadosCloud extends JDialog {
     }
 
     private void jButtonSalvarTracesActionPerformed(final java.awt.event.ActionEvent evt) {
-        final FileFilter filtro = new FiltroDeArquivos("Workload Model of " +
-                                                       "Simulation", ".wmsx",
+        final FileFilter filtro = new MultipleExtensionFileFilter("Workload Model of " +
+                                                                  "Simulation", ".wmsx",
                 true);
         final JFileChooser jFileChooser = new JFileChooser();
         jFileChooser.setFileFilter(filtro);

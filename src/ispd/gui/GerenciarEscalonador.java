@@ -3,7 +3,7 @@ package ispd.gui;
 import ispd.arquivo.Escalonadores;
 import ispd.escalonador.ManipularArquivos;
 import ispd.gui.auxiliar.DocumentColor;
-import ispd.gui.auxiliar.FiltroDeArquivos;
+import ispd.gui.auxiliar.MultipleExtensionFileFilter;
 import ispd.utils.ValidaValores;
 
 import javax.swing.GroupLayout;
@@ -144,7 +144,7 @@ public class GerenciarEscalonador extends JFrame {
         jPopupMenuTexto.add(jMenuItemPaste1);
 
         this.jFileChooser1.setAcceptAllFileFilterUsed(false);
-        this.jFileChooser1.setFileFilter(new FiltroDeArquivos(this.translate(
+        this.jFileChooser1.setFileFilter(new MultipleExtensionFileFilter(this.translate(
                 "Java" +
                 " Source Files (. java)"), ".java", true));
 

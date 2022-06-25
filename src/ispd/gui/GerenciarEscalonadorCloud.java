@@ -3,7 +3,7 @@ package ispd.gui;
 import ispd.arquivo.EscalonadoresCloud;
 import ispd.escalonadorCloud.ManipularArquivosCloud;
 import ispd.gui.auxiliar.DocumentColor;
-import ispd.gui.auxiliar.FiltroDeArquivos;
+import ispd.gui.auxiliar.MultipleExtensionFileFilter;
 import ispd.utils.ValidaValores;
 
 import javax.swing.AbstractButton;
@@ -130,7 +130,7 @@ public class GerenciarEscalonadorCloud extends javax.swing.JFrame {
         jPopupMenuTexto.add(jMenuItemPaste1);
 
         this.jFileChooser1.setAcceptAllFileFilterUsed(false);
-        this.jFileChooser1.setFileFilter(new FiltroDeArquivos(this.translate(
+        this.jFileChooser1.setFileFilter(new MultipleExtensionFileFilter(this.translate(
                 "Java" +
                 " Source Files (. java)"), ".java", true));
 

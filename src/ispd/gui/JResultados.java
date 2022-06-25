@@ -3,7 +3,7 @@ package ispd.gui;
 import ispd.arquivo.SalvarResultadosHTML;
 import ispd.arquivo.xml.ConfiguracaoISPD;
 import ispd.arquivo.xml.TraceXML;
-import ispd.gui.auxiliar.FiltroDeArquivos;
+import ispd.gui.auxiliar.MultipleExtensionFileFilter;
 import ispd.gui.auxiliar.Graficos;
 import ispd.gui.auxiliar.HtmlPane;
 import ispd.gui.auxiliar.ParesOrdenadosUso;
@@ -1211,8 +1211,8 @@ public class JResultados extends JDialog {
     }
 
     private void jButtonSalvarTracesActionPerformed(final java.awt.event.ActionEvent evt) {
-        final FileFilter filtro = new FiltroDeArquivos("Workload Model of " +
-                                                       "Simulation", ".wmsx",
+        final FileFilter filtro = new MultipleExtensionFileFilter("Workload Model of " +
+                                                                  "Simulation", ".wmsx",
                 true);
         final JFileChooser jFileChooser = new JFileChooser();
         jFileChooser.setFileFilter(filtro);
