@@ -189,7 +189,7 @@ public class DesenhoGrade extends DrawingArea {
         }
 
         final var copy =
-                ((ItemGrade) this.copiedIcon).criarCopia(this.getPosicaoMouseX(),
+                ((GridItem) this.copiedIcon).makeCopy(this.getPosicaoMouseX(),
                         this.getPosicaoMouseY(), this.iconCount,
                         this.vertexCount);
         this.vertices.add((Vertex) copy);
@@ -231,13 +231,13 @@ public class DesenhoGrade extends DrawingArea {
             final Link link = (Link) this.selectedIcons.iterator().next();
             this.selectedIcons.remove(link);
             link.setSelected(false);
-            final Link temp = link.criarCopia(0, 0, this.iconCount,
+            final Link temp = link.makeCopy(0, 0, this.iconCount,
                     this.edgeCount);
             this.edgeCount++;
             this.iconCount++;
             temp.setPosition(link.getDestination(), link.getSource());
-            ((ItemGrade) temp.getSource()).getConexoesSaida().add(temp);
-            ((ItemGrade) temp.getDestination()).getConexoesSaida().add(temp);
+            ((GridItem) temp.getSource()).getConnectionsOut().add(temp);
+            ((GridItem) temp.getDestination()).getConnectionsOut().add(temp);
             this.selectedIcons.add(temp);
             this.edges.add(temp);
             ValidaValores.addNomeIcone(temp.getId().getName());
@@ -266,32 +266,32 @@ public class DesenhoGrade extends DrawingArea {
             if (opcao == JOptionPane.YES_OPTION) {
                 for (final Icon iconeRemover : this.selectedIcons) {
                     if (iconeRemover instanceof Edge) {
-                        final ItemGrade or =
-                                (ItemGrade) ((Edge) iconeRemover).getSource();
-                        or.getConexoesSaida().remove((ItemGrade) iconeRemover);
-                        final ItemGrade de =
-                                (ItemGrade) ((Edge) iconeRemover).getDestination();
-                        de.getConexoesEntrada().remove((ItemGrade) iconeRemover);
-                        ValidaValores.removeNomeIcone(((ItemGrade) iconeRemover).getId().getName());
+                        final GridItem or =
+                                (GridItem) ((Edge) iconeRemover).getSource();
+                        or.getConnectionsOut().remove((GridItem) iconeRemover);
+                        final GridItem de =
+                                (GridItem) ((Edge) iconeRemover).getDestination();
+                        de.getConnectionsIn().remove((GridItem) iconeRemover);
+                        ValidaValores.removeNomeIcone(((GridItem) iconeRemover).getId().getName());
                         this.edges.remove((Edge) iconeRemover);
                         this.mainWindow.modificar();
                     } else {
                         final int cont = 0;
                         //Remover dados das conexoes q entram
-                        Set<ItemGrade> listanos =
-                                ((ItemGrade) iconeRemover).getConexoesEntrada();
-                        for (final ItemGrade I : listanos) {
+                        Set<GridItem> listanos =
+                                ((GridItem) iconeRemover).getConnectionsIn();
+                        for (final GridItem I : listanos) {
                             this.edges.remove((Edge) I);
                             ValidaValores.removeNomeIcone(I.getId().getName());
                         }
                         //Remover dados das conexoes q saem
                         listanos =
-                                ((ItemGrade) iconeRemover).getConexoesSaida();
-                        for (final ItemGrade I : listanos) {
+                                ((GridItem) iconeRemover).getConnectionsOut();
+                        for (final GridItem I : listanos) {
                             this.edges.remove((Edge) I);
                             ValidaValores.removeNomeIcone(I.getId().getName());
                         }
-                        ValidaValores.removeNomeIcone(((ItemGrade) iconeRemover).getId().getName());
+                        ValidaValores.removeNomeIcone(((GridItem) iconeRemover).getId().getName());
                         this.vertices.remove((Vertex) iconeRemover);
                         this.mainWindow.modificar();
                     }
@@ -305,8 +305,8 @@ public class DesenhoGrade extends DrawingArea {
     public void adicionarAresta(final Vertex Origem, final Vertex Destino) {
         final Link link = new Link(Origem, Destino, this.edgeCount,
                 this.iconCount);
-        ((ItemGrade) Origem).getConexoesSaida().add(link);
-        ((ItemGrade) Destino).getConexoesEntrada().add(link);
+        ((GridItem) Origem).getConnectionsOut().add(link);
+        ((GridItem) Destino).getConnectionsIn().add(link);
         this.edgeCount++;
         this.iconCount++;
         ValidaValores.addNomeIcone(link.getId().getName());
@@ -328,7 +328,7 @@ public class DesenhoGrade extends DrawingArea {
     public void showActionIcon(final MouseEvent me, final Icon icon) {
         this.mainWindow.modificar();
         if (icon instanceof Machine || icon instanceof Cluster) {
-            this.mainWindow.getjPanelConfiguracao().setIcone((ItemGrade) icon
+            this.mainWindow.getjPanelConfiguracao().setIcone((GridItem) icon
                     , this.users, this.modelType);
             JOptionPane.showMessageDialog(
                     this.mainWindow,
@@ -336,24 +336,24 @@ public class DesenhoGrade extends DrawingArea {
                     this.mainWindow.getjPanelConfiguracao().getTitle(),
                     JOptionPane.PLAIN_MESSAGE);
         } else {
-            this.mainWindow.getjPanelConfiguracao().setIcone((ItemGrade) icon);
+            this.mainWindow.getjPanelConfiguracao().setIcone((GridItem) icon);
             JOptionPane.showMessageDialog(
                     this.mainWindow,
                     this.mainWindow.getjPanelConfiguracao(),
                     this.mainWindow.getjPanelConfiguracao().getTitle(),
                     JOptionPane.PLAIN_MESSAGE);
         }
-        this.setLabelAtributos((ItemGrade) icon);
+        this.setLabelAtributos((GridItem) icon);
     }
 
     @Override
     public void showSelectionIcon(final MouseEvent me, final Icon icon) {
-        this.setLabelAtributos((ItemGrade) icon);
+        this.setLabelAtributos((GridItem) icon);
     }
 
     @Override
     public void adicionarVertice(final int x, final int y) {
-        ItemGrade vertice = null;
+        GridItem vertice = null;
         switch (this.vertexType) {
             case DesenhoGrade.MACHINE -> {
                 vertice = new Machine(x, y, this.vertexCount, this.iconCount,
@@ -386,62 +386,62 @@ public class DesenhoGrade extends DrawingArea {
         }
     }
 
-    private void setLabelAtributos(final ItemGrade icon) {
+    private void setLabelAtributos(final GridItem icon) {
         final StringBuilder text = new StringBuilder("<html>");
-        text.append(icon.getAtributos(this.translator));
+        text.append(icon.makeDescription(this.translator));
         if (this.shouldPrintDirectConnections && icon instanceof Vertex) {
             text.append("<br>").append(this.translate("Output " +
                                                       "Connection:"));
-            for (final ItemGrade i : icon.getConexoesSaida()) {
-                final ItemGrade saida = (ItemGrade) ((Edge) i).getDestination();
+            for (final GridItem i : icon.getConnectionsOut()) {
+                final GridItem saida = (GridItem) ((Edge) i).getDestination();
                 text.append("<br>").append(saida.getId().getName());
             }
             text.append("<br>").append(this.translate("Input " +
                                                       "Connection:"));
-            for (final ItemGrade i : icon.getConexoesEntrada()) {
-                final ItemGrade entrada = (ItemGrade) ((Edge) i).getSource();
+            for (final GridItem i : icon.getConnectionsIn()) {
+                final GridItem entrada = (GridItem) ((Edge) i).getSource();
                 text.append("<br>").append(entrada.getId().getName());
             }
         }
         if (this.shouldPrintDirectConnections && icon instanceof Edge) {
-            for (final ItemGrade i : icon.getConexoesEntrada()) {
+            for (final GridItem i : icon.getConnectionsIn()) {
                 text.append("<br>").append(this.translate("Source " +
                                                           "Node:")).append(" "
-                ).append(i.getConexoesEntrada());
+                ).append(i.getConnectionsIn());
             }
-            for (final ItemGrade i : icon.getConexoesEntrada()) {
+            for (final GridItem i : icon.getConnectionsIn()) {
                 text.append("<br>").append(this.translate("Destination" +
                                                           " " +
-                                                          "Node:")).append(" ").append(i.getConexoesSaida());
+                                                          "Node:")).append(" ").append(i.getConnectionsOut());
             }
         }
         if (this.shouldPrintIndirectConnections && icon instanceof final Machine I) {
-            final Set<ItemGrade> listaEntrada = I.getNosIndiretosEntrada();
-            final Set<ItemGrade> listaSaida = I.getNosIndiretosSaida();
+            final Set<GridItem> listaEntrada = I.getNosIndiretosEntrada();
+            final Set<GridItem> listaSaida = I.getNosIndiretosSaida();
             text.append("<br>").append(this.translate("Output Nodes " +
                                                       "Indirectly " +
                                                       "Connected:"));
-            for (final ItemGrade i : listaSaida) {
+            for (final GridItem i : listaSaida) {
                 text.append("<br>").append(i.getId().getGlobalId());
             }
             text.append("<br>").append(this.translate("Input Nodes " +
                                                       "Indirectly " +
                                                       "Connected:"));
-            for (final ItemGrade i : listaEntrada) {
+            for (final GridItem i : listaEntrada) {
                 text.append("<br>").append(i.getId().getGlobalId());
             }
         }
         if (this.shouldPrintSchedulableNodes && icon instanceof final Machine I) {
             text.append("<br>").append(this.translate("Schedulable " +
                                                       "Nodes:"));
-            for (final ItemGrade i : I.getNosEscalonaveis()) {
+            for (final GridItem i : I.getNosEscalonaveis()) {
                 text.append("<br>").append(i.getId().getGlobalId());
             }
             if (I.isMestre()) {
-                final List<ItemGrade> escravos = ((Machine) icon).getEscravos();
+                final List<GridItem> escravos = ((Machine) icon).getEscravos();
                 text.append("<br>").append(this.translate("Slave " +
                                                           "Nodes:"));
-                for (final ItemGrade i : escravos) {
+                for (final GridItem i : escravos) {
                     text.append("<br>").append(i.getId().getName());
                 }
             }
@@ -460,9 +460,9 @@ public class DesenhoGrade extends DrawingArea {
                         I.getTaxaOcupacao()));
                 if (((Machine) icon).isMestre()) {
                     saida.append(String.format("MESTRE %s LMAQ".formatted(I.getAlgoritmo())));
-                    final List<ItemGrade> lista =
+                    final List<GridItem> lista =
                             ((Machine) icon).getEscravos();
-                    for (final ItemGrade slv : lista) {
+                    for (final GridItem slv : lista) {
                         if (this.vertices.contains((Vertex) slv)) {
                             saida.append(" ").append(slv.getId().getName());
                         }
@@ -493,8 +493,8 @@ public class DesenhoGrade extends DrawingArea {
             saida.append(String.format("REDE %s %f %f %f CONECTA",
                     I.getId().getName(), I.getBanda(), I.getLatencia(),
                     I.getTaxaOcupacao()));
-            saida.append(" ").append(((ItemGrade) icon.getSource()).getId().getName());
-            saida.append(" ").append(((ItemGrade) icon.getDestination()).getId().getName());
+            saida.append(" ").append(((GridItem) icon.getSource()).getId().getName());
+            saida.append(" ").append(((GridItem) icon.getDestination()).getId().getName());
             saida.append("\n");
         }
         saida.append("CARGA");
@@ -522,7 +522,7 @@ public class DesenhoGrade extends DrawingArea {
             if (vertice instanceof final Machine I) {
                 final var slaves =
                         new ArrayList<Integer>(I.getEscravos().size());
-                for (final ItemGrade slv : I.getEscravos()) {
+                for (final GridItem slv : I.getEscravos()) {
                     if (this.vertices.contains((Vertex) slv)) {
                         slaves.add(slv.getId().getGlobalId());
                     }
@@ -588,8 +588,8 @@ public class DesenhoGrade extends DrawingArea {
                     l.getId().getLocalId(), l.getId().getGlobalId(),
                     l.getId().getName(),
                     l.getBanda(), l.getTaxaOcupacao(), l.getLatencia(),
-                    ((ItemGrade) l.getSource()).getId().getGlobalId(),
-                    ((ItemGrade) l.getDestination()).getId().getGlobalId());
+                    ((GridItem) l.getSource()).getId().getGlobalId(),
+                    ((GridItem) l.getDestination()).getId().getGlobalId());
         }
         //trecho de escrita das máquinas virtuais
         if (this.virtualMachines != null) {
@@ -658,7 +658,7 @@ public class DesenhoGrade extends DrawingArea {
     private void updateVertexAndEdgeCount() {
 
         for (final var icon : this.edges) {
-            final var i = (ItemGrade) icon;
+            final var i = (GridItem) icon;
             if (this.edgeCount < i.getId().getLocalId()) {
                 this.edgeCount = i.getId().getLocalId();
             }
@@ -668,7 +668,7 @@ public class DesenhoGrade extends DrawingArea {
         }
 
         for (final var icon : this.vertices) {
-            final var i = (ItemGrade) icon;
+            final var i = (GridItem) icon;
             if (this.vertexCount < i.getId().getLocalId()) {
                 this.vertexCount = i.getId().getLocalId();
             }

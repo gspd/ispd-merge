@@ -6,7 +6,7 @@ import ispd.escalonadorCloud.ManipularArquivosCloud;
 import ispd.gui.PickModelTypeDialog;
 import ispd.gui.iconico.grade.Cluster;
 import ispd.gui.iconico.grade.Internet;
-import ispd.gui.iconico.grade.ItemGrade;
+import ispd.gui.iconico.grade.GridItem;
 import ispd.gui.iconico.grade.Link;
 import ispd.gui.iconico.grade.Machine;
 
@@ -148,7 +148,7 @@ public class JPanelConfigIcon extends JPanel {
         });
     }
 
-    public void setIcone(final ItemGrade icon) {
+    public void setIcone(final GridItem icon) {
         if (icon instanceof Link) {
             String text = this.translate(
                     "Network icon configuration");
@@ -173,7 +173,7 @@ public class JPanelConfigIcon extends JPanel {
     }
 
     public void setIcone(
-            final ItemGrade icon,
+            final GridItem icon,
             final Iterable<String> users,
             final int choice) {
         if (choice == PickModelTypeDialog.GRID) {

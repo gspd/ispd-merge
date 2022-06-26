@@ -14,7 +14,7 @@ import ispd.gui.configuracao.JPanelConfigIcon;
 import ispd.gui.configuracao.SimplePanel;
 import ispd.gui.iconico.grade.Cluster;
 import ispd.gui.iconico.grade.DesenhoGrade;
-import ispd.gui.iconico.grade.ItemGrade;
+import ispd.gui.iconico.grade.GridItem;
 import ispd.gui.iconico.grade.Machine;
 import ispd.gui.iconico.grade.VirtualMachine;
 import ispd.gui.utils.ButtonBuilder;
@@ -1805,7 +1805,7 @@ public class MainWindow extends JFrame implements KeyListener {
     public void keyReleased(final KeyEvent keyEvent) {
     }
 
-    public void setSelectedIcon(final ItemGrade icon, final String text) {
+    public void setSelectedIcon(final GridItem icon, final String text) {
         if (icon == null) {
             this.jScrollPaneSideBar.setViewportView(this.jPanelSimple);
             this.jPanelProperties.setText("");

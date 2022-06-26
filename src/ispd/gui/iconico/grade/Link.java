@@ -51,7 +51,7 @@ import java.util.Set;
  *
  * @author denison
  */
-public class Link extends Edge implements ItemGrade {
+public class Link extends Edge implements GridItem {
 
     private GridItemId id;
     private boolean selected;
@@ -75,40 +75,40 @@ public class Link extends Edge implements ItemGrade {
     }
 
     @Override
-    public Set<ItemGrade> getConexoesEntrada() {
+    public Set<GridItem> getConnectionsIn() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public Set<ItemGrade> getConexoesSaida() {
+    public Set<GridItem> getConnectionsOut() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public String getAtributos(ResourceBundle palavras) {
-        String texto = palavras.getString("Local ID:") + " " + getId().getLocalId()
-                + "<br>" + palavras.getString("Global ID:") + " " + getId().getGlobalId()
-                + "<br>" + palavras.getString("Label") + ": " + getId().getName()
-                + "<br>" + palavras.getString("X1-coordinate:") + " " + getSource().getX()
-                + "<br>" + palavras.getString("Y1-coordinate:") + " " + getSource().getY()
-                + "<br>" + palavras.getString("X2-coordinate:") + " " + getDestination().getY()
-                + "<br>" + palavras.getString("Y2-coordinate:") + " " + getDestination().getX()
-                + "<br>" + palavras.getString("Bandwidth") + ": " + getBanda()
-                + "<br>" + palavras.getString("Latency") + ": " + getLatencia()
-                + "<br>" + palavras.getString("Load Factor") + ": " + getTaxaOcupacao();
+    public String makeDescription(ResourceBundle translator) {
+        String texto = translator.getString("Local ID:") + " " + getId().getLocalId()
+                       + "<br>" + translator.getString("Global ID:") + " " + getId().getGlobalId()
+                       + "<br>" + translator.getString("Label") + ": " + getId().getName()
+                       + "<br>" + translator.getString("X1-coordinate:") + " " + getSource().getX()
+                       + "<br>" + translator.getString("Y1-coordinate:") + " " + getSource().getY()
+                       + "<br>" + translator.getString("X2-coordinate:") + " " + getDestination().getY()
+                       + "<br>" + translator.getString("Y2-coordinate:") + " " + getDestination().getX()
+                       + "<br>" + translator.getString("Bandwidth") + ": " + getBanda()
+                       + "<br>" + translator.getString("Latency") + ": " + getLatencia()
+                       + "<br>" + translator.getString("Load Factor") + ": " + getTaxaOcupacao();
         return texto;
     }
 
     /**
      *
-     * @param posicaoMouseX the value of posicaoMouseX
-     * @param posicaoMouseY the value of posicaoMouseY
-     * @param idGlobal the value of idGlobal
-     * @param idLocal the value of idLocal
+     * @param mousePosX the value of posicaoMouseX
+     * @param mousePosY the value of posicaoMouseY
+     * @param copyGlobalId the value of idGlobal
+     * @param copyLocalId the value of idLocal
      */
     @Override
-    public Link criarCopia(int posicaoMouseX, int posicaoMouseY, int idGlobal, int idLocal) {
-        Link temp = new Link(null, null, idGlobal, idLocal);
+    public Link makeCopy(int mousePosX, int mousePosY, int copyGlobalId, int copyLocalId) {
+        Link temp = new Link(null, null, copyGlobalId, copyLocalId);
         temp.banda = this.banda;
         temp.latencia = this.latencia;
         temp.ocupacao = this.ocupacao;
@@ -117,7 +117,7 @@ public class Link extends Edge implements ItemGrade {
     }
 
     @Override
-    public boolean isConfigurado() {
+    public boolean isCorrectlyConfigured() {
         return configurado;
     }
 
@@ -177,7 +177,7 @@ public class Link extends Edge implements ItemGrade {
 
         if (isSelected()) {
             g.setColor(Color.BLACK);
-        } else if (isConfigurado()) {
+        } else if (isCorrectlyConfigured()) {
             g.setColor(DARK_GREEN);
         } else {
             g.setColor(Color.RED);

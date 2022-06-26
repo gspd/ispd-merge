@@ -44,7 +44,7 @@ import ispd.gui.iconico.Edge;
 import ispd.gui.iconico.Vertex;
 import ispd.gui.iconico.grade.Cluster;
 import ispd.gui.iconico.grade.Internet;
-import ispd.gui.iconico.grade.ItemGrade;
+import ispd.gui.iconico.grade.GridItem;
 import ispd.gui.iconico.grade.Link;
 import ispd.gui.iconico.grade.Machine;
 import ispd.gui.iconico.grade.VirtualMachine;
@@ -801,7 +801,7 @@ public class IconicoXML {
         return cargasConfiguracao;
     }
 
-    private static void setCaracteristicas(ItemGrade item, NodeList elementsByTagName) {
+    private static void setCaracteristicas(GridItem item, NodeList elementsByTagName) {
         Machine maq = null;
         Cluster clust = null;
         if (item instanceof Machine) {
@@ -944,10 +944,10 @@ public class IconicoXML {
                 maq.setVMMallocpolicy(master.getAttribute("vm_alloc"));
                 maq.setMestre(true);
                 NodeList slaves = master.getElementsByTagName("slave");
-                List<ItemGrade> escravos = new ArrayList<ItemGrade>(slaves.getLength());
+                List<GridItem> escravos = new ArrayList<GridItem>(slaves.getLength());
                 for (int j = 0; j < slaves.getLength(); j++) {
                     Element slave = (Element) slaves.item(j);
-                    ItemGrade escravo = (ItemGrade) icones.get(Integer.parseInt(slave.getAttribute("id")));
+                    GridItem escravo = (GridItem) icones.get(Integer.parseInt(slave.getAttribute("id")));
                     if (escravo != null) {
                         escravos.add(escravo);
                     }
@@ -967,8 +967,8 @@ public class IconicoXML {
             Vertex destino = (Vertex) icones.get(Integer.parseInt(connect.getAttribute("destination")));
             Link lk = new Link(origem, destino, local, global);
             lk.setSelected(false);
-            ((ItemGrade) origem).getConexoesSaida().add(lk);
-            ((ItemGrade) destino).getConexoesEntrada().add(lk);
+            ((GridItem) origem).getConnectionsOut().add(lk);
+            ((GridItem) destino).getConnectionsIn().add(lk);
             arestas.add(lk);
             lk.getId().setName(link.getAttribute("id"));
             ValidaValores.addNomeIcone(lk.getId().getName());

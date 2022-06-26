@@ -8,13 +8,13 @@ import java.util.HashSet;
 import java.util.ResourceBundle;
 import java.util.Set;
 
-public class Cluster extends Vertex implements ItemGrade {
+public class Cluster extends Vertex implements GridItem {
     private static final int SOME_OFFSET = 15;
     private static final String NO_SELECTION = "---";
     private static final int RANGE_WIDTH = 17;
     private final GridItemId id;
-    private final Set<ItemGrade> connectionsIn = new HashSet<>(0);
-    private final Set<ItemGrade> connectionsOut = new HashSet<>(0);
+    private final Set<GridItem> connectionsIn = new HashSet<>(0);
+    private final Set<GridItem> connectionsOut = new HashSet<>(0);
     private Double bandwidth = 0.0;
     private Double latency = 0.0;
     private String algorithm = Cluster.NO_SELECTION;
@@ -95,55 +95,55 @@ public class Cluster extends Vertex implements ItemGrade {
     }
 
     @Override
-    public Set<ItemGrade> getConexoesEntrada() {
+    public Set<GridItem> getConnectionsIn() {
         return this.connectionsIn;
     }
 
     @Override
-    public Set<ItemGrade> getConexoesSaida() {
+    public Set<GridItem> getConnectionsOut() {
         return this.connectionsOut;
     }
 
     @Override
-    public String getAtributos(final ResourceBundle palavras) {
+    public String makeDescription(final ResourceBundle translator) {
         return ("%s %d<br>%s %d<br>%s: %s<br>%s %d<br>%s %d<br>%s: %d<br>%s: " +
                 "%s<br>%s: %s<br>%s: %s<br>%s: %s")
                 .formatted(
-                        palavras.getString("Local ID:"),
+                        translator.getString("Local ID:"),
                         this.id.getLocalId(),
-                        palavras.getString("Global ID:"),
+                        translator.getString("Global ID:"),
                         this.id.getGlobalId(),
-                        palavras.getString("Label"),
+                        translator.getString("Label"),
                         this.id.getName(),
-                        palavras.getString("X-coordinate:"),
+                        translator.getString("X-coordinate:"),
                         this.getX(),
-                        palavras.getString("Y-coordinate:"),
+                        translator.getString("Y-coordinate:"),
                         this.getY(),
-                        palavras.getString("Number of slaves"),
+                        translator.getString("Number of slaves"),
                         this.slaveCount,
-                        palavras.getString("Computing power"),
+                        translator.getString("Computing power"),
                         this.computationalPower,
-                        palavras.getString("Bandwidth"),
+                        translator.getString("Bandwidth"),
                         this.bandwidth,
-                        palavras.getString("Latency"),
+                        translator.getString("Latency"),
                         this.latency,
-                        palavras.getString("Scheduling algorithm"),
+                        translator.getString("Scheduling algorithm"),
                         this.algorithm
                 );
     }
 
     /**
-     * @param posicaoMouseX the value of X position
-     * @param posicaoMouseY the value of Y position
-     * @param idGlobal      the value of idGlobal
-     * @param idLocal       the value of idLocal
+     * @param mousePosX the value of X position
+     * @param mousePosY the value of Y position
+     * @param copyGlobalId      the value of idGlobal
+     * @param copyLocalId       the value of idLocal
      */
     @Override
-    public Cluster criarCopia(final int posicaoMouseX, final int posicaoMouseY,
-                              final int idGlobal, final int idLocal) {
+    public Cluster makeCopy(final int mousePosX, final int mousePosY,
+                            final int copyGlobalId, final int copyLocalId) {
         final var other = new Cluster(
-                posicaoMouseX, posicaoMouseY,
-                idGlobal, idLocal,
+                mousePosX, mousePosY,
+                copyGlobalId, copyLocalId,
                 this.energyConsumption
         );
 
@@ -160,7 +160,7 @@ public class Cluster extends Vertex implements ItemGrade {
     }
 
     @Override
-    public boolean isConfigurado() {
+    public boolean isCorrectlyConfigured() {
         return this.isConfigured;
     }
 

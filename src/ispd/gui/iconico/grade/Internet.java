@@ -8,12 +8,12 @@ import java.util.HashSet;
 import java.util.ResourceBundle;
 import java.util.Set;
 
-public class Internet extends Vertex implements ItemGrade {
+public class Internet extends Vertex implements GridItem {
     private static final int IMAGE_SIZE = 15;
     private static final int ICON_SIZE = 17;
     private final GridItemId id;
-    private final Set<ItemGrade> connectionsIn = new HashSet<>(0);
-    private final Set<ItemGrade> connectionsOut = new HashSet<>(0);
+    private final Set<GridItem> connectionsIn = new HashSet<>(0);
+    private final Set<GridItem> connectionsOut = new HashSet<>(0);
     private double bandwidth = 0.0;
     private double loadFactor = 0.0;
     private double latency = 0.0;
@@ -70,35 +70,35 @@ public class Internet extends Vertex implements ItemGrade {
     }
 
     @Override
-    public Set<ItemGrade> getConexoesEntrada() {
+    public Set<GridItem> getConnectionsIn() {
         return this.connectionsIn;
     }
 
     @Override
-    public Set<ItemGrade> getConexoesSaida() {
+    public Set<GridItem> getConnectionsOut() {
         return this.connectionsOut;
     }
 
     @Override
-    public String getAtributos(final ResourceBundle palavras) {
+    public String makeDescription(final ResourceBundle translator) {
         return ("%s %d<br>%s %d<br>%s: %s<br>%s %d<br>%s %d<br>%s: %s<br>%s:" +
                 " %s<br>%s: %s").formatted(
-                palavras.getString("Local ID:"), this.id.getLocalId(),
-                palavras.getString("Global ID:"), this.id.getGlobalId(),
-                palavras.getString("Label"), this.id.getName(),
-                palavras.getString("X-coordinate:"), this.getX(),
-                palavras.getString("Y-coordinate:"), this.getY(),
-                palavras.getString("Bandwidth"), this.bandwidth,
-                palavras.getString("Latency"), this.latency,
-                palavras.getString("Load Factor"), this.loadFactor
+                translator.getString("Local ID:"), this.id.getLocalId(),
+                translator.getString("Global ID:"), this.id.getGlobalId(),
+                translator.getString("Label"), this.id.getName(),
+                translator.getString("X-coordinate:"), this.getX(),
+                translator.getString("Y-coordinate:"), this.getY(),
+                translator.getString("Bandwidth"), this.bandwidth,
+                translator.getString("Latency"), this.latency,
+                translator.getString("Load Factor"), this.loadFactor
         );
     }
 
     @Override
-    public Internet criarCopia(final int posicaoMouseX, final int posicaoMouseY,
-                               final int idGlobal, final int idLocal) {
-        final var other = new Internet(posicaoMouseX, posicaoMouseY,
-                idGlobal, idLocal);
+    public Internet makeCopy(final int mousePosX, final int mousePosY,
+                             final int copyGlobalId, final int copyLocalId) {
+        final var other = new Internet(mousePosX, mousePosY,
+                copyGlobalId, copyLocalId);
         other.bandwidth = this.bandwidth;
         other.loadFactor = this.loadFactor;
         other.latency = this.latency;
@@ -107,7 +107,7 @@ public class Internet extends Vertex implements ItemGrade {
     }
 
     @Override
-    public boolean isConfigurado() {
+    public boolean isCorrectlyConfigured() {
         return this.isConfigured;
     }
 
