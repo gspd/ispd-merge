@@ -972,9 +972,9 @@ public class IconicoXML {
             arestas.add(lk);
             lk.getId().setName(link.getAttribute("id"));
             ValidaValores.addNomeIcone(lk.getId().getName());
-            lk.setBanda(Double.parseDouble(link.getAttribute("bandwidth")));
-            lk.setTaxaOcupacao(Double.parseDouble(link.getAttribute("load")));
-            lk.setLatencia(Double.parseDouble(link.getAttribute("latency")));
+            lk.setBandwidth(Double.parseDouble(link.getAttribute("bandwidth")));
+            lk.setLoadFactor(Double.parseDouble(link.getAttribute("load")));
+            lk.setLatency(Double.parseDouble(link.getAttribute("latency")));
         }
     }
 

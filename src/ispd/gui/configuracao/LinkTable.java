@@ -76,21 +76,21 @@ public class LinkTable extends AbstractTableModel {
 
             case LinkTable.BANDWIDTH:
                 if (this.link instanceof Link) {
-                    return ((Link) this.link).getBanda();
+                    return ((Link) this.link).getBandwidth();
                 } else {
                     return ((Internet) this.link).getBandwidth();
                 }
 
             case LinkTable.LATENCY:
                 if (this.link instanceof Link) {
-                    return ((Link) this.link).getLatencia();
+                    return ((Link) this.link).getLatency();
                 } else {
                     return ((Internet) this.link).getLatency();
                 }
 
             case LinkTable.LOAD_FACTOR:
                 if (this.link instanceof Link) {
-                    return ((Link) this.link).getTaxaOcupacao();
+                    return ((Link) this.link).getLoadFactor();
                 } else {
                     return ((Internet) this.link).getLoadFactor();
                 }
@@ -138,21 +138,21 @@ public class LinkTable extends AbstractTableModel {
         switch (rowIndex) {
             case LinkTable.BANDWIDTH:
                 if (this.link instanceof Link) {
-                    ((Link) this.link).setBanda(value);
+                    ((Link) this.link).setBandwidth(value);
                 } else {
                     ((Internet) this.link).setBandwidth(value);
                 }
                 break;
             case LinkTable.LATENCY:
                 if (this.link instanceof Link) {
-                    ((Link) this.link).setLatencia(value);
+                    ((Link) this.link).setLatency(value);
                 } else {
                     ((Internet) this.link).setLatency(value);
                 }
                 break;
             case LinkTable.LOAD_FACTOR:
                 if (this.link instanceof Link) {
-                    ((Link) this.link).setTaxaOcupacao(value);
+                    ((Link) this.link).setLoadFactor(value);
                 } else {
                     ((Internet) this.link).setLoadFactor(value);
                 }

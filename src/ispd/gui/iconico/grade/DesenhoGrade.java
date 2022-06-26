@@ -491,8 +491,8 @@ public class DesenhoGrade extends DrawingArea {
         for (final Edge icon : this.edges) {
             final Link I = (Link) icon;
             saida.append(String.format("REDE %s %f %f %f CONECTA",
-                    I.getId().getName(), I.getBanda(), I.getLatencia(),
-                    I.getTaxaOcupacao()));
+                    I.getId().getName(), I.getBandwidth(), I.getLatency(),
+                    I.getLoadFactor()));
             saida.append(" ").append(((GridItem) icon.getSource()).getId().getName());
             saida.append(" ").append(((GridItem) icon.getDestination()).getId().getName());
             saida.append("\n");
@@ -587,7 +587,7 @@ public class DesenhoGrade extends DrawingArea {
                     l.getDestination().getX(), l.getDestination().getY(),
                     l.getId().getLocalId(), l.getId().getGlobalId(),
                     l.getId().getName(),
-                    l.getBanda(), l.getTaxaOcupacao(), l.getLatencia(),
+                    l.getBandwidth(), l.getLoadFactor(), l.getLatency(),
                     ((GridItem) l.getSource()).getId().getGlobalId(),
                     ((GridItem) l.getDestination()).getId().getGlobalId());
         }
@@ -754,15 +754,15 @@ public class DesenhoGrade extends DrawingArea {
         }
 
         final Link link = (Link) this.selectedIcons.iterator().next();
-        final double bandwidth = link.getBanda();
-        final double occupationToll = link.getTaxaOcupacao();
-        final double latency = link.getLatencia();
+        final double bandwidth = link.getBandwidth();
+        final double occupationToll = link.getLoadFactor();
+        final double latency = link.getLatency();
 
         for (final Edge e : this.edges) {
             final Link otherLink = (Link) e;
-            otherLink.setBanda(bandwidth);
-            otherLink.setTaxaOcupacao(occupationToll);
-            otherLink.setLatencia(latency);
+            otherLink.setBandwidth(bandwidth);
+            otherLink.setLoadFactor(occupationToll);
+            otherLink.setLatency(latency);
         }
     }
 
