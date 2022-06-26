@@ -54,7 +54,7 @@ import java.util.Set;
  */
 public class Machine extends Vertex implements ItemGrade {
 
-    private IdentificadorItemGrade id;
+    private GridItemId id;
     private HashSet<ItemGrade> conexoesEntrada;
     private HashSet<ItemGrade> conexoesSaida;
     private String algoritmo;
@@ -84,7 +84,7 @@ public class Machine extends Vertex implements ItemGrade {
 
     public Machine(int x, int y, int idLocal, int idGlobal, Double energia) {
         super(x, y);
-        this.id = new IdentificadorItemGrade(idLocal, idGlobal, "mac" + idGlobal);
+        this.id = new GridItemId(idLocal, idGlobal, "mac" + idGlobal);
         this.escravos = new ArrayList<ItemGrade>();
         this.proprietario = "user1";
         this.algoritmo = "---";
@@ -104,7 +104,7 @@ public class Machine extends Vertex implements ItemGrade {
     }
 
     @Override
-    public IdentificadorItemGrade getId() {
+    public GridItemId getId() {
         return this.id;
     }
     
@@ -128,14 +128,14 @@ public class Machine extends Vertex implements ItemGrade {
 
     @Override
     public String toString() {
-        return "id: " + getId().getIdGlobal() + " " + getId().getNome();
+        return "id: " + getId().getGlobalId() + " " + getId().getName();
     }
 
     @Override
     public String getAtributos(ResourceBundle palavras) {
-        String texto = palavras.getString("Local ID:") + " " + String.valueOf(getId().getIdLocal())
-                + "<br>" + palavras.getString("Global ID:") + " " + String.valueOf(getId().getIdGlobal())
-                + "<br>" + palavras.getString("Label") + ": " + getId().getNome()
+        String texto = palavras.getString("Local ID:") + " " + String.valueOf(getId().getLocalId())
+                + "<br>" + palavras.getString("Global ID:") + " " + String.valueOf(getId().getGlobalId())
+                + "<br>" + palavras.getString("Label") + ": " + getId().getName()
                 + "<br>" + palavras.getString("X-coordinate:") + " " + String.valueOf(getX())
                 + "<br>" + palavras.getString("Y-coordinate:") + " " + String.valueOf(getY())
                 + "<br>" + palavras.getString("Computing power") + ": " + String.valueOf(getPoderComputacional())
@@ -179,7 +179,7 @@ public class Machine extends Vertex implements ItemGrade {
         }
 
         g.setColor(Color.BLACK);
-        g.drawString(String.valueOf(getId().getIdGlobal()), getX(), getY() + 30);
+        g.drawString(String.valueOf(getId().getGlobalId()), getX(), getY() + 30);
         // Se o icone estiver ativo, desenhamos uma margem nele.
         if (isSelected()) {
             g.setColor(Color.RED);

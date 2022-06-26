@@ -52,7 +52,7 @@ import java.util.Set;
  */
 public class Internet extends Vertex implements ItemGrade {
     
-    private IdentificadorItemGrade id;
+    private GridItemId id;
     private HashSet<ItemGrade> conexoesEntrada;
     private HashSet<ItemGrade> conexoesSaida;
     private double banda;
@@ -62,13 +62,13 @@ public class Internet extends Vertex implements ItemGrade {
 
     public Internet(int x, int y, int idLocal, int idGlobal) {
         super(x, y);
-        this.id = new IdentificadorItemGrade(idLocal, idGlobal, "net" + idGlobal);
+        this.id = new GridItemId(idLocal, idGlobal, "net" + idGlobal);
         this.conexoesEntrada = new HashSet<ItemGrade>();
         this.conexoesSaida = new HashSet<ItemGrade>();
     }
 
     @Override
-    public IdentificadorItemGrade getId() {
+    public GridItemId getId() {
         return this.id;
     }
     
@@ -84,9 +84,9 @@ public class Internet extends Vertex implements ItemGrade {
     
     @Override
     public String getAtributos(ResourceBundle palavras) {
-        String texto = palavras.getString("Local ID:") + " " + id.getIdLocal()
-         + "<br>" + palavras.getString("Global ID:") + " " + id.getIdGlobal()
-         + "<br>" + palavras.getString("Label") + ": " + id.getNome()
+        String texto = palavras.getString("Local ID:") + " " + id.getLocalId()
+         + "<br>" + palavras.getString("Global ID:") + " " + id.getGlobalId()
+         + "<br>" + palavras.getString("Label") + ": " + id.getName()
          + "<br>" + palavras.getString("X-coordinate:") + " " + getX()
          + "<br>" + palavras.getString("Y-coordinate:") + " " + getY()
          + "<br>" + palavras.getString("Bandwidth") + ": " + getBanda()
@@ -127,7 +127,7 @@ public class Internet extends Vertex implements ItemGrade {
         }
 
         g.setColor(Color.BLACK);
-        g.drawString(String.valueOf(getId().getIdGlobal()), getX(), getY() + 30);
+        g.drawString(String.valueOf(getId().getGlobalId()), getX(), getY() + 30);
         // Se o icone estiver ativo, desenhamos uma margem nele.
         if (isSelected()) {
             g.setColor(Color.RED);

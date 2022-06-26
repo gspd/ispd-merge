@@ -39,19 +39,18 @@
  */
 package ispd.arquivo.xml;
 
-import ispd.gui.iconico.Vertex;
-import ispd.utils.ValidaValores;
 import ispd.gui.PickModelTypeDialog;
 import ispd.gui.iconico.Edge;
+import ispd.gui.iconico.Vertex;
 import ispd.gui.iconico.grade.Cluster;
 import ispd.gui.iconico.grade.Internet;
 import ispd.gui.iconico.grade.ItemGrade;
 import ispd.gui.iconico.grade.Link;
 import ispd.gui.iconico.grade.Machine;
 import ispd.gui.iconico.grade.VirtualMachine;
+import ispd.motor.carga.CargaForNode;
 import ispd.motor.carga.CargaList;
 import ispd.motor.carga.CargaRandom;
-import ispd.motor.carga.CargaForNode;
 import ispd.motor.carga.CargaTrace;
 import ispd.motor.carga.GerarCarga;
 import ispd.motor.filas.RedeDeFilas;
@@ -69,6 +68,18 @@ import ispd.motor.filas.servidores.implementacao.CS_VMM;
 import ispd.motor.filas.servidores.implementacao.CS_VirtualMac;
 import ispd.motor.filas.servidores.implementacao.Vertice;
 import ispd.motor.metricas.MetricasUsuarios;
+import ispd.utils.ValidaValores;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -77,16 +88,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.EntityResolver;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
 /**
  * Realiza manupulações com o arquivo xml do modelo icônico
@@ -861,8 +862,8 @@ public class IconicoXML {
             clust.setSelected(false);
             vertices.add(clust);
             icones.put(global, clust);
-            clust.getId().setNome(cluster.getAttribute("id"));
-            ValidaValores.addNomeIcone(clust.getId().getNome());
+            clust.getId().setName(cluster.getAttribute("id"));
+            ValidaValores.addNomeIcone(clust.getId().getName());
             clust.setComputationalPower(Double.parseDouble(cluster.getAttribute("power")));
             setCaracteristicas(clust, cluster.getElementsByTagName("characteristic"));
             clust.setSlaveCount(Integer.parseInt(cluster.getAttribute("nodes")));
@@ -886,8 +887,8 @@ public class IconicoXML {
             net.setSelected(false);
             vertices.add(net);
             icones.put(global, net);
-            net.getId().setNome(inet.getAttribute("id"));
-            ValidaValores.addNomeIcone(net.getId().getNome());
+            net.getId().setName(inet.getAttribute("id"));
+            ValidaValores.addNomeIcone(net.getId().getName());
             net.setBanda(Double.parseDouble(inet.getAttribute("bandwidth")));
             net.setTaxaOcupacao(Double.parseDouble(inet.getAttribute("load")));
             net.setLatencia(Double.parseDouble(inet.getAttribute("latency")));
@@ -906,8 +907,8 @@ public class IconicoXML {
                 maq.setSelected(false);
                 icones.put(global, maq);
                 vertices.add(maq);
-                maq.getId().setNome(maquina.getAttribute("id"));
-                ValidaValores.addNomeIcone(maq.getId().getNome());
+                maq.getId().setName(maquina.getAttribute("id"));
+                ValidaValores.addNomeIcone(maq.getId().getName());
                 maq.setPoderComputacional(Double.parseDouble(maquina.getAttribute("power")));
                 setCaracteristicas(maq, maquina.getElementsByTagName("characteristic"));
                 maq.setTaxaOcupacao(Double.parseDouble(maquina.getAttribute("load")));
@@ -932,8 +933,8 @@ public class IconicoXML {
                 int global = Integer.parseInt(id.getAttribute("global"));
                 Machine maq = (Machine) icones.get(global);
                 vertices.add(maq);
-                maq.getId().setNome(maquina.getAttribute("id"));
-                ValidaValores.addNomeIcone(maq.getId().getNome());
+                maq.getId().setName(maquina.getAttribute("id"));
+                ValidaValores.addNomeIcone(maq.getId().getName());
                 maq.setPoderComputacional(Double.parseDouble(maquina.getAttribute("power")));
                 setCaracteristicas(maq, maquina.getElementsByTagName("characteristic"));
                 maq.setTaxaOcupacao(Double.parseDouble(maquina.getAttribute("load")));
@@ -969,8 +970,8 @@ public class IconicoXML {
             ((ItemGrade) origem).getConexoesSaida().add(lk);
             ((ItemGrade) destino).getConexoesEntrada().add(lk);
             arestas.add(lk);
-            lk.getId().setNome(link.getAttribute("id"));
-            ValidaValores.addNomeIcone(lk.getId().getNome());
+            lk.getId().setName(link.getAttribute("id"));
+            ValidaValores.addNomeIcone(lk.getId().getName());
             lk.setBanda(Double.parseDouble(link.getAttribute("bandwidth")));
             lk.setTaxaOcupacao(Double.parseDouble(link.getAttribute("load")));
             lk.setLatencia(Double.parseDouble(link.getAttribute("latency")));

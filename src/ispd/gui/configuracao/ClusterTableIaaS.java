@@ -116,7 +116,7 @@ public class ClusterTableIaaS extends AbstractTableModel {
 
     private Serializable objectAtRow(final int rowIndex) {
         return switch (rowIndex) {
-            case TableRows.LABEL -> this.cluster.getId().getNome();
+            case TableRows.LABEL -> this.cluster.getId().getName();
             case TableRows.OWNER -> this.users;
             case TableRows.NODES -> this.cluster.getSlaveCount();
             case TableRows.PROCESSORS -> this.cluster.getPoderComputacional();
@@ -162,7 +162,7 @@ public class ClusterTableIaaS extends AbstractTableModel {
 
         switch (rowIndex) {
             case TableRows.LABEL ->
-                    this.cluster.getId().setNome(aValue.toString());
+                    this.cluster.getId().setName(aValue.toString());
             case TableRows.OWNER ->
                     this.cluster.setOwner(this.users.getSelectedItem().toString());
             case TableRows.NODES ->

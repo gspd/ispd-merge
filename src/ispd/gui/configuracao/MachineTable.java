@@ -121,7 +121,7 @@ public class MachineTable extends AbstractTableModel {
         }
 
         return switch (rowIndex) {
-            case MachineTable.LABEL -> this.machine.getId().getNome();
+            case MachineTable.LABEL -> this.machine.getId().getName();
             case MachineTable.OWNER -> this.users;
             case MachineTable.PROCESSOR -> this.machine.getPoderComputacional();
             case MachineTable.LOAD_FACTOR -> this.machine.getTaxaOcupacao();
@@ -165,7 +165,7 @@ public class MachineTable extends AbstractTableModel {
     private void setValueAtIndex(final Object value, final int rowIndex) {
         switch (rowIndex) {
             case MachineTable.LABEL ->
-                    this.machine.getId().setNome(value.toString());
+                    this.machine.getId().setName(value.toString());
             case MachineTable.OWNER ->
                     this.machine.setProprietario(this.users.getSelectedItem().toString());
             case MachineTable.PROCESSOR ->

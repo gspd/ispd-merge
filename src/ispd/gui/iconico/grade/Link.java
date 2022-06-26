@@ -53,7 +53,7 @@ import java.util.Set;
  */
 public class Link extends Edge implements ItemGrade {
 
-    private IdentificadorItemGrade id;
+    private GridItemId id;
     private boolean selected;
     private Polygon areaSeta;
     private static Color DARK_GREEN = new Color(0, 130, 0);
@@ -66,11 +66,11 @@ public class Link extends Edge implements ItemGrade {
         super(origem, destino);
         this.selected = true;
         this.areaSeta = new Polygon();
-        this.id = new IdentificadorItemGrade(idLocal, idGlobal, "link" + idGlobal);
+        this.id = new GridItemId(idLocal, idGlobal, "link" + idGlobal);
     }
 
     @Override
-    public IdentificadorItemGrade getId() {
+    public GridItemId getId() {
         return this.id;
     }
 
@@ -86,9 +86,9 @@ public class Link extends Edge implements ItemGrade {
 
     @Override
     public String getAtributos(ResourceBundle palavras) {
-        String texto = palavras.getString("Local ID:") + " " + getId().getIdLocal()
-                + "<br>" + palavras.getString("Global ID:") + " " + getId().getIdGlobal()
-                + "<br>" + palavras.getString("Label") + ": " + getId().getNome()
+        String texto = palavras.getString("Local ID:") + " " + getId().getLocalId()
+                + "<br>" + palavras.getString("Global ID:") + " " + getId().getGlobalId()
+                + "<br>" + palavras.getString("Label") + ": " + getId().getName()
                 + "<br>" + palavras.getString("X1-coordinate:") + " " + getSource().getX()
                 + "<br>" + palavras.getString("Y1-coordinate:") + " " + getSource().getY()
                 + "<br>" + palavras.getString("X2-coordinate:") + " " + getDestination().getY()

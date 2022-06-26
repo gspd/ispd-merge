@@ -12,7 +12,7 @@ public class Cluster extends Vertex implements ItemGrade {
     private static final int SOME_OFFSET = 15;
     private static final String NO_SELECTION = "---";
     private static final int RANGE_WIDTH = 17;
-    private final IdentificadorItemGrade id;
+    private final GridItemId id;
     private final Set<ItemGrade> connectionsIn = new HashSet<>(0);
     private final Set<ItemGrade> connectionsOut = new HashSet<>(0);
     private Double bandwidth = 0.0;
@@ -38,7 +38,7 @@ public class Cluster extends Vertex implements ItemGrade {
             final int idGlobal,
             final Double energy) {
         super(x, y);
-        this.id = new IdentificadorItemGrade(
+        this.id = new GridItemId(
                 idLocal, idGlobal,
                 "cluster%d".formatted(idGlobal)
         );
@@ -55,7 +55,7 @@ public class Cluster extends Vertex implements ItemGrade {
 
     @Override
     public String toString() {
-        return "id: %d %s".formatted(this.id.getIdGlobal(), this.id.getNome());
+        return "id: %d %s".formatted(this.id.getGlobalId(), this.id.getName());
     }
 
     @Override
@@ -70,7 +70,7 @@ public class Cluster extends Vertex implements ItemGrade {
                 this.getY() + Cluster.SOME_OFFSET, null);
 
         g.setColor(Color.BLACK);
-        g.drawString(String.valueOf(this.id.getIdGlobal()), this.getX(),
+        g.drawString(String.valueOf(this.id.getGlobalId()), this.getX(),
                 this.getY() + 30);
 
         // Se o icone estiver ativo, desenhamos uma margem nele.
@@ -90,7 +90,7 @@ public class Cluster extends Vertex implements ItemGrade {
     }
 
     @Override
-    public IdentificadorItemGrade getId() {
+    public GridItemId getId() {
         return this.id;
     }
 
@@ -110,11 +110,11 @@ public class Cluster extends Vertex implements ItemGrade {
                 "%s<br>%s: %s<br>%s: %s<br>%s: %s")
                 .formatted(
                         palavras.getString("Local ID:"),
-                        this.id.getIdLocal(),
+                        this.id.getLocalId(),
                         palavras.getString("Global ID:"),
-                        this.id.getIdGlobal(),
+                        this.id.getGlobalId(),
                         palavras.getString("Label"),
-                        this.id.getNome(),
+                        this.id.getName(),
                         palavras.getString("X-coordinate:"),
                         this.getX(),
                         palavras.getString("Y-coordinate:"),

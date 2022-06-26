@@ -48,7 +48,7 @@ import java.util.Set;
  */
 public interface ItemGrade {
 
-    public IdentificadorItemGrade getId();
+    public GridItemId getId();
 
     public Set<ItemGrade> getConexoesEntrada();
 

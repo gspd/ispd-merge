@@ -61,7 +61,7 @@ public class ClusterTable extends AbstractTableModel {
                 if (this.cluster != null) {
                     switch (rowIndex) {
                         case TableRows.LABEL:
-                            return this.cluster.getId().getNome();
+                            return this.cluster.getId().getName();
                         case TableRows.OWNER:
                             return this.users;
                         case TableRows.NODES:
@@ -144,7 +144,7 @@ public class ClusterTable extends AbstractTableModel {
 
         switch (rowIndex) {
             case TableRows.LABEL ->
-                    this.cluster.getId().setNome(aValue.toString());
+                    this.cluster.getId().setName(aValue.toString());
             case TableRows.OWNER ->
                     this.cluster.setOwner(this.users.getSelectedItem().toString());
             case TableRows.NODES ->

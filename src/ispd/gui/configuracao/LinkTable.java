@@ -72,7 +72,7 @@ public class LinkTable extends AbstractTableModel {
 
         switch (rowIndex) {
             case LinkTable.LABEL:
-                return this.link.getId().getNome();
+                return this.link.getId().getName();
 
             case LinkTable.BANDWIDTH:
                 if (this.link instanceof Link) {
@@ -129,7 +129,7 @@ public class LinkTable extends AbstractTableModel {
     private void updateValue(final Object aValue, final int rowIndex) {
 
         if (rowIndex == LinkTable.LABEL) {
-            this.link.getId().setNome(aValue.toString());
+            this.link.getId().setName(aValue.toString());
             return;
         }
 

@@ -159,7 +159,7 @@ public class JPanelConfigIcon extends JPanel {
                     "Internet icon configuration"));
         }
         this.jLabelIconName.setText("%s#: %d".formatted(this.translate(
-                "Configuration for the icon"), icon.getId().getIdGlobal()));
+                "Configuration for the icon"), icon.getId().getGlobalId()));
         this.getTabelaLink().setLink(icon);
         this.jScrollPane.setViewportView(this.linkTable);
     }
@@ -191,7 +191,7 @@ public class JPanelConfigIcon extends JPanel {
                 this.schedulers.listarAdicionados().clear();
             }
             this.jLabelIconName.setText("%s#: %d".formatted(this.translate(
-                    "Configuration for the icon"), icon.getId().getIdGlobal()));
+                    "Configuration for the icon"), icon.getId().getGlobalId()));
             if (icon instanceof Machine) {
                 this.jLabelTitle.setText(this.translate(
                         "Machine icon configuration"));
@@ -238,7 +238,7 @@ public class JPanelConfigIcon extends JPanel {
             }
 
             this.jLabelIconName.setText("%s#: %d".formatted(this.translate(
-                    "Configuration for the icon"), icon.getId().getIdGlobal()));
+                    "Configuration for the icon"), icon.getId().getGlobalId()));
             if (icon instanceof Machine) {
                 this.jLabelTitle.setText(this.translate("Machine icon configuration"));
                 this.getTabelaMaquinaIaaS().setMaquina((Machine) icon, users);
