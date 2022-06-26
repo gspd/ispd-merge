@@ -594,10 +594,10 @@ public class DesenhoGrade extends DrawingArea {
         //trecho de escrita das máquinas virtuais
         if (this.virtualMachines != null) {
             for (final VirtualMachine vm : this.virtualMachines) {
-                xml.addVirtualMachines(vm.getNome(), vm.getProprietario(),
-                        vm.getVMM(), vm.getPoderComputacional(),
-                        vm.getMemoriaAlocada(), vm.getDiscoAlocado(),
-                        vm.getOS());
+                xml.addVirtualMachines(vm.getName(), vm.getProprietario(),
+                        vm.getVmm(), vm.getPoderComputacional(),
+                        vm.getAllocatedMemory(), vm.getAllocatedDisk(),
+                        vm.getOs());
             }
         }
 
