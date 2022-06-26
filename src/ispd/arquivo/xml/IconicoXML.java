@@ -889,9 +889,9 @@ public class IconicoXML {
             icones.put(global, net);
             net.getId().setName(inet.getAttribute("id"));
             ValidaValores.addNomeIcone(net.getId().getName());
-            net.setBanda(Double.parseDouble(inet.getAttribute("bandwidth")));
-            net.setTaxaOcupacao(Double.parseDouble(inet.getAttribute("load")));
-            net.setLatencia(Double.parseDouble(inet.getAttribute("latency")));
+            net.setBandwidth(Double.parseDouble(inet.getAttribute("bandwidth")));
+            net.setLoadFactor(Double.parseDouble(inet.getAttribute("load")));
+            net.setLatency(Double.parseDouble(inet.getAttribute("latency")));
         }
         //Realiza leitura dos icones de máquina
         for (int i = 0; i < maquinas.getLength(); i++) {

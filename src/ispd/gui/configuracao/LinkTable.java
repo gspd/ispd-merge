@@ -78,21 +78,21 @@ public class LinkTable extends AbstractTableModel {
                 if (this.link instanceof Link) {
                     return ((Link) this.link).getBanda();
                 } else {
-                    return ((Internet) this.link).getBanda();
+                    return ((Internet) this.link).getBandwidth();
                 }
 
             case LinkTable.LATENCY:
                 if (this.link instanceof Link) {
                     return ((Link) this.link).getLatencia();
                 } else {
-                    return ((Internet) this.link).getLatencia();
+                    return ((Internet) this.link).getLatency();
                 }
 
             case LinkTable.LOAD_FACTOR:
                 if (this.link instanceof Link) {
                     return ((Link) this.link).getTaxaOcupacao();
                 } else {
-                    return ((Internet) this.link).getTaxaOcupacao();
+                    return ((Internet) this.link).getLoadFactor();
                 }
         }
 
@@ -140,21 +140,21 @@ public class LinkTable extends AbstractTableModel {
                 if (this.link instanceof Link) {
                     ((Link) this.link).setBanda(value);
                 } else {
-                    ((Internet) this.link).setBanda(value);
+                    ((Internet) this.link).setBandwidth(value);
                 }
                 break;
             case LinkTable.LATENCY:
                 if (this.link instanceof Link) {
                     ((Link) this.link).setLatencia(value);
                 } else {
-                    ((Internet) this.link).setLatencia(value);
+                    ((Internet) this.link).setLatency(value);
                 }
                 break;
             case LinkTable.LOAD_FACTOR:
                 if (this.link instanceof Link) {
                     ((Link) this.link).setTaxaOcupacao(value);
                 } else {
-                    ((Internet) this.link).setTaxaOcupacao(value);
+                    ((Internet) this.link).setLoadFactor(value);
                 }
                 break;
         }

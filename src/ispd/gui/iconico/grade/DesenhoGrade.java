@@ -484,8 +484,8 @@ public class DesenhoGrade extends DrawingArea {
         for (final Icon icon : this.vertices) {
             if (icon instanceof final Internet I) {
                 saida.append(String.format("INET %s %f %f %f\n",
-                        I.getId().getName(), I.getBanda(), I.getLatencia(),
-                        I.getTaxaOcupacao()));
+                        I.getId().getName(), I.getBandwidth(), I.getLatency(),
+                        I.getLoadFactor()));
             }
         }
         for (final Edge icon : this.edges) {
@@ -578,7 +578,7 @@ public class DesenhoGrade extends DrawingArea {
                         I.getX(), I.getY(),
                         I.getId().getLocalId(), I.getId().getGlobalId(),
                         I.getId().getName(),
-                        I.getBanda(), I.getTaxaOcupacao(), I.getLatencia());
+                        I.getBandwidth(), I.getLoadFactor(), I.getLatency());
             }
         }
         for (final Edge link : this.edges) {
