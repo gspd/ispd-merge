@@ -437,7 +437,7 @@ public class DesenhoGrade extends DrawingArea {
             for (final GridItem i : I.getNosEscalonaveis()) {
                 text.append("<br>").append(i.getId().getGlobalId());
             }
-            if (I.isMestre()) {
+            if (I.isMaster()) {
                 final List<GridItem> escravos = ((Machine) icon).getEscravos();
                 text.append("<br>").append(this.translate("Slave " +
                                                           "Nodes:"));
@@ -457,9 +457,9 @@ public class DesenhoGrade extends DrawingArea {
             if (icon instanceof final Machine I) {
                 saida.append(String.format("MAQ %s %f %f ",
                         I.getId().getName(), I.getPoderComputacional(),
-                        I.getTaxaOcupacao()));
-                if (((Machine) icon).isMestre()) {
-                    saida.append(String.format("MESTRE %s LMAQ".formatted(I.getAlgoritmo())));
+                        I.getLoadFactor()));
+                if (((Machine) icon).isMaster()) {
+                    saida.append(String.format("MESTRE %s LMAQ".formatted(I.getAlgorithm())));
                     final List<GridItem> lista =
                             ((Machine) icon).getEscravos();
                     for (final GridItem slv : lista) {
@@ -531,22 +531,22 @@ public class DesenhoGrade extends DrawingArea {
                     xml.addMachine(I.getX(), I.getY(),
                             I.getId().getLocalId(), I.getId().getGlobalId(),
                             I.getId().getName(),
-                            I.getPoderComputacional(), I.getTaxaOcupacao(),
-                            I.getAlgoritmo(), I.getProprietario(),
-                            I.getNucleosProcessador(), I.getMemoriaRAM(),
-                            I.getDiscoRigido(),
-                            I.isMestre(), slaves);
+                            I.getPoderComputacional(), I.getLoadFactor(),
+                            I.getAlgorithm(), I.getProprietario(),
+                            I.getProcessorCores(), I.getRamMemory(),
+                            I.getHardDisk(),
+                            I.isMaster(), slaves);
                 } else if (this.modelType == PickModelTypeDialog.IAAS) {
                     xml.addMachineIaaS(I.getX(), I.getY(),
                             I.getId().getLocalId(), I.getId().getGlobalId(),
                             I.getId().getName(),
-                            I.getPoderComputacional(), I.getTaxaOcupacao(),
-                            I.getVMMallocpolicy(), I.getAlgoritmo(),
-                            I.getProprietario(), I.getNucleosProcessador(),
-                            I.getMemoriaRAM(),
-                            I.getDiscoRigido(), I.getCostperprocessing(),
-                            I.getCostpermemory(), I.getCostperdisk(),
-                            I.isMestre(), slaves);
+                            I.getPoderComputacional(), I.getLoadFactor(),
+                            I.getVmmAllocationPolicy(), I.getAlgorithm(),
+                            I.getProprietario(), I.getProcessorCores(),
+                            I.getRamMemory(),
+                            I.getHardDisk(), I.getCostPerProcessing(),
+                            I.getCostPerMemory(), I.getCostPerDisk(),
+                            I.isMaster(), slaves);
                 }
             } else if (vertice instanceof Cluster) {
                 if (this.modelType == PickModelTypeDialog.GRID) {
@@ -800,7 +800,7 @@ public class DesenhoGrade extends DrawingArea {
     public List<String> getNosEscalonadores() {
         final List<String> machines = new ArrayList<>(0);
         for (final var icon : this.vertices) {
-            if (icon instanceof Machine m && m.isMestre()) {
+            if (icon instanceof Machine m && m.isMaster()) {
                 machines.add(m.getId().getName());
             }
             if (icon instanceof Cluster c && c.isMaster()) {
