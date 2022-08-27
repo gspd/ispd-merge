@@ -5,10 +5,21 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import java.io.PrintWriter;
+import java.text.MessageFormat;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
-class ExportHelper {
-    private final HashMap<? super Integer, ? super String> resources;
+class GridSimExporter {
+    private static final String ID_GLOBAL = "global";
+
+    // TODO: Map<String, String> to avoid ParseInts?
+    private final HashMap<Integer, String> resources
+            = new HashMap<>(0);
+
+    // TODO: Convert to ArrayList?
     private final NodeList users;
     private final NodeList machines;
     private final NodeList clusters;
@@ -16,8 +27,10 @@ class ExportHelper {
     private final NodeList links;
     private final NodeList loads;
 
-    ExportHelper(final Document model) {
-        this.resources = new HashMap<>(0);
+    private final PrintWriter out;
+
+    GridSimExporter(final Document model, final PrintWriter out) {
+        this.out = out;
         this.users = model.getElementsByTagName("owner");
         this.machines = model.getElementsByTagName("machine");
         this.clusters = model.getElementsByTagName("cluster");
@@ -26,19 +39,33 @@ class ExportHelper {
         this.loads = model.getElementsByTagName("load");
     }
 
-    void printCodeToFile(final PrintWriter pw) {
-        ExportHelper.printHeader(pw);
-
-        this.printMain(pw);
-        this.printCreateGridUser(pw);
-
-        ExportHelper.printCreateResource(pw);
-
-        this.printCreateGridlet(pw);
+    private static int globalId(final Element machine) {
+        return Integer.parseInt(((Element) machine.getElementsByTagName(
+                "icon_id").item(0)).getAttribute(GridSimExporter.ID_GLOBAL));
     }
 
-    private static void printHeader(final PrintWriter pw) {
-        pw.print("""
+    private static Iterable<Element> iter(final NodeList list) {
+        return () -> new NodeListIterator(list);
+    }
+
+    private static Stream<Element> asStream(final NodeList list) {
+        return IntStream.range(0, list.getLength()).mapToObj(list::item).map(Element.class::cast);
+    }
+
+    public void export() {
+        this.printHeader();
+
+        this.printMain();
+
+        this.printCreateGridUser();
+        this.printCreateResource();
+        this.printCreateGridlet();
+
+        this.printFooter();
+    }
+
+    private void printHeader() {
+        this.out.print("""
                     
                 import java.util.*;
                 import gridsim.*;
@@ -114,46 +141,54 @@ class ExportHelper {
                 """);
     }
 
-    private void printMain(final PrintWriter pw) {
-        pw.println(" \nclass Modelo{ \n\n  \tpublic static void main(String[]" +
-                " args) {\n");
-        pw.println("\t\ttry {");
-        pw.println("\t\t\tCalendar calendar = Calendar.getInstance(); " +
-                "\n\t\t\t boolean trace_flag = true;");
-        pw.println("\t\t\tString[] exclude_from_file = {\"\"}; \n\t\t\t " +
-                "String[] exclude_from_processing = {\"\"};");
-        pw.println("\t\t\tGridSim.init(" + this.users.getLength() + "," +
-                "calendar, true, exclude_from_file,exclude_from_processing, " +
-                "null);");
-        pw.println("\n\t\t\tFIFOScheduler resSched = new FIFOScheduler( \" " +
-                "GridResSched \");");
+    private void printMain() {
+        this.out.print(MessageFormat.format("""
+                                        
+                        class Modelo'{'
 
-        pw.print("""
-                            double baud_rate = 100.0;
-                            double delay =0.1;
-                            int MTU = 100;
+                          	public static void main(String[] args) '{'
+
+                        		try '{'
+                        			Calendar calendar = Calendar.getInstance();
+                        			 boolean trace_flag = true;
+                        			String[] exclude_from_file = '{'""'}';
+                        			 String[] exclude_from_processing = '{'""'}';
+                        			GridSim.init({0},calendar, true, exclude_from_file,exclude_from_processing, null);
+
+                        			FIFOScheduler resSched = new FIFOScheduler( " GridResSched ");
+                                    double baud_rate = 100.0;
+                                    double delay =0.1;
+                                    int MTU = 100;""",
+
+                this.users.getLength()));
+
+        this.printResources();
+
+        this.out.print(this.getLoadTraceString());
+
+        this.printMasters();
+
+        this.out.print("""
+
+                            ResourceUserList userList = createGridUser();
                 """);
 
-        this.printResources(pw);
+        this.printInternet();
+        this.printNonMasterConnection();
 
-        pw.print(this.getLoadTraceString());
+        this.out.print("""
 
-        this.printMasters(pw);
-
-        pw.println("\n\t\t\tResourceUserList userList = createGridUser();");
-
-        this.printInternet(pw);
-        this.printNonMasterConnection(pw);
-
-        pw.println("\n\t\t\tGridSim.startGridSimulation();");
-
-        pw.println("\t\t} \t\tcatch (Exception e){ ");
-        pw.println("\t\t\t  e.printStackTrace();\n \t\t\tSystem.out.println" +
-                "(\"Unwanted ERRORS happened\"); \n\t\t} \n\t} ");
+                            GridSim.startGridSimulation();
+                                } catch (Exception e){
+                              e.printStackTrace();
+                             System.out.println("Unwanted ERRORS happened");
+                        }
+                    }
+                """);
     }
 
-    private void printCreateGridUser(final PrintWriter pw) {
-        pw.print(String.format("""
+    private void printCreateGridUser() {
+        this.out.print(String.format("""
 
                     private static ResourceUserList createGridUser(){
                         ResourceUserList userList = new ResourceUserList();
@@ -165,8 +200,8 @@ class ExportHelper {
         );
     }
 
-    private static void printCreateResource(final PrintWriter pw) {
-        pw.print("""
+    private void printCreateResource() {
+        this.out.print("""
                     
                     private static GridResource createResource(String name, double baud_rate, double delay, int MTU, int n_maq, int cap){
                     
@@ -208,71 +243,100 @@ class ExportHelper {
                 """);
     }
 
-    private void printCreateGridlet(final PrintWriter pw) {
-        pw.println("\n\n\tprivate static GridletList createGridlet(){ " +
-                "\n\t\tdouble length; \n\t\tlong file_size;\n\t\tRandom " +
-                "random = new Random();");
-        pw.println("\n\t\tGridletList list = new GridletList();");
-        for (int i = 0; i < this.loads.getLength(); i++) {
-            final var sizes =
-                    ((Element) this.loads.item(i)).getElementsByTagName("size");
-            ExportHelper.processLoadValues(sizes, pw);
-        }
-        pw.println("\n\t} \n}");
+    private void printCreateGridlet() {
+        this.out.print("""
+
+
+                    private static GridletList createGridlet(){
+                        double length;
+                        long file_size;
+                        Random random = new Random();
+
+                        GridletList list = new GridletList();
+                """);
+
+        // TODO: More abstractions in accessing NodeList items
+        // Maybe stream API, and map functions to access attributes easily
+        GridSimExporter.iter(this.loads)
+                .forEach(e -> this.processLoadValues(
+                        e.getElementsByTagName("size")));
+
+        this.out.print("""
+
+                        return list;
+                """);
     }
 
-    private void printResources(final PrintWriter pw) {
-        this.printMachines(pw);
-        this.printClusters(pw);
+    private void printFooter() {
+        this.out.print("""
+
+                    }
+                }
+                """);
+    }
+
+    private void printResources() {
+        this.printMachines();
+        this.printClusters();
     }
 
     private String getLoadTraceString() {
-        if (0 == this.loads.getLength())
+        if (this.loads.getLength() == 0)
             return "";
 
         final var trace =
                 ((Element) this.loads.item(0)).getElementsByTagName("trace");
 
-        if (0 == trace.getLength())
+        if (trace.getLength() == 0)
             return """
                         
                                 GridletList list = createGridlet();
                         
                     """;
 
-        return String.format("""
-                    
-                             String[] fileName = {
-                                %s
-                    
-                            }
-                    
+        return MessageFormat.format("""
+
+                             String[] fileName = '{'
+                                {0}
+
+                            '}'
+
                              ArrayList load = new ArrayList();
-                             for (i = 0; i < fileName.length; i++){
+                             for (i = 0; i < fileName.length; i++)'{'
                                 Workload w = new Workload("Load_"+i, fileName[i], resList[], rating);
                                 load.add(w);
-                            }
+                            '}'
                 """, ((Element) trace.item(0)).getAttribute("file_path"));
     }
 
-    private void printMasters(final PrintWriter pw) {
-        pw.println("\n\t\t\tLink link = new SimpleLink(\"link_\", 100, 0.01, " +
-                "1500 );");
+    private void printMasters() {
+        this.out.printf("""
+
+                Link link = new SimpleLink("link_", 100, 0.01, 1500 );
+                """);
+
         for (int i = 0; i < this.machines.getLength(); i++)
-            this.printMaster((Element) this.machines.item(i), i, pw);
+            this.printMaster((Element) this.machines.item(i), i);
     }
 
-    private void printInternet(final PrintWriter pw) {
-        for (int i = 0; i < this.internet.getLength(); i++) {
-            final var net = (Element) this.internet.item(i);
-            this.resources.put(Integer.parseInt(((Element) net.getElementsByTagName("icon_id").item(0)).getAttribute("global")), net.getAttribute("id"));
-            pw.println("\t\t\tRouter r_" + net.getAttribute("id") + " = new " +
-                    "RIPRouter(" + net.getAttribute("id") + ",trace_flag);");
-        }
+    private void printInternet() {
+        GridSimExporter.asStream(this.internet)
+                .forEach(net -> {
+                    final var id = net.getAttribute("id");
+
+                    this.resources.put(
+                            GridSimExporter.globalId(net),
+                            id
+                    );
+
+                    this.out.print("""
+                            Router r_%s = new RIPRouter(%s, trace_flag);
+                            """.formatted(id, id));
+                });
     }
 
-    private void printNonMasterConnection(final PrintWriter pw) {
-        pw.print("""
+    private void printNonMasterConnection() {
+        this.out.print("""
                     
                 \t\t\tFIFOScheduler rSched = new FIFOScheduler("r_Sched");
                 """);
@@ -284,7 +348,7 @@ class ExportHelper {
                     (Element) link.getElementsByTagName("connect").item(0);
             Integer.parseInt(connect.getAttribute("origination"));
             Integer.parseInt(connect.getAttribute("destination"));
-            pw.print(String.format("""
+            this.out.print(String.format("""
                                 
                                         Link %s = new SimpleLink("link_%d", %s*1000, %s*1000,1500  );
                             """,
@@ -307,8 +371,7 @@ class ExportHelper {
         return sb.toString();
     }
 
-    private static void processLoadValues(final NodeList sizes,
-                                          final PrintWriter pw) {
+    private void processLoadValues(final NodeList sizes) {
         double minComputation = 0;
         double maxComputation = 0;
         double computationValue = 0;
@@ -332,6 +395,7 @@ class ExportHelper {
                 maxcp = (maxComputation - computationValue) / computationValue;
                 maxcp = Math.min(1.0, maxcp);
             } else if ("communication".equals(size.getAttribute("type"))) {
+                // TODO: Bug?
                 Double.parseDouble(size.getAttribute("minimum"));
                 Double.parseDouble(size.getAttribute("maximum"));
                 communicationValue = Double.parseDouble(size.getAttribute(
@@ -341,69 +405,122 @@ class ExportHelper {
                 maxcm = (maxComputation - communicationValue) / communicationValue;
                 maxcp = Math.min(1.0, maxcm);
             }
-            pw.println("\t\tlength = GridSimRandom.real(" + computationValue + "," + mincp + "," + maxcp + ",random.nextDouble());");
-            pw.println("\t\tfile_size = (long) GridSimRandom.real(" + communicationValue + "," + mincm + "," + maxcm + ",random.nextDouble());");
-            pw.println("\t\tGridlet gridlet" + k + " = new Gridlet(" + k + "," +
-                    " length, file_size,file_size);");
-            pw.println("\t\tlist.add(gridlet" + k + ");");
-            pw.println("\n\t\tgridlet" + k + ".setUserID(0);");
+
+            this.out.print(MessageFormat.format("""
+                                    length = GridSimRandom.real({0},{1},{2},random.nextDouble());
+                                    file_size = (long) GridSimRandom.real({3},{4},{5},random.nextDouble());
+                                    Gridlet gridlet{6} = new Gridlet({6}, length, file_size,file_size);
+                                    list.add(gridlet{6});
+
+                                    gridlet{6}.setUserID(0);
+                            """,
+                    computationValue, mincp, maxcp,
+                    communicationValue, mincm, maxcm,
+                    k
+            ));
         }
-        pw.println("\n\t\treturn list;");
     }
 
-    private void printMachines(final PrintWriter pw) {
+    private void printMachines() {
         for (int i = 0; i < this.machines.getLength(); i++) {
             final var machine = (Element) this.machines.item(i);
-            if (0 == machine.getElementsByTagName("master").getLength())
-                this.printResource(machine, i, 1, pw);
+            if (machine.getElementsByTagName("master").getLength() == 0)
+                this.printResource(machine, i, 1);
         }
     }
 
-    private void printClusters(final PrintWriter pw) {
+    private void printClusters() {
         for (int j = 0, i = this.machines.getLength(); i < this.machines.getLength() + this.clusters.getLength(); i++, j++) {
             final var cluster = (Element) this.clusters.item(j);
             final int nodes = Integer.parseInt(cluster.getAttribute("nodes"));
-            this.printResource(cluster, i, nodes, pw);
+            this.printResource(cluster, i, nodes);
         }
     }
 
-    private void printMaster(final Element machine, final int id,
-                             final PrintWriter pw) {
-        if (1 != machine.getElementsByTagName("master").getLength())
+    private void printMaster(final Element machine, final int id) {
+        if (machine.getElementsByTagName("master").getLength() != 1)
             return;
 
-        this.resources.put(Integer.parseInt(((Element) machine.getElementsByTagName("icon_id").item(0)).getAttribute("global")), machine.getAttribute("id"));
+        this.resources.put(
+                GridSimExporter.globalId(machine),
+                machine.getAttribute("id")
+        );
 
         final var slaves =
                 ((Element) machine.getElementsByTagName("master").item(0)).getElementsByTagName("slave");
-        pw.println("\n\t\t\tArrayList esc" + id + " = new ArrayList();");
+
+        this.out.print(MessageFormat.format("""
+
+                            ArrayList esc{0} = new ArrayList();
+                """, id));
 
         for (int i = 0; i < slaves.getLength(); i++)
-            pw.println("\t\t\tesc" + id + ".add(" + this.resources.get(Integer.parseInt(((Element) slaves.item(i)).getAttribute("id"))) + ");");
+            this.out.printf("\t\t\tesc%d.add(%s);\n", id,
+                    this.resources.get(Integer.parseInt(((Element) slaves.item(i)).getAttribute("id"))));
 
-        pw.println("\n\t\t\tMestre " + machine.getAttribute("id") + " = new " +
-                "Mestre(\"" + machine.getAttribute("id") + "_\", link, list, " +
-                "esc" + id + ", " + slaves.getLength() + ");");
-        pw.println("\t\t\tRouter r_" + machine.getAttribute("id") + " = new " +
-                "RIPRouter( \"router_" + id + "\", trace_flag);");
-        pw.println("\t\t\tr_" + machine.getAttribute("id") + ".attachHost( " + machine.getAttribute("id") + ", resSched); ");
+        this.out.print(MessageFormat.format("""
+
+                                    Mestre {0} = new Mestre("{0}_", link, list, esc{1}, {2});
+                                    Router r_{0} = new RIPRouter( "router_{2}", trace_flag);
+                                    r_{0}.attachHost( {0}, resSched);
+                        """,
+                machine.getAttribute("id"),
+                id,
+                slaves.getLength()
+        ));
 
         for (int i = 0; i < slaves.getLength(); i++)
-            pw.println("\n\t\t\tr_" + machine.getAttribute("id") +
-                    ".attachHost( " + this.resources.get(Integer.parseInt(((Element) slaves.item(i)).getAttribute("id"))) + ", resSched); ");
+            this.out.println("\n\t\t\tr_" + machine.getAttribute("id") +
+                             ".attachHost( " + this.resources.get(Integer.parseInt(((Element) slaves.item(i)).getAttribute("id"))) + ", resSched); ");
     }
 
-    private void printResource(
-            final Element machine,
-            final int index,
-            final int nodes,
-            final PrintWriter pw) {
-        this.resources.put(Integer.parseInt(((Element) machine.getElementsByTagName("icon_id").item(0)).getAttribute("global")), machine.getAttribute("id"));
+    private void printResource(final Element machine,
+                               final int index,
+                               final int nodes) {
+        this.resources.put(
+                GridSimExporter.globalId(machine),
+                machine.getAttribute("id")
+        );
 
-        pw.println(("\n\t\t\tGridResource %s = createResource(\"%s_\",  " +
-                "baud_rate,  delay,  MTU, %d, (int)%s);").formatted(machine.getAttribute("id"), machine.getAttribute("id"), nodes, machine.getAttribute("power")));
-        pw.println("\t\t\tRouter r_" + machine.getAttribute("id") + " = new " +
-                "RIPRouter( \"router_" + index + "\", trace_flag);");
-        pw.println("\t\t\tr_" + machine.getAttribute("id") + ".attachHost( " + machine.getAttribute("id") + ", resSched); ");
+        this.out.print(MessageFormat.format("""
+
+                                    GridResource {0} = createResource("{0}_",  baud_rate,  delay,  MTU, {1}, (int){2});
+                                    Router r_{0} = new RIPRouter( "router_{3}", trace_flag);
+                                    r_{0}.attachHost( {0}, resSched);
+                        """,
+                machine.getAttribute("id"),
+                nodes,
+                machine.getAttribute("power"),
+                index
+        ));
+    }
+
+    // TODO: Use this iterator in more places, if applicable
+    private static class NodeListIterator implements Iterator<Element> {
+
+        private final NodeList list;
+        private int index;
+
+        private NodeListIterator(final NodeList list) {
+            this.list = list;
+            this.index = 0;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return this.index < this.list.getLength();
+        }
+
+        @Override
+        public Element next() {
+            if (!this.hasNext())
+                throw new NoSuchElementException("No more elements in list");
+
+            final var elem = (Element) this.list.item(this.index);
+
+            this.index++;
+
+            return elem;
+        }
     }
 }
