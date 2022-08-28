@@ -1,232 +1,251 @@
-/* ==========================================================
- * iSPD : iconic Simulator of Parallel and Distributed System
- * ==========================================================
- *
- * (C) Copyright 2010-2014, by Grupo de pesquisas em Sistemas Paralelos e Distribuídos da Unesp (GSPD).
- *
- * Project Info:  http://gspd.dcce.ibilce.unesp.br/
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
- *
- * [Oracle and Java are registered trademarks of Oracle and/or its affiliates. 
- * Other names may be trademarks of their respective owners.]
- *
- * ---------------
- * ConfiguracaoISPD.java
- * ---------------
- * (C) Copyright 2014, by Grupo de pesquisas em Sistemas Paralelos e Distribuídos da Unesp (GSPD).
- *
- * Original Author:  Denison Menezes (for GSPD);
- * Contributor(s):   -;
- *
- * Changes
- * -------
- * 
- * 14-Out-2014 : Version 2.0.1;
- *
- */
 package ispd.arquivo.xml;
 
 import ispd.escalonador.Carregar;
-import java.io.File;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.File;
+import java.io.IOException;
+import java.util.Objects;
+import java.util.function.Function;
+
+// TODO: Generalize attribute read/write (perhaps with proxy objects)
+// TODO: File name and path should be configurable as well
 
 /**
- * Classe que controla arquivo de configuração do iSPD
- *
- * @author denison
+ * Responsible for maintaining the software's configuration file
  */
 public class ConfiguracaoISPD {
-
+    // TODO: ENUM; also, why byte?
     public static final byte DEFAULT = 0;
     public static final byte OPTIMISTIC = 1;
     public static final byte GRAPHICAL = 2;
-    public static final String FILENAME = "configuration.xml";
-    private File configurationFile;
-    private byte simulationMode;
-    private Integer numberOfThreads;
-    private Integer numberOfSimulations;
-    private Boolean createProcessingChart;
-    private Boolean createCommunicationChart;
-    private Boolean createUserThroughTimeChart;
-    private Boolean createMachineThroughTimeChart;
-    private Boolean createTaskThroughTimeChart;
-    private File lastFile;
+    private static final String FILENAME = "configuration.xml";
+    private final File configurationFile = new File(
+            Carregar.DIRETORIO_ISPD,
+            ConfiguracaoISPD.FILENAME
+    );
+    private byte simulationMode = ConfiguracaoISPD.DEFAULT;
+    private Integer threadCount = 1;
+    private Integer simulationCount = 1;
+    private Boolean shouldChartProc = true;
+    private Boolean shouldChartComms = true;
+    private Boolean shouldChartUserTime = true;
+    private Boolean shouldChartMachineTime = false;
+    private Boolean shouldChartTaskTime = false;
+    private File lastModelOpen = Carregar.DIRETORIO_ISPD;
 
     /**
-     * Busca se arquivo de configuração existe e carrega valores salvos
+     * If the configuration file exists, reads configuration from it.
+     * Otherwise, 'default' values are used
      */
     public ConfiguracaoISPD() {
-        configurationFile = new File(Carregar.DIRETORIO_ISPD, FILENAME);
         try {
-            Document doc = ManipuladorXML.ler(configurationFile, "configurationFile.dtd");
-            load(doc);
-        } catch (Exception ex) {
-            //carrega valores padrão
-            simulationMode = DEFAULT;
-            lastFile = Carregar.DIRETORIO_ISPD;
-            numberOfThreads = 1;
-            numberOfSimulations = 1;
-            createProcessingChart = true;
-            createCommunicationChart = true;
-            createUserThroughTimeChart = true;
-            createMachineThroughTimeChart = false;
-            createTaskThroughTimeChart = false;
+            final var doc = ManipuladorXML.ler(
+                    this.configurationFile,
+                    "configurationFile.dtd"
+            );
+
+            this.readConfigFromDoc(doc);
+        } catch (final IOException |
+                       ParserConfigurationException |
+                       SAXException ignored) {
         }
     }
 
+    private void readConfigFromDoc(final Document doc) {
+        final var ispd =
+                (Element) doc.getElementsByTagName("ispd").item(0);
+
+        this.readGeneralConfig(ispd);
+        this.readChartCreationConfig(ispd);
+        this.readLastOpenModelConfig(ispd);
+    }
+
+    private void readGeneralConfig(final Element ispd) {
+        this.simulationMode = switch (ispd.getAttribute("simulation_mode")) {
+            case "default" -> ConfiguracaoISPD.DEFAULT;
+            case "optimistic" -> ConfiguracaoISPD.OPTIMISTIC;
+            default -> ConfiguracaoISPD.GRAPHICAL;
+        };
+
+        this.threadCount = ConfiguracaoISPD.parseAttr(
+                ispd, "number_threads", Integer::valueOf);
+        this.simulationCount = ConfiguracaoISPD.parseAttr(
+                ispd, "number_simulations", Integer::valueOf);
+    }
+
+    private void readChartCreationConfig(final Element ispd) {
+        final var chart =
+                (Element) ispd.getElementsByTagName("chart_create").item(0);
+
+        this.shouldChartProc = ConfiguracaoISPD.parseAttr(
+                chart, "processing", Boolean::valueOf);
+        this.shouldChartComms = ConfiguracaoISPD.parseAttr(
+                chart, "communication", Boolean::valueOf);
+        this.shouldChartUserTime = ConfiguracaoISPD.parseAttr(
+                chart, "user_time", Boolean::valueOf);
+        this.shouldChartMachineTime = ConfiguracaoISPD.parseAttr(
+                chart, "machine_time", Boolean::valueOf);
+        this.shouldChartTaskTime = ConfiguracaoISPD.parseAttr(
+                chart, "task_time", Boolean::valueOf);
+    }
+
+    private void readLastOpenModelConfig(final Element ispd) {
+        final var files =
+                (Element) ispd.getElementsByTagName("model_open").item(0);
+
+        final var lastFile = files.getAttribute("last_file");
+        if (!lastFile.isEmpty()) {
+            this.lastModelOpen = new File(lastFile);
+        }
+    }
+
+    private static <T> T parseAttr(final Element elem,
+                                   final String attr,
+                                   final Function<? super String, T> cast) {
+        return cast.apply(elem.getAttribute(attr));
+    }
+
     /**
-     * Retorna o tipo de simulação que será utilizada
-     *
-     * @return pode indicar:
-     * [DEFAULT] [OPTIMISTIC] [GRAPHICAL]
-     * 
+     * Returns which simulation mode is being used<br>
+     * {@literal 0}: <b>Default</b> simulation mode<br>
+     * {@literal 1}: <b>Optimisitc</b><br>
+     * {@literal 2}: <b>Graphical</b>
      */
     public int getSimulationMode() {
-        return simulationMode;
+        return this.simulationMode;
     }
 
-    private void load(Document doc) {
-        Element ispd = (Element) doc.getElementsByTagName("ispd").item(0);
-        Element chart = (Element) ispd.getElementsByTagName("chart_create").item(0);
-        Element files = (Element) ispd.getElementsByTagName("model_open").item(0);
-        ispd.getAttribute("simulation_mode");
-        String modo = ispd.getAttribute("simulation_mode");
-        if ("default".equals(modo)) {
-            simulationMode = DEFAULT;
-        } else if ("optimistic".equals(modo)) {
-            simulationMode = OPTIMISTIC;
-        } else {
-            simulationMode = GRAPHICAL;
-        }
-        numberOfThreads = Integer.valueOf(ispd.getAttribute("number_threads"));
-        numberOfSimulations = Integer.valueOf(ispd.getAttribute("number_simulations"));
-        createProcessingChart = Boolean.valueOf(chart.getAttribute("processing"));
-        createCommunicationChart = Boolean.valueOf(chart.getAttribute("communication"));
-        createUserThroughTimeChart = Boolean.valueOf(chart.getAttribute("user_time"));
-        createMachineThroughTimeChart = Boolean.valueOf(chart.getAttribute("machine_time"));
-        createTaskThroughTimeChart = Boolean.valueOf(chart.getAttribute("task_time"));
-        String endereco = files.getAttribute("last_file");
-        if (endereco != null && !"".equals(endereco)) {
-            lastFile = new File(endereco);
-        }
-    }
-
-    /**
-     * Salva modificações nas configurações do iSPD
-     */
-    public void save() {
-        Document doc = ManipuladorXML.novoDocumento();
-        Element ispd = doc.createElement("ispd");
-        switch (simulationMode) {
-            case DEFAULT:
-                ispd.setAttribute("simulation_mode", "default");
-                break;
-            case OPTIMISTIC:
-                ispd.setAttribute("simulation_mode", "optimistic");
-                break;
-            case GRAPHICAL:
-                ispd.setAttribute("simulation_mode", "graphical");
-                break;
-        }
-        ispd.setAttribute("number_simulations", numberOfSimulations.toString());
-        ispd.setAttribute("number_threads", numberOfThreads.toString());
-        Element chart = doc.createElement("chart_create");
-        chart.setAttribute("processing", createProcessingChart.toString());
-        chart.setAttribute("communication", createCommunicationChart.toString());
-        chart.setAttribute("user_time", createUserThroughTimeChart.toString());
-        chart.setAttribute("machine_time", createMachineThroughTimeChart.toString());
-        chart.setAttribute("task_time", createTaskThroughTimeChart.toString());
-        ispd.appendChild(chart);
-        Element files = doc.createElement("model_open");
-        if (lastFile != null) {
-            files.setAttribute("last_file", lastFile.getAbsolutePath());
-        }
-        ispd.appendChild(files);
-        doc.appendChild(ispd);
-        ManipuladorXML.escrever(doc, configurationFile, "configurationFile.dtd", false);
-    }
-
-    public Integer getNumberOfThreads() {
-        return numberOfThreads;
-    }
-
-    public void setNumberOfThreads(Integer numberOfThreads) {
-        this.numberOfThreads = numberOfThreads;
-    }
-
-    public Integer getNumberOfSimulations() {
-        return numberOfSimulations;
-    }
-
-    public void setNumberOfSimulations(Integer numberOfSimulations) {
-        this.numberOfSimulations = numberOfSimulations;
-    }
-
-    public Boolean getCreateProcessingChart() {
-        return createProcessingChart;
-    }
-
-    public void setCreateProcessingChart(Boolean createProcessingPieChart) {
-        this.createProcessingChart = createProcessingPieChart;
-    }
-
-    public Boolean getCreateCommunicationChart() {
-        return createCommunicationChart;
-    }
-
-    public void setCreateCommunicationChart(Boolean createCommunicationPieChart) {
-        this.createCommunicationChart = createCommunicationPieChart;
-    }
-
-    public Boolean getCreateUserThroughTimeChart() {
-        return createUserThroughTimeChart;
-    }
-
-    public void setCreateUserThroughTimeChart(Boolean createUserThroughTimeChart) {
-        this.createUserThroughTimeChart = createUserThroughTimeChart;
-    }
-
-    public Boolean getCreateMachineThroughTimeChart() {
-        return createMachineThroughTimeChart;
-    }
-
-    public void setCreateMachineThroughTimeChart(Boolean createMachineThroughTimeChart) {
-        this.createMachineThroughTimeChart = createMachineThroughTimeChart;
-    }
-
-    public Boolean getCreateTaskThroughTimeChart() {
-        return createTaskThroughTimeChart;
-    }
-
-    public void setCreateTaskThroughTimeChart(Boolean createTaskThroughTimeChart) {
-        this.createTaskThroughTimeChart = createTaskThroughTimeChart;
-    }
-
-    public void setSimulationMode(byte simulationMode) {
+    public void setSimulationMode(final byte simulationMode) {
         this.simulationMode = simulationMode;
     }
 
-    public File getLastFile() {
-        return lastFile;
+    /**
+     * Saves current configurations to the file
+     */
+    public void saveCurrentConfig() {
+        final var doc = Objects.requireNonNull(ManipuladorXML.novoDocumento());
+
+        final var ispd = this.saveGeneralConfig(doc);
+        ispd.appendChild(this.saveChartConfig(doc));
+        ispd.appendChild(this.saveLastOpenModelConfig(doc));
+
+        doc.appendChild(ispd);
+
+        ManipuladorXML.escrever(doc,
+                this.configurationFile,
+                "configurationFile.dtd",
+                false
+        );
     }
 
-    public void setLastFile(File lastDir) {
-        if (lastDir != null) {
-            this.lastFile = lastDir;
+    private Element saveGeneralConfig(final Document doc) {
+        final var ispd = doc.createElement("ispd");
+
+        ispd.setAttribute("simulation_mode", switch (this.simulationMode) {
+            case ConfiguracaoISPD.DEFAULT -> "default";
+            case ConfiguracaoISPD.OPTIMISTIC -> "optimistic";
+            case ConfiguracaoISPD.GRAPHICAL -> "graphical";
+            default -> throw new RuntimeException("Invalid Simulation Mode");
+        });
+
+        ispd.setAttribute(
+                "number_simulations", this.simulationCount.toString());
+        ispd.setAttribute(
+                "number_threads", this.threadCount.toString());
+
+        return ispd;
+    }
+
+    private Element saveChartConfig(final Document doc) {
+        final var c = doc.createElement("chart_create");
+        c.setAttribute("processing", this.shouldChartProc.toString());
+        c.setAttribute("communication", this.shouldChartComms.toString());
+        c.setAttribute("user_time", this.shouldChartUserTime.toString());
+        c.setAttribute("machine_time", this.shouldChartMachineTime.toString());
+        c.setAttribute("task_time", this.shouldChartTaskTime.toString());
+        return c;
+    }
+
+    private Element saveLastOpenModelConfig(final Document doc) {
+        final var files = doc.createElement("model_open");
+
+        if (this.lastModelOpen != null) {
+            files.setAttribute(
+                    "last_file", this.lastModelOpen.getAbsolutePath());
         }
+
+        return files;
+    }
+
+    public Integer getNumberOfThreads() {
+        return this.threadCount;
+    }
+
+    public void setNumberOfThreads(final Integer numberOfThreads) {
+        this.threadCount = numberOfThreads;
+    }
+
+    public Integer getNumberOfSimulations() {
+        return this.simulationCount;
+    }
+
+    public void setNumberOfSimulations(final Integer numberOfSimulations) {
+        this.simulationCount = numberOfSimulations;
+    }
+
+    public Boolean getCreateProcessingChart() {
+        return this.shouldChartProc;
+    }
+
+    public void setCreateProcessingChart(final Boolean b) {
+        this.shouldChartProc = b;
+    }
+
+    public Boolean getCreateCommunicationChart() {
+        return this.shouldChartComms;
+    }
+
+    public void setCreateCommunicationChart(final Boolean b) {
+        this.shouldChartComms = b;
+    }
+
+    public Boolean getCreateUserThroughTimeChart() {
+        return this.shouldChartUserTime;
+    }
+
+    public void setCreateUserThroughTimeChart(final Boolean b) {
+        this.shouldChartUserTime = b;
+    }
+
+    public Boolean getCreateMachineThroughTimeChart() {
+        return this.shouldChartMachineTime;
+    }
+
+    public void setCreateMachineThroughTimeChart(final Boolean b) {
+        this.shouldChartMachineTime = b;
+    }
+
+    public Boolean getCreateTaskThroughTimeChart() {
+        return this.shouldChartTaskTime;
+    }
+
+    public void setCreateTaskThroughTimeChart(final Boolean b) {
+        this.shouldChartTaskTime = b;
+    }
+
+    public File getLastFile() {
+        return this.lastModelOpen;
+    }
+
+    public void setLastFile(final File lastDir) {
+        if (lastDir == null) {
+            return;
+        }
+
+        this.lastModelOpen = lastDir;
     }
 }
