@@ -385,7 +385,7 @@ public class Alocadores implements ManipularArquivosAlloc {
         }
 
         final var nome = arquivo.getName()
-                .substring(0, arquivo.getName().length() - 5);
+                .substring(0, arquivo.getName().length() - ".java".length());
 
         if (!new File(Alocadores.DIRECTORY, nome + ".class").exists()) {
             return false;
