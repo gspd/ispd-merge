@@ -248,7 +248,7 @@ public class Escalonadores implements ManipularArquivos {
 
         // Check if compilation worked, looking for a .class file
         if (new File(Escalonadores.DIRECTORY, nome + ".class").exists()) {
-            this.insertPolicy(nome);
+            this.addPolicy(nome);
         }
 
         return err.isEmpty() ? null : err;
@@ -276,7 +276,7 @@ public class Escalonadores implements ManipularArquivos {
     /**
      * recebe nome do escalonar e adiciona ele na lista de escalonadores
      */
-    private void insertPolicy(final String policyName) {
+    private void addPolicy(final String policyName) {
         if (this.policies.contains(policyName)) {
             return;
         }
@@ -385,7 +385,7 @@ public class Escalonadores implements ManipularArquivos {
             return false;
         }
 
-        this.insertPolicy(nome);
+        this.addPolicy(nome);
 
         return true;
     }

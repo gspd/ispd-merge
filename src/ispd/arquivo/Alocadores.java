@@ -106,7 +106,7 @@ public class Alocadores implements ManipularArquivosAlloc {
     /**
      * Extracts given dir from jar file given by file.
      *
-     * @param dir Directory name to be extracted
+     * @param dir  Directory name to be extracted
      * @param file Jar file from which to extracted the directory
      */
     private static void extractDirFromJar(final String dir, final File file) throws IOException {
@@ -251,7 +251,7 @@ public class Alocadores implements ManipularArquivosAlloc {
 
         // Check if compilation worked, looking for a .class file
         if (new File(Alocadores.DIRECTORY, nome + ".class").exists()) {
-            this.insertPolicy(nome);
+            this.addPolicy(nome);
         }
 
         return err.isEmpty() ? null : err;
@@ -279,13 +279,13 @@ public class Alocadores implements ManipularArquivosAlloc {
     /**
      * Adds policy to the inner list of policies
      */
-    private void insertPolicy(final String policy) {
-        if (this.policies.contains(policy)) {
+    private void addPolicy(final String policyName) {
+        if (this.policies.contains(policyName)) {
             return;
         }
 
-        this.policies.add(policy);
-        this.addedPolicies.add(policy);
+        this.policies.add(policyName);
+        this.addedPolicies.add(policyName);
     }
 
     private static String compileManually(final File target) throws IOException {
@@ -354,13 +354,13 @@ public class Alocadores implements ManipularArquivosAlloc {
         return deleted;
     }
 
-    private void removePolicy(final String policy) {
-        if (!this.policies.contains(policy)) {
+    private void removePolicy(final String policyName) {
+        if (!this.policies.contains(policyName)) {
             return;
         }
 
-        this.policies.remove(policy);
-        this.removedPolicies.add(policy);
+        this.policies.remove(policyName);
+        this.removedPolicies.add(policyName);
     }
 
     /**
@@ -391,7 +391,7 @@ public class Alocadores implements ManipularArquivosAlloc {
             return false;
         }
 
-        this.insertPolicy(nome);
+        this.addPolicy(nome);
 
         return true;
     }
