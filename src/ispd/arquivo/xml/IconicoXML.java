@@ -1051,6 +1051,15 @@ public class IconicoXML {
         return machine;
     }
 
+    private static CS_Link linkFromElement(final Element elem) {
+        return new CS_Link(
+                elem.getAttribute("id"),
+                IconicoXML.getValueAttribute(elem, "bandwidth"),
+                IconicoXML.getValueAttribute(elem, "load"),
+                IconicoXML.getValueAttribute(elem, "latency")
+        );
+    }
+
     public void addUsers(final Collection<String> users,
                          final Map<String, Double> limits) {
         // TODO: Iterate over the HashMap instead?
@@ -1576,30 +1585,10 @@ public class IconicoXML {
         }
 
         private void readLinksAndConnectResources() {
-            //cria os links e realiza a conexão entre os recursos
-            for (int i = 0; i < this.docLinks.getLength(); i++) {
-                final Element link = (Element) this.docLinks.item(i);
-
-                final CS_Link cslink = new CS_Link(
-                        link.getAttribute("id"),
-                        IconicoXML.getValueAttribute(link,
-                                "bandwidth"),
-                        IconicoXML.getValueAttribute(link, "load"),
-                        IconicoXML.getValueAttribute(link, "latency"));
-                this.links.add(cslink);
-
-                //adiciona entrada e saida desta conexão
-                final Element connect =
-                        IconicoXML.getTagElement(link, "connect");
-                final Vertice origem =
-                        (Vertice) this.serviceCenters.get(Integer.parseInt(connect.getAttribute("origination")));
-                final Vertice destino =
-                        (Vertice) this.serviceCenters.get(Integer.parseInt(connect.getAttribute("destination")));
-                cslink.setConexoesSaida((CentroServico) destino);
-                destino.addConexoesEntrada(cslink);
-                cslink.setConexoesEntrada((CentroServico) origem);
-                origem.addConexoesSaida(cslink);
-            }
+            IntStream.range(0, this.docLinks.getLength())
+                    .mapToObj(this.docLinks::item)
+                    .map(Element.class::cast)
+                    .forEach(this::processLinkElement);
         }
 
         private void addSlavesToMasters() {
@@ -1642,7 +1631,8 @@ public class IconicoXML {
 
             this.serviceCenters.put(
                     IconicoXML.getIconGlobalId(machineElement),
-                    machine);
+                    machine
+            );
 
             if (isMaster) {
                 this.masters.add(machine);
@@ -1721,6 +1711,17 @@ public class IconicoXML {
             }
         }
 
+        private void processLinkElement(final Element elem) {
+            final var link = IconicoXML.linkFromElement(elem);
+
+            this.links.add(link);
+
+            QueueNetworkBuilder.connectLinkAndVertices(link,
+                    this.getElementVertex(elem, "origination"),
+                    this.getElementVertex(elem, "destination")
+            );
+        }
+
         private void addSlavesToMachine(final Element machine) {
             final var master = (CS_Mestre) this.serviceCenters.get(
                     IconicoXML.getIconGlobalId(machine)
@@ -1741,6 +1742,20 @@ public class IconicoXML {
         private void addPowerToUser(final String user, final double value) {
             final var oldValue = this.users.get(user);
             this.users.put(user, oldValue + value);
+        }
+
+        private static void connectLinkAndVertices(final CS_Link link,
+                                                   final Vertice origination,
+                                                   final Vertice destination) {
+            link.setConexoesEntrada((CentroServico) origination);
+            link.setConexoesSaida((CentroServico) destination);
+            origination.addConexoesSaida(link);
+            destination.addConexoesEntrada(link);
+        }
+
+        private Vertice getElementVertex(final Element elem,
+                                         final String vertexEnd) {
+            return (Vertice) this.serviceCenters.get(IconicoXML.getIntValueAttribute(IconicoXML.getTagElement(elem, "connect"), vertexEnd));
         }
 
         private void processServiceCenter(
