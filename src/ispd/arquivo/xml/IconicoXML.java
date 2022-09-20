@@ -52,9 +52,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * Realiza manupulações com o arquivo xml do modelo icônico
@@ -1039,7 +1041,7 @@ public class IconicoXML {
 
     private static CS_Maquina machineFromElement(final Element cluster,
                                                  final int id) {
-        final var machine = new CS_Maquina(
+        return new CS_Maquina(
                 cluster.getAttribute("id"),
                 cluster.getAttribute("owner"),
                 IconicoXML.getValueAttribute(cluster, "power"),
@@ -1048,7 +1050,6 @@ public class IconicoXML {
                 id + 1,
                 IconicoXML.getValueAttribute(cluster, "energy")
         );
-        return machine;
     }
 
     private static CS_Link linkFromElement(final Element elem) {
@@ -1518,14 +1519,18 @@ public class IconicoXML {
         }
 
         private RedeDeFilas build() {
-            this.readUserPowerLimits();
+            // TODO: Could these be move to constructor?
+            QueueNetworkBuilder.forEachElement(
+                    this.docOwners, this::setUserPowerLimit);
+            QueueNetworkBuilder.forEachElement(
+                    this.docMachines, this::processMachineElement);
+            QueueNetworkBuilder.forEachElement(
+                    this.docClusters, this::processClusterElement);
+            QueueNetworkBuilder.forEachElement(
+                    this.docInternets, this::processInternetElement);
+            QueueNetworkBuilder.forEachElement(
+                    this.docLinks, this::processLinkElement);
 
-            this.readMachineIcons();
-
-            this.readClusterIcons();
-
-            this.readInternetIcons();
-            this.readLinksAndConnectResources();
             this.addSlavesToMasters();
 
             this.users.forEach((user, power) -> {
@@ -1546,68 +1551,9 @@ public class IconicoXML {
             return queueNetwork;
         }
 
-        private void readUserPowerLimits() {
-            IntStream.range(0, this.docOwners.getLength())
-                    .mapToObj(this.docOwners::item)
-                    .map(Element.class::cast)
-                    .forEach(this::setUserPowerLimit);
-        }
-
-        private void readMachineIcons() {
-            IntStream.range(0, this.docMachines.getLength())
-                    .mapToObj(this.docMachines::item)
-                    .map(Element.class::cast)
-                    .forEach(this::processMachineElement);
-        }
-
-        private void readClusterIcons() {
-            IntStream.range(0, this.docClusters.getLength())
-                    .mapToObj(this.docClusters::item)
-                    .map(Element.class::cast)
-                    .forEach(this::processClusterElement);
-        }
-
-        private void readInternetIcons() {
-            //Realiza leitura dos icones de internet
-            for (int i = 0; i < this.docInternets.getLength(); i++) {
-                final Element inet = (Element) this.docInternets.item(i);
-                final int global =
-                        IconicoXML.getIconGlobalId(inet);
-                final CS_Internet net = new CS_Internet(
-                        inet.getAttribute("id"),
-                        IconicoXML.getValueAttribute(inet, "bandwidth"),
-                        IconicoXML.getValueAttribute(inet, "load"),
-                        IconicoXML.getValueAttribute(inet, "latency")
-                );
-                this.internets.add(net);
-                this.serviceCenters.put(global, net);
-            }
-        }
-
-        private void readLinksAndConnectResources() {
-            IntStream.range(0, this.docLinks.getLength())
-                    .mapToObj(this.docLinks::item)
-                    .map(Element.class::cast)
-                    .forEach(this::processLinkElement);
-        }
-
-        private void addSlavesToMasters() {
-            IntStream.range(0, this.docMachines.getLength())
-                    .mapToObj(this.docMachines::item)
-                    .map(Element.class::cast)
-                    .filter(IconicoXML::isValidMaster)
-                    .forEach(this::addSlavesToMachine);
-        }
-
-        private void setUserMetrics(final CS_Mestre master) {
-            // TODO: Why create a new one every time?
-            master.getEscalonador().setMetricaUsuarios(this.makeUserMetrics());
-        }
-
-        private MetricasUsuarios makeUserMetrics() {
-            final var metrics = new MetricasUsuarios();
-            metrics.addAllUsuarios(this.owners, this.powers);
-            return metrics;
+        private static void forEachElement(final NodeList list,
+                                           final Consumer<? super Element> action) {
+            QueueNetworkBuilder.elementStreamOf(list).forEach(action);
         }
 
         private void setUserPowerLimit(final Element user) {
@@ -1711,6 +1657,16 @@ public class IconicoXML {
             }
         }
 
+        private void processInternetElement(final Element inet) {
+            final var net = QueueNetworkBuilder.internetFromElement(inet);
+
+            this.internets.add(net);
+            this.serviceCenters.put(
+                    IconicoXML.getIconGlobalId(inet),
+                    net
+            );
+        }
+
         private void processLinkElement(final Element elem) {
             final var link = IconicoXML.linkFromElement(elem);
 
@@ -1722,26 +1678,41 @@ public class IconicoXML {
             );
         }
 
-        private void addSlavesToMachine(final Element machine) {
-            final var master = (CS_Mestre) this.serviceCenters.get(
-                    IconicoXML.getIconGlobalId(machine)
-            );
+        private void addSlavesToMasters() {
+            QueueNetworkBuilder.elementStreamOf(this.docMachines)
+                    .filter(IconicoXML::isValidMaster)
+                    .forEach(this::addSlavesToMachine);
+        }
 
-            final var slaves = IconicoXML
-                    .getTagElement(machine, "master")
-                    .getElementsByTagName("slave");
+        private void setUserMetrics(final CS_Mestre master) {
+            // TODO: Why create a new one every time?
+            master.getEscalonador().setMetricaUsuarios(this.makeUserMetrics());
+        }
 
-            IntStream.range(0, slaves.getLength())
-                    .mapToObj(slaves::item)
-                    .map(Element.class::cast)
-                    .map(elem -> IconicoXML.getIntValueAttribute(elem, "id"))
-                    .map(this.serviceCenters::get)
-                    .forEach(sc -> this.processServiceCenter(sc, master));
+        private MetricasUsuarios makeUserMetrics() {
+            final var metrics = new MetricasUsuarios();
+            metrics.addAllUsuarios(this.owners, this.powers);
+            return metrics;
+        }
+
+        private static Stream<Element> elementStreamOf(final NodeList list) {
+            return IntStream.range(0, list.getLength())
+                    .mapToObj(list::item)
+                    .map(Element.class::cast);
         }
 
         private void addPowerToUser(final String user, final double value) {
             final var oldValue = this.users.get(user);
             this.users.put(user, oldValue + value);
+        }
+
+        private static CS_Internet internetFromElement(final Element elem) {
+            return new CS_Internet(
+                    elem.getAttribute("id"),
+                    IconicoXML.getValueAttribute(elem, "bandwidth"),
+                    IconicoXML.getValueAttribute(elem, "load"),
+                    IconicoXML.getValueAttribute(elem, "latency")
+            );
         }
 
         private static void connectLinkAndVertices(final CS_Link link,
@@ -1756,6 +1727,21 @@ public class IconicoXML {
         private Vertice getElementVertex(final Element elem,
                                          final String vertexEnd) {
             return (Vertice) this.serviceCenters.get(IconicoXML.getIntValueAttribute(IconicoXML.getTagElement(elem, "connect"), vertexEnd));
+        }
+
+        private void addSlavesToMachine(final Element machine) {
+            final var master = (CS_Mestre) this.serviceCenters.get(
+                    IconicoXML.getIconGlobalId(machine)
+            );
+
+            final var slaves = IconicoXML
+                    .getTagElement(machine, "master")
+                    .getElementsByTagName("slave");
+
+            QueueNetworkBuilder.elementStreamOf(slaves)
+                    .map(elem -> IconicoXML.getIntValueAttribute(elem, "id"))
+                    .map(this.serviceCenters::get)
+                    .forEach(sc -> this.processServiceCenter(sc, master));
         }
 
         private void processServiceCenter(
