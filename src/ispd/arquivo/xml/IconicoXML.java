@@ -318,24 +318,13 @@ public class IconicoXML {
                     final Element disco =
                             IconicoXML.getTagElement(caracteristica,
                                     "hard_disk");
-                    final CS_MaquinaCloud maq = new CS_MaquinaCloud(
-                            (cluster.getAttribute("id") + "." + j),
-                            cluster.getAttribute("owner"),
-                            Double.parseDouble(processamento.getAttribute(
-                                    "power")),
-                            Integer.parseInt(processamento.getAttribute(
-                                    "number")),
-                            Double.parseDouble(memoria.getAttribute("size")),
-                            Double.parseDouble(disco.getAttribute("size")),
-                            Double.parseDouble(custo.getAttribute("cost_proc")),
-                            Double.parseDouble(custo.getAttribute("cost_mem")),
-                            Double.parseDouble(custo.getAttribute("cost_disk")),
-                            0.0/*TaxaOcupacao*/,
-                            j + 1/*identificador da maquina no cluster*/);
-                    maq.addConexoesSaida(Switch);
-                    maq.addConexoesEntrada(Switch);
-                    Switch.addConexoesEntrada(maq);
-                    Switch.addConexoesSaida(maq);
+                    final var maq =
+                            IconicoXML.cloudMachineFromElement(cluster, j,
+                                    custo,
+                                    processamento, memoria, disco);
+
+                    IconicoXML.connectMachineAndSwitch(Switch, maq);
+
                     maq.addMestre(clust);
                     clust.addEscravo(maq);
                     maqs.add(maq);
@@ -379,24 +368,10 @@ public class IconicoXML {
                     final Element disco =
                             (Element) caracteristica.getElementsByTagName(
                                     "hard_disk");
-                    final CS_MaquinaCloud maq = new CS_MaquinaCloud(
-                            (cluster.getAttribute("id") + "." + j),
-                            cluster.getAttribute("owner"),
-                            Double.parseDouble(processamento.getAttribute(
-                                    "power")),
-                            Integer.parseInt(processamento.getAttribute(
-                                    "number")),
-                            Double.parseDouble(memoria.getAttribute("size")),
-                            Double.parseDouble(disco.getAttribute("size")),
-                            Double.parseDouble(custo.getAttribute("cost_proc")),
-                            Double.parseDouble(custo.getAttribute("cost_mem")),
-                            Double.parseDouble(custo.getAttribute("cost_disk")),
-                            0.0/*TaxaOcupacao*/,
-                            j + 1/*identificador da maquina no cluster*/);
-                    maq.addConexoesSaida(Switch);
-                    maq.addConexoesEntrada(Switch);
-                    Switch.addConexoesEntrada(maq);
-                    Switch.addConexoesSaida(maq);
+                    final var maq =
+                            IconicoXML.cloudMachineFromElement(cluster, j,
+                                    custo, processamento, memoria, disco);
+                    IconicoXML.connectMachineAndSwitch(Switch, maq);
                     maqTemp.add(maq);
                     maqs.add(maq);
                 }
@@ -533,6 +508,35 @@ public class IconicoXML {
     private static Element getTagElement(final Element machine,
                                          final String tag) {
         return (Element) machine.getElementsByTagName(tag).item(0);
+    }
+
+    private static CS_MaquinaCloud cloudMachineFromElement(final Element cluster,
+                                                           final int id,
+                                                           final Element cost,
+                                                           final Element processing,
+                                                           final Element memory,
+                                                           final Element disk) {
+        return new CS_MaquinaCloud(
+                "%s.%d".formatted(cluster.getAttribute("id"), id),
+                cluster.getAttribute("owner"),
+                Double.parseDouble(processing.getAttribute("power")),
+                Integer.parseInt(processing.getAttribute("number")),
+                Double.parseDouble(memory.getAttribute("size")),
+                Double.parseDouble(disk.getAttribute("size")),
+                Double.parseDouble(cost.getAttribute("cost_proc")),
+                Double.parseDouble(cost.getAttribute("cost_mem")),
+                Double.parseDouble(cost.getAttribute("cost_disk")),
+                0.0/*TaxaOcupacao*/,
+                id + 1/*identificador da maquina no cluster*/
+        );
+    }
+
+    private static void connectMachineAndSwitch(final CS_Switch aSwitch,
+                                                final CS_MaquinaCloud maq) {
+        maq.addConexoesSaida(aSwitch);
+        maq.addConexoesEntrada(aSwitch);
+        aSwitch.addConexoesEntrada(maq);
+        aSwitch.addConexoesSaida(maq);
     }
 
     /**
@@ -905,11 +909,11 @@ public class IconicoXML {
         return IntStream.range(0, owners.getLength())
                 .mapToObj(owners::item)
                 .map(Element.class::cast)
-                .map(IconicoXML::virtualMachineFromOwner)
+                .map(IconicoXML::virtualMachineFromElement)
                 .collect(Collectors.toCollection(HashSet::new));
     }
 
-    private static VirtualMachine virtualMachineFromOwner(final Element owner) {
+    private static VirtualMachine virtualMachineFromElement(final Element owner) {
         return new VirtualMachine(
                 owner.getAttribute("id"),
                 owner.getAttribute("owner"),
@@ -973,14 +977,14 @@ public class IconicoXML {
         return Integer.parseInt(elem.getAttribute(attr));
     }
 
-    private static CS_Processamento masterFromElement(final Element machine) {
+    private static CS_Mestre masterFromElement(final Element elem) {
         return new CS_Mestre(
-                machine.getAttribute("id"),
-                machine.getAttribute("owner"),
-                IconicoXML.getValueAttribute(machine, "power"),
-                IconicoXML.getValueAttribute(machine, "load"),
-                IconicoXML.getScheduler(machine),
-                IconicoXML.getValueAttribute(machine, "energy")
+                elem.getAttribute("id"),
+                elem.getAttribute("owner"),
+                IconicoXML.getValueAttribute(elem, "power"),
+                IconicoXML.getValueAttribute(elem, "load"),
+                IconicoXML.getScheduler(elem),
+                IconicoXML.getValueAttribute(elem, "energy")
         );
     }
 
@@ -994,23 +998,23 @@ public class IconicoXML {
                 "scheduler");
     }
 
-    private static CS_Maquina machineFromElement(final Element machine) {
+    private static CS_Maquina machineFromElement(final Element elem) {
         return new CS_Maquina(
-                machine.getAttribute("id"),
-                machine.getAttribute("owner"),
-                IconicoXML.getValueAttribute(machine, "power"),
+                elem.getAttribute("id"),
+                elem.getAttribute("owner"),
+                IconicoXML.getValueAttribute(elem, "power"),
                 1,
-                IconicoXML.getValueAttribute(machine, "load"),
-                IconicoXML.getValueAttribute(machine, "energy")
+                IconicoXML.getValueAttribute(elem, "load"),
+                IconicoXML.getValueAttribute(elem, "energy")
         );
     }
 
-    private static CS_Switch switchFromElement(final Element cluster) {
+    private static CS_Switch switchFromElement(final Element elem) {
         return new CS_Switch(
-                cluster.getAttribute("id"),
-                IconicoXML.getValueAttribute(cluster, "bandwidth"),
+                elem.getAttribute("id"),
+                IconicoXML.getValueAttribute(elem, "bandwidth"),
                 0.0,
-                IconicoXML.getValueAttribute(cluster, "latency")
+                IconicoXML.getValueAttribute(elem, "latency")
         );
     }
 
@@ -1018,16 +1022,15 @@ public class IconicoXML {
         return Boolean.parseBoolean(cluster.getAttribute("master"));
     }
 
-    private static CS_Mestre clusterFromElement(final Element clusterElem) {
-        final var cluster = new CS_Mestre(
-                clusterElem.getAttribute("id"),
-                clusterElem.getAttribute("owner"),
-                IconicoXML.getValueAttribute(clusterElem, "power"),
+    private static CS_Mestre clusterFromElement(final Element elem) {
+        return new CS_Mestre(
+                elem.getAttribute("id"),
+                elem.getAttribute("owner"),
+                IconicoXML.getValueAttribute(elem, "power"),
                 0.0,
-                clusterElem.getAttribute("scheduler"),
-                IconicoXML.getValueAttribute(clusterElem, "energy")
+                elem.getAttribute("scheduler"),
+                IconicoXML.getValueAttribute(elem, "energy")
         );
-        return cluster;
     }
 
     private static void connectMachineAndSwitch(final CS_Maquina machine,
@@ -1059,6 +1062,33 @@ public class IconicoXML {
                 IconicoXML.getValueAttribute(elem, "load"),
                 IconicoXML.getValueAttribute(elem, "latency")
         );
+    }
+
+    private static void forEachDocElement(final Document doc, final String tag,
+                                          final Consumer<Element> action) {
+        IconicoXML.forEachElement(
+                doc.getElementsByTagName(tag),
+                action
+        );
+    }
+
+    private static void forEachElement(final NodeList list,
+                                       final Consumer<? super Element> action) {
+        IconicoXML.elementStreamOf(list).forEach(action);
+    }
+
+    private static Stream<Element> elementStreamOf(final NodeList list) {
+        return IntStream.range(0, list.getLength())
+                .mapToObj(list::item)
+                .map(Element.class::cast);
+    }
+
+    private static void connectClusterAndSwitch(final CS_Mestre cluster,
+                                                final CS_Switch theSwitch) {
+        cluster.addConexoesEntrada(theSwitch);
+        cluster.addConexoesSaida(theSwitch);
+        theSwitch.addConexoesEntrada(cluster);
+        theSwitch.addConexoesSaida(cluster);
     }
 
     public void addUsers(final Collection<String> users,
@@ -1491,11 +1521,6 @@ public class IconicoXML {
     }
 
     private static class QueueNetworkBuilder {
-        private final NodeList docMachines;
-        private final NodeList docClusters;
-        private final NodeList docInternets;
-        private final NodeList docLinks;
-        private final NodeList docOwners;
         private final Map<String, Double> users = new HashMap<>(0);
         // TODO: Investigate why profiles is query-less
         private final Map<String, Double> profiles = new HashMap<>(0);
@@ -1511,49 +1536,17 @@ public class IconicoXML {
         private final List<Double> powers = new ArrayList<>(0);
 
         private QueueNetworkBuilder(final Document doc) {
-            this.docMachines = doc.getElementsByTagName("machine");
-            this.docClusters = doc.getElementsByTagName("cluster");
-            this.docInternets = doc.getElementsByTagName("internet");
-            this.docLinks = doc.getElementsByTagName("link");
-            this.docOwners = doc.getElementsByTagName("owner");
-        }
+            final var docMachines = doc.getElementsByTagName("machine");
 
-        private RedeDeFilas build() {
-            // TODO: Could these be move to constructor?
-            QueueNetworkBuilder.forEachElement(
-                    this.docOwners, this::setUserPowerLimit);
-            QueueNetworkBuilder.forEachElement(
-                    this.docMachines, this::processMachineElement);
-            QueueNetworkBuilder.forEachElement(
-                    this.docClusters, this::processClusterElement);
-            QueueNetworkBuilder.forEachElement(
-                    this.docInternets, this::processInternetElement);
-            QueueNetworkBuilder.forEachElement(
-                    this.docLinks, this::processLinkElement);
+            IconicoXML.forEachDocElement(doc, "owner", this::setUserPowerLimit);
+            IconicoXML.forEachElement(docMachines, this::processMachineElement);
+            IconicoXML.forEachDocElement(
+                    doc, "cluster", this::processClusterElement);
+            IconicoXML.forEachDocElement(
+                    doc, "internet", this::processInternetElement);
+            IconicoXML.forEachDocElement(doc, "link", this::processLinkElement);
 
-            this.addSlavesToMasters();
-
-            this.users.forEach((user, power) -> {
-                this.owners.add(user);
-                this.powers.add(power);
-            });
-
-            this.masters.stream()
-                    .map(CS_Mestre.class::cast)
-                    .forEach(this::setUserMetrics);
-
-            final var queueNetwork = new RedeDeFilas(
-                    this.masters, this.machines, this.links, this.internets);
-
-            this.makeUserMetrics();
-
-            queueNetwork.setUsuarios(this.owners);
-            return queueNetwork;
-        }
-
-        private static void forEachElement(final NodeList list,
-                                           final Consumer<? super Element> action) {
-            QueueNetworkBuilder.elementStreamOf(list).forEach(action);
+            this.addSlavesToMasters(IconicoXML.elementStreamOf(docMachines));
         }
 
         private void setUserPowerLimit(final Element user) {
@@ -1564,19 +1557,19 @@ public class IconicoXML {
             );
         }
 
-        private void processMachineElement(final Element machineElement) {
-            final var isMaster = IconicoXML.isValidMaster(machineElement);
+        private void processMachineElement(final Element elem) {
+            final var isMaster = IconicoXML.isValidMaster(elem);
 
             final CS_Processamento machine;
 
             if (isMaster) {
-                machine = IconicoXML.masterFromElement(machineElement);
+                machine = IconicoXML.masterFromElement(elem);
             } else {
-                machine = IconicoXML.machineFromElement(machineElement);
+                machine = IconicoXML.machineFromElement(elem);
             }
 
             this.serviceCenters.put(
-                    IconicoXML.getIconGlobalId(machineElement),
+                    IconicoXML.getIconGlobalId(elem),
                     machine
             );
 
@@ -1586,8 +1579,10 @@ public class IconicoXML {
                 this.machines.add((CS_Maquina) machine);
             }
 
-            this.addPowerToUser(machine.getProprietario(),
-                    machine.getPoderComputacional());
+            this.increaseUserPower(
+                    machine.getProprietario(),
+                    machine.getPoderComputacional()
+            );
         }
 
         private void processClusterElement(final Element elem) {
@@ -1606,17 +1601,13 @@ public class IconicoXML {
                 final double power =
                         cluster.getPoderComputacional() * (slaveCount + 1);
 
-                this.addPowerToUser(cluster.getProprietario(), power);
+                this.increaseUserPower(cluster.getProprietario(), power);
 
                 final var theSwitch = IconicoXML.switchFromElement(elem);
 
                 this.links.add(theSwitch);
 
-                // TODO: Unify CS_Mestre and CS_Maquina interfaces
-                cluster.addConexoesEntrada(theSwitch);
-                cluster.addConexoesSaida(theSwitch);
-                theSwitch.addConexoesEntrada(cluster);
-                theSwitch.addConexoesSaida(cluster);
+                IconicoXML.connectClusterAndSwitch(cluster, theSwitch);
 
                 for (int i = 0; i < slaveCount; i++) {
                     final var machine = IconicoXML.machineFromElement(elem, i);
@@ -1638,7 +1629,7 @@ public class IconicoXML {
                         IconicoXML.getValueAttribute(elem, "power")
                         * IconicoXML.getIntValueAttribute(elem, "nodes");
 
-                this.addPowerToUser(elem.getAttribute("owner"), power);
+                this.increaseUserPower(elem.getAttribute("owner"), power);
 
                 final int slaveCount = Integer.parseInt(
                         elem.getAttribute("nodes")
@@ -1678,30 +1669,12 @@ public class IconicoXML {
             );
         }
 
-        private void addSlavesToMasters() {
-            QueueNetworkBuilder.elementStreamOf(this.docMachines)
-                    .filter(IconicoXML::isValidMaster)
+        private void addSlavesToMasters(final Stream<? extends Element> machineStream) {
+            machineStream.filter(IconicoXML::isValidMaster)
                     .forEach(this::addSlavesToMachine);
         }
 
-        private void setUserMetrics(final CS_Mestre master) {
-            // TODO: Why create a new one every time?
-            master.getEscalonador().setMetricaUsuarios(this.makeUserMetrics());
-        }
-
-        private MetricasUsuarios makeUserMetrics() {
-            final var metrics = new MetricasUsuarios();
-            metrics.addAllUsuarios(this.owners, this.powers);
-            return metrics;
-        }
-
-        private static Stream<Element> elementStreamOf(final NodeList list) {
-            return IntStream.range(0, list.getLength())
-                    .mapToObj(list::item)
-                    .map(Element.class::cast);
-        }
-
-        private void addPowerToUser(final String user, final double value) {
+        private void increaseUserPower(final String user, final double value) {
             final var oldValue = this.users.get(user);
             this.users.put(user, oldValue + value);
         }
@@ -1738,7 +1711,7 @@ public class IconicoXML {
                     .getTagElement(machine, "master")
                     .getElementsByTagName("slave");
 
-            QueueNetworkBuilder.elementStreamOf(slaves)
+            IconicoXML.elementStreamOf(slaves)
                     .map(elem -> IconicoXML.getIntValueAttribute(elem, "id"))
                     .map(this.serviceCenters::get)
                     .forEach(sc -> this.processServiceCenter(sc, master));
@@ -1757,6 +1730,36 @@ public class IconicoXML {
                     master.addEscravo(slave);
                 }
             }
+        }
+
+        private RedeDeFilas build() {
+            this.users.forEach((user, power) -> {
+                this.owners.add(user);
+                this.powers.add(power);
+            });
+
+            this.masters.stream()
+                    .map(CS_Mestre.class::cast)
+                    .forEach(this::setUserMetrics);
+
+            final var queueNetwork = new RedeDeFilas(
+                    this.masters, this.machines, this.links, this.internets);
+
+            this.makeUserMetrics();
+
+            queueNetwork.setUsuarios(this.owners);
+            return queueNetwork;
+        }
+
+        private void setUserMetrics(final CS_Mestre master) {
+            // TODO: Why create a new one every time?
+            master.getEscalonador().setMetricaUsuarios(this.makeUserMetrics());
+        }
+
+        private MetricasUsuarios makeUserMetrics() {
+            final var metrics = new MetricasUsuarios();
+            metrics.addAllUsuarios(this.owners, this.powers);
+            return metrics;
         }
     }
 }
