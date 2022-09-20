@@ -41,6 +41,7 @@ public class SimulationResultChartMaker {
     private ChartPanel processingBarChart = null;
     private ChartPanel processingPieChart = null;
     private ChartPanel communicationPieChart = null;
+    private ChartPanel communicationBarChart;
     private ChartPanel userThroughTime1 = null;
     private ChartPanel UserThroughTime2 = null;
     private ChartPanel machineThroughTime = null;
@@ -52,7 +53,7 @@ public class SimulationResultChartMaker {
     }
 
     public ChartPanel getCommunicationBarChart() {
-        return null;
+        return communicationBarChart;
     }
 
     public ChartPanel getProcessingPieChart() {
@@ -168,15 +169,28 @@ public class SimulationResultChartMaker {
 
     public void criarComunicacao(
             final Map<String, ? extends MetricasComunicacao> metrics) {
+        final var commsBarChartData = new DefaultCategoryDataset();
         final var commsPieChartData = new DefaultPieDataset();
 
         if (metrics != null) {
             for (final var link : metrics.values()) {
+                commsBarChartData.addValue(link.getMbitsTransmitidos(), "vermelho", link.getId());
                 commsPieChartData.insertValue(
                         0, link.getId(), link.getMbitsTransmitidos());
             }
         }
 
+        this.communicationBarChart =
+                SimulationResultChartMaker.panelWithPreferredSize(ChartFactory.createBarChart(
+                        "Total communication in each resource",
+                        "Resource",
+                        "Mbits",
+                        commsBarChartData,
+                        PlotOrientation.VERTICAL,
+                        false,
+                        false,
+                        false
+                ));
         this.communicationPieChart =
                 SimulationResultChartMaker.panelWithPreferredSize(ChartFactory.createPieChart(
                         "Total communication in each resource",
@@ -336,11 +350,11 @@ public class SimulationResultChartMaker {
         final int userCount = qn.getUsuarios().size();
 
         final var timeSeries1 = SimulationResultChartMaker.userSeries(qn);
-        final var userUsage1 = new Double[userCount];
+        final var userUsage1 = new double[userCount];
         final var chartData1 = new XYSeriesCollection();
 
         final var timeSeries2 = SimulationResultChartMaker.userSeries(qn);
-        final var userUsage2 = new Double[userCount];
+        final var userUsage2 = new double[userCount];
         final var chartData2 = new XYSeriesCollection();
 
         final var list =
@@ -387,11 +401,8 @@ public class SimulationResultChartMaker {
 
         this.setPlotRenderer(chart2);
 
-        final ChartPanel chartPanel1 = SimulationResultChartMaker.panelWithPreferredSize(chart1);
-        this.userThroughTime1 = chartPanel1;
-
-        final ChartPanel chartPanel2 = SimulationResultChartMaker.panelWithPreferredSize(chart2);
-        this.UserThroughTime2 = chartPanel2;
+        this.userThroughTime1 = SimulationResultChartMaker.panelWithPreferredSize(chart1);
+        this.UserThroughTime2 = SimulationResultChartMaker.panelWithPreferredSize(chart2);
     }
 
     private static XYSeries[] userSeries(final RedeDeFilas qn) {
@@ -431,7 +442,7 @@ public class SimulationResultChartMaker {
 
     private void updateUserUsage(
             final XYSeries timeSeries,
-            final Double[] usages,
+            final double[] usages,
             final UserOperationTime userTime,
             final int index) {
         timeSeries.add(userTime.getTime(), usages[index]);
