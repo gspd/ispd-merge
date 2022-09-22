@@ -30,7 +30,6 @@ import ispd.motor.filas.servidores.implementacao.CS_VirtualMac;
 import ispd.motor.filas.servidores.implementacao.Vertice;
 import ispd.motor.metricas.MetricasUsuarios;
 import ispd.utils.ValidaValores;
-import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -451,7 +450,7 @@ public class IconicoXML {
     }
 
     static Element getFirstTagElement(
-            final @NotNull Element element, final String tag) {
+            final Element element, final String tag) {
         return (Element) element.getElementsByTagName(tag).item(0);
     }
 
@@ -470,8 +469,10 @@ public class IconicoXML {
                 "power"));
         final var cores = process.getAttribute(
                 "number");
-        final var memorySize = IconicoXML.getFirstTagElement(characteristics, "memory").getAttribute("size");
-        final var diskSize = IconicoXML.getFirstTagElement(characteristics, "hard_disk").getAttribute("size");
+        final var memorySize = IconicoXML.getFirstTagElement(characteristics,
+                "memory").getAttribute("size");
+        final var diskSize = IconicoXML.getFirstTagElement(characteristics,
+                "hard_disk").getAttribute("size");
 
         if (item instanceof Cluster cluster) {
             cluster.setComputationalPower(power);
@@ -801,7 +802,8 @@ public class IconicoXML {
             final Double bandwidth, final Double latency,
             final String scheduler,
             final String owner,
-            final Boolean isMaster) {
+            final Boolean isMaster,
+            final Double energy) {
         this.system.appendChild(this.anElement(
                 "cluster", new Object[][] {
                         { "nodes", slaveCount },
@@ -812,6 +814,7 @@ public class IconicoXML {
                         { "owner", owner },
                         { "master", isMaster },
                         { "id", name },
+                        { "energy", energy },
                 }, new Node[] {
                         this.aPositionElement(x, y),
                         this.anIconIdElement(globalId, localId),
