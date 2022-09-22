@@ -30,6 +30,7 @@ import ispd.motor.filas.servidores.implementacao.CS_VirtualMac;
 import ispd.motor.filas.servidores.implementacao.Vertice;
 import ispd.motor.metricas.MetricasUsuarios;
 import ispd.utils.ValidaValores;
+import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -347,8 +348,7 @@ public class IconicoXML {
             clust.getId().setName(cluster.getAttribute("id"));
             ValidaValores.addNomeIcone(clust.getId().getName());
             clust.setComputationalPower(Double.parseDouble(cluster.getAttribute("power")));
-            IconicoXML.setCaracteristicas(clust, cluster.getElementsByTagName(
-                    "characteristic"));
+            IconicoXML.setGridItemCharacteristics(clust, cluster);
             clust.setSlaveCount(Integer.parseInt(cluster.getAttribute("nodes")));
             clust.setBandwidth(Double.parseDouble(cluster.getAttribute(
                     "bandwidth")));
@@ -450,65 +450,69 @@ public class IconicoXML {
         }
     }
 
-    public static Element getFirstTagElement(
-            final Element element, final String tag) {
+    static Element getFirstTagElement(
+            final @NotNull Element element, final String tag) {
         return (Element) element.getElementsByTagName(tag).item(0);
     }
 
-    private static void setCaracteristicas(final GridItem item,
-                                           final NodeList elementsByTagName) {
-        Machine maq = null;
-        Cluster clust = null;
-        if (item instanceof Machine) {
-            maq = (Machine) item;
-        } else if (item instanceof Cluster) {
-            clust = (Cluster) item;
-        }
+    private static void setGridItemCharacteristics(
+            final GridItem item, final Element elem) {
+        if (IconicoXML.hasCharacteristics(elem))
+            return;
 
-        final Element caracteristicas = (Element) elementsByTagName.item(0);
-        final Element process =
-                IconicoXML.getFirstTagElement(caracteristicas, "process");
-        final Element memory =
-                IconicoXML.getFirstTagElement(caracteristicas, "memory");
-        final Element disk = IconicoXML.getFirstTagElement(caracteristicas,
-                "hard_disk");
+        final var characteristics =
+                IconicoXML.getFirstTagElement(elem, "characteristic");
+        final var process =
+                IconicoXML.getFirstTagElement(characteristics, "process");
 
-        if (elementsByTagName.getLength() > 0 && clust != null) {
+        // TODO: Extract cost interface in both Cluster and Machine
+        final var power = Double.parseDouble(process.getAttribute(
+                "power"));
+        final var cores = process.getAttribute(
+                "number");
+        final var memorySize = IconicoXML.getFirstTagElement(characteristics, "memory").getAttribute("size");
+        final var diskSize = IconicoXML.getFirstTagElement(characteristics, "hard_disk").getAttribute("size");
 
+        if (item instanceof Cluster cluster) {
+            cluster.setComputationalPower(power);
+            cluster.setCoreCount(Integer.valueOf(cores));
 
-            clust.setComputationalPower(Double.parseDouble(process.getAttribute(
-                    "power")));
-            clust.setCoreCount(Integer.valueOf(process.getAttribute("number")));
+            cluster.setRam(Double.parseDouble(memorySize));
+            cluster.setHardDisk(Double.parseDouble(diskSize));
 
-            clust.setRam(Double.parseDouble(memory.getAttribute("size")));
-            clust.setHardDisk(Double.parseDouble(disk.getAttribute("size")));
-            if (IconicoXML.hasCostProperties(caracteristicas)) {
-                final Element cost =
-                        IconicoXML.getFirstTagElement(caracteristicas, "cost");
-                clust.setCostPerProcessing(Double.parseDouble(cost.getAttribute(
-                        "cost_proc")));
-                clust.setCostPerMemory(Double.parseDouble(cost.getAttribute(
-                        "cost_mem")));
-                clust.setCostPerDisk(Double.parseDouble(cost.getAttribute(
-                        "cost_disk")));
+            if (!IconicoXML.hasCostProperties(characteristics)) {
+                return;
             }
-        } else if (elementsByTagName.getLength() > 0 && maq != null) {
-            maq.setComputationalPower(Double.parseDouble(process.getAttribute(
-                    "power")));
-            maq.setCoreCount(Integer.valueOf(process.getAttribute("number")));
-            maq.setRam(Double.valueOf(memory.getAttribute("size")));
 
-            maq.setHardDisk(Double.valueOf(disk.getAttribute("size")));
-            if (IconicoXML.hasCostProperties(caracteristicas)) {
-                final Element cost =
-                        IconicoXML.getFirstTagElement(caracteristicas, "cost");
-                maq.setCostPerProcessing(Double.valueOf(cost.getAttribute(
-                        "cost_proc")));
-                maq.setCostPerMemory(Double.valueOf(cost.getAttribute(
-                        "cost_mem")));
-                maq.setCostPerDisk(Double.valueOf(cost.getAttribute(
-                        "cost_disk")));
+            final Element cost =
+                    IconicoXML.getFirstTagElement(characteristics, "cost");
+            cluster.setCostPerProcessing(Double.parseDouble(cost.getAttribute(
+                    "cost_proc")));
+            cluster.setCostPerMemory(Double.parseDouble(cost.getAttribute(
+                    "cost_mem")));
+            cluster.setCostPerDisk(Double.parseDouble(cost.getAttribute(
+                    "cost_disk")));
+        } else if (item instanceof Machine machine) {
+
+
+            machine.setComputationalPower(power);
+            machine.setCoreCount(Integer.valueOf(cores));
+            machine.setRam(Double.valueOf(memorySize));
+
+            machine.setHardDisk(Double.valueOf(diskSize));
+
+            if (!IconicoXML.hasCostProperties(characteristics)) {
+                return;
             }
+
+            final Element cost =
+                    IconicoXML.getFirstTagElement(characteristics, "cost");
+            machine.setCostPerProcessing(Double.valueOf(cost.getAttribute(
+                    "cost_proc")));
+            machine.setCostPerMemory(Double.valueOf(cost.getAttribute(
+                    "cost_mem")));
+            machine.setCostPerDisk(Double.valueOf(cost.getAttribute(
+                    "cost_disk")));
 
         }
     }
@@ -537,11 +541,14 @@ public class IconicoXML {
 
         machine.setComputationalPower(Double.parseDouble(elem.getAttribute(
                 "power")));
-        IconicoXML.setCaracteristicas(machine, elem.getElementsByTagName(
-                "characteristic"));
+        IconicoXML.setGridItemCharacteristics(machine, elem);
         machine.setLoadFactor(Double.parseDouble(elem.getAttribute(
                 "load")));
         machine.setOwner(elem.getAttribute("owner"));
+    }
+
+    private static boolean hasCharacteristics(final Element elem) {
+        return elem.getElementsByTagName("characteristic").getLength() <= 0;
     }
 
     private static boolean hasCostProperties(final Element characteristics) {
@@ -1179,8 +1186,9 @@ public class IconicoXML {
                         IconicoXML.getFirstTagElement(maquina, "icon_id");
                 final int global = Integer.parseInt(id.getAttribute("global"));
                 if (Utils.isValidMaster(maquina)) {
-                    final Element master = IconicoXML.getFirstTagElement(maquina,
-                            "master");
+                    final Element master =
+                            IconicoXML.getFirstTagElement(maquina,
+                                    "master");
                     final Element carac = IconicoXML.getFirstTagElement(maquina,
                             "characteristic");
                     final Element proc =
@@ -1209,13 +1217,17 @@ public class IconicoXML {
                 } else {
                     //acessa as características do máquina
                     final Element caracteristica =
-                            IconicoXML.getFirstTagElement(maquina, "characteristic");
+                            IconicoXML.getFirstTagElement(maquina,
+                                    "characteristic");
                     final Element custo =
-                            IconicoXML.getFirstTagElement(caracteristica, "cost");
+                            IconicoXML.getFirstTagElement(caracteristica,
+                                    "cost");
                     final Element processamento =
-                            IconicoXML.getFirstTagElement(caracteristica, "process");
+                            IconicoXML.getFirstTagElement(caracteristica,
+                                    "process");
                     final Element memoria =
-                            IconicoXML.getFirstTagElement(caracteristica, "memory");
+                            IconicoXML.getFirstTagElement(caracteristica,
+                                    "memory");
                     final Element disco =
                             IconicoXML.getFirstTagElement(caracteristica,
                                     "hard_disk");
@@ -1327,10 +1339,10 @@ public class IconicoXML {
                     //Contabiliza para o usuario poder computacional do mestre
                     final double total =
                             Double.parseDouble(cluster.getAttribute(
-                            "power"))
-                                         * Integer.parseInt(cluster.getAttribute(
-                            "nodes"
-                    ));
+                                    "power"))
+                            * Integer.parseInt(cluster.getAttribute(
+                                    "nodes"
+                            ));
                     usuarios.put(cluster.getAttribute("owner"),
                             total + usuarios.get(cluster.getAttribute("owner")));
                     final List<CS_MaquinaCloud> maqTemp =
@@ -1409,8 +1421,9 @@ public class IconicoXML {
                         IconicoXML.getFirstTagElement(maquina, "icon_id");
                 final int global = Integer.parseInt(id.getAttribute("global"));
                 if (Utils.isValidMaster(maquina)) {
-                    final Element master = IconicoXML.getFirstTagElement(maquina,
-                            "master");
+                    final Element master =
+                            IconicoXML.getFirstTagElement(maquina,
+                                    "master");
                     final NodeList slaves = master.getElementsByTagName(
                             "slave");
                     final CS_VMM mestre = (CS_VMM) centroDeServicos.get(global);
