@@ -21,40 +21,41 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-class CloudQueueNetworkBuilder {
-
-
+public class CloudQueueNetworkBuilder {
     private final NodeList docMachines;
     private final NodeList docClusters;
     private final NodeList docInternet;
     private final NodeList docLinks;
     private final NodeList docOwners;
     private final NodeList docVms;
-    private final HashMap<Integer, CentroServico> serviceCenters = new HashMap<>();
-    private final HashMap<CentroServico, List<CS_MaquinaCloud>> clusterSlaves = new HashMap<>();
+    private final HashMap<Integer, CentroServico> serviceCenters =
+            new HashMap<>(0);
+    private final HashMap<CentroServico, List<CS_MaquinaCloud>> clusterSlaves =
+            new HashMap<>(0);
+    private final List<CS_MaquinaCloud> machines = new ArrayList<>(0);
+    private final List<CS_VirtualMac> virtualMachines = new ArrayList<>(0);
+    private final List<CS_Comunicacao> links = new ArrayList<>(0);
+    private final List<CS_Internet> internets = new ArrayList<>(0);
+    private final List<CS_Processamento> virtualMachineMasters =
+            new ArrayList<>(0);
+    private final HashMap<String, Double> users = new HashMap<>(0);
 
-    public CloudQueueNetworkBuilder(final Document model)
-    {
+    private final List<String> owners = new ArrayList<>(0);
+    private final List<Double> powers = new ArrayList<>(0);
+
+    public CloudQueueNetworkBuilder(final Document model) {
         this.docMachines = model.getElementsByTagName("machine");
         this.docClusters = model.getElementsByTagName("cluster");
         this.docInternet = model.getElementsByTagName("internet");
         this.docLinks = model.getElementsByTagName("link");
         this.docOwners = model.getElementsByTagName("owner");
         this.docVms = model.getElementsByTagName("virtualMac");
-
     }
 
     public RedeDeFilasCloud build() {
-        final List<CS_MaquinaCloud> maqs = new ArrayList<>();
-        final List<CS_VirtualMac> vms = new ArrayList<>();
-        final List<CS_Comunicacao> links = new ArrayList<>();
-        final List<CS_Internet> nets = new ArrayList<>();
-        final List<CS_Processamento> VMMs = new ArrayList<>();
-        //cria lista de usuarios e o poder computacional cedido por cada um
-        final HashMap<String, Double> usuarios = new HashMap<>();
         for (int i = 0; i < this.docOwners.getLength(); i++) {
             final Element owner = (Element) this.docOwners.item(i);
-            usuarios.put(owner.getAttribute("id"), 0.0);
+            this.users.put(owner.getAttribute("id"), 0.0);
         }
         //cria maquinas, mestres, internets e mestres dos clusters
         //Realiza leitura dos icones de máquina
@@ -87,11 +88,11 @@ class CloudQueueNetworkBuilder {
                         Double.parseDouble(maquina.getAttribute("load")),
                         master.getAttribute("scheduler")/*Escalonador*/,
                         master.getAttribute("vm_alloc"));
-                VMMs.add(mestre);
+                this.virtualMachineMasters.add(mestre);
                 this.serviceCenters.put(global, mestre);
                 //Contabiliza para o usuario poder computacional do mestre
-                usuarios.put(mestre.getProprietario(),
-                        usuarios.get(mestre.getProprietario()) + mestre.getPoderComputacional());
+                this.users.put(mestre.getProprietario(),
+                        this.users.get(mestre.getProprietario()) + mestre.getPoderComputacional());
             } else {
                 //acessa as características do máquina
                 final Element caracteristica =
@@ -124,10 +125,10 @@ class CloudQueueNetworkBuilder {
                         Double.parseDouble(custo.getAttribute("cost_mem")),
                         Double.parseDouble(custo.getAttribute("cost_disk"))
                 );
-                maqs.add(maq);
+                this.machines.add(maq);
                 this.serviceCenters.put(global, maq);
-                usuarios.put(maq.getProprietario(),
-                        usuarios.get(maq.getProprietario()) + maq.getPoderComputacional());
+                this.users.put(maq.getProprietario(),
+                        this.users.get(maq.getProprietario()) + maq.getPoderComputacional());
             }
         }
         //Realiza leitura dos icones de cluster
@@ -155,7 +156,7 @@ class CloudQueueNetworkBuilder {
                         0.0,
                         cluster.getAttribute("scheduler")/*Escalonador*/,
                         cluster.getAttribute("vm_alloc"));
-                VMMs.add(clust);
+                this.virtualMachineMasters.add(clust);
                 this.serviceCenters.put(global, clust);
                 //Contabiliza para o usuario poder computacional do mestre
                 final int numeroEscravos =
@@ -163,15 +164,15 @@ class CloudQueueNetworkBuilder {
                                 "nodes"));
                 final double total =
                         clust.getPoderComputacional() + (clust.getPoderComputacional() * numeroEscravos);
-                usuarios.put(clust.getProprietario(),
-                        total + usuarios.get(clust.getProprietario()));
+                this.users.put(clust.getProprietario(),
+                        total + this.users.get(clust.getProprietario()));
                 final CS_Switch Switch = new CS_Switch(
                         (cluster.getAttribute("id") + "switch"),
                         Double.parseDouble(cluster.getAttribute(
                                 "bandwidth")),
                         0.0,
                         Double.parseDouble(cluster.getAttribute("latency")));
-                links.add(Switch);
+                this.links.add(Switch);
                 clust.addConexoesEntrada(Switch);
                 clust.addConexoesSaida(Switch);
                 Switch.addConexoesEntrada(clust);
@@ -201,7 +202,7 @@ class CloudQueueNetworkBuilder {
 
                     maq.addMestre(clust);
                     clust.addEscravo(maq);
-                    maqs.add(maq);
+                    this.machines.add(maq);
                     //não adicionei referencia ao switch nem aos escrevos do
                     // cluster aos centros de serviços
                 }
@@ -212,7 +213,7 @@ class CloudQueueNetworkBuilder {
                                 "bandwidth")),
                         0.0,
                         Double.parseDouble(cluster.getAttribute("latency")));
-                links.add(Switch);
+                this.links.add(Switch);
                 this.serviceCenters.put(global, Switch);
                 //Contabiliza para o usuario poder computacional do mestre
                 final double total =
@@ -221,8 +222,8 @@ class CloudQueueNetworkBuilder {
                         * Integer.parseInt(cluster.getAttribute(
                                 "nodes"
                         ));
-                usuarios.put(cluster.getAttribute("owner"),
-                        total + usuarios.get(cluster.getAttribute("owner")));
+                this.users.put(cluster.getAttribute("owner"),
+                        total + this.users.get(cluster.getAttribute("owner")));
                 final List<CS_MaquinaCloud> maqTemp =
                         new ArrayList<>();
                 final int numeroEscravos =
@@ -249,7 +250,7 @@ class CloudQueueNetworkBuilder {
                                     custo, processamento, memoria, disco);
                     IconicoXML.connectMachineAndSwitch(Switch, maq);
                     maqTemp.add(maq);
-                    maqs.add(maq);
+                    this.machines.add(maq);
                 }
                 this.clusterSlaves.put(Switch, maqTemp);
             }
@@ -266,7 +267,7 @@ class CloudQueueNetworkBuilder {
                     Double.parseDouble(inet.getAttribute("bandwidth")),
                     Double.parseDouble(inet.getAttribute("load")),
                     Double.parseDouble(inet.getAttribute("latency")));
-            nets.add(net);
+            this.internets.add(net);
             this.serviceCenters.put(global, net);
         }
         //cria os links e realiza a conexão entre os recursos
@@ -278,7 +279,7 @@ class CloudQueueNetworkBuilder {
                     Double.parseDouble(link.getAttribute("bandwidth")),
                     Double.parseDouble(link.getAttribute("load")),
                     Double.parseDouble(link.getAttribute("latency")));
-            links.add(cslink);
+            this.links.add(cslink);
 
             //adiciona entrada e saida desta conexão
             final Element connect =
@@ -344,7 +345,7 @@ class CloudQueueNetworkBuilder {
                                     "disk_alloc")),
                             virtualMac.getAttribute("op_system"));
             //adicionando VMM responsável pela VM
-            for (final CS_Processamento aux : VMMs) {
+            for (final CS_Processamento aux : this.virtualMachineMasters) {
                 if (virtualMac.getAttribute("vmm").equals(aux.getId())) {
                     //atentar ao fato de que a solução falha se o nome do
                     // vmm
@@ -359,30 +360,29 @@ class CloudQueueNetworkBuilder {
                 }
 
             }
-            vms.add(VM);
+            this.virtualMachines.add(VM);
         }
 
-        //verifica se há usuarios sem nenhum recurso
-        final List<String> proprietarios = new ArrayList<>();
-        final List<Double> poderComp = new ArrayList<>();
-        for (final Map.Entry<String, Double> entry : usuarios.entrySet()) {
-            proprietarios.add(entry.getKey());
-            poderComp.add(entry.getValue());
+        for (final Map.Entry<String, Double> entry : this.users.entrySet()) {
+            this.owners.add(entry.getKey());
+            this.powers.add(entry.getValue());
         }
         //cria as métricas de usuarios para cada mestre
-        for (final CS_Processamento mestre : VMMs) {
+        for (final CS_Processamento mestre : this.virtualMachineMasters) {
             final CS_VMM mst = (CS_VMM) mestre;
             final MetricasUsuarios mu = new MetricasUsuarios();
-            mu.addAllUsuarios(proprietarios, poderComp);
+            mu.addAllUsuarios(this.owners, this.powers);
             mst.getEscalonador().setMetricaUsuarios(mu);
         }
-        final RedeDeFilasCloud rdf = new RedeDeFilasCloud(VMMs, maqs, vms,
-                links,
-                nets);
+        final RedeDeFilasCloud rdf =
+                new RedeDeFilasCloud(this.virtualMachineMasters,
+                        this.machines, this.virtualMachines,
+                        this.links,
+                        this.internets);
         //cria as métricas de usuarios globais da rede de filas
         final MetricasUsuarios mu = new MetricasUsuarios();
-        mu.addAllUsuarios(proprietarios, poderComp);
-        rdf.setUsuarios(proprietarios);
+        mu.addAllUsuarios(this.owners, this.powers);
+        rdf.setUsuarios(this.owners);
         return rdf;
     }
 }

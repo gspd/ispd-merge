@@ -18,7 +18,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
+import java.util.function.Consumer;
+import java.util.stream.IntStream;
 
 class QueueNetworkBuilder {
     private final Map<String, Double> users = new HashMap<>(0);
@@ -34,17 +35,22 @@ class QueueNetworkBuilder {
     private final List<CS_Internet> internets = new ArrayList<>(0);
     private final List<String> owners = new ArrayList<>(0);
     private final List<Double> powers = new ArrayList<>(0);
+    private final DocumentWrapper doc;
 
     QueueNetworkBuilder(final Document doc) {
-        final var docMachines = doc.getElementsByTagName("machine");
+        this.doc = new DocumentWrapper(doc);
 
-        Utils.forEachDocElement(doc, "owner", this::setUserPowerLimit);
-        Utils.forEachElement(docMachines, this::processMachineElement);
-        Utils.forEachDocElement(doc, "cluster", this::processClusterElement);
-        Utils.forEachDocElement(doc, "internet", this::processInternetElement);
-        Utils.forEachDocElement(doc, "link", this::processLinkElement);
+        final Map<String, Consumer<Element>> processingSteps = Map.of(
+                "owner", this::setUserPowerLimit,
+                "machine", this::processMachineElement,
+                "cluster", this::processClusterElement,
+                "internet", this::processNetElement,
+                "link", this::processLinkElement
+        );
 
-        this.addSlavesToMasters(Utils.elementStreamOf(docMachines));
+        processingSteps.forEach(this.doc::forEachElementWithTag);
+
+        this.addSlavesToMasters();
     }
 
     private void setUserPowerLimit(final Element user) {
@@ -146,7 +152,7 @@ class QueueNetworkBuilder {
         }
     }
 
-    private void processInternetElement(final Element inet) {
+    private void processNetElement(final Element inet) {
         final var net = QueueNetworkBuilder.internetFromElement(inet);
 
         this.internets.add(net);
@@ -167,8 +173,8 @@ class QueueNetworkBuilder {
         );
     }
 
-    private void addSlavesToMasters(final Stream<? extends Element> machineStream) {
-        machineStream
+    private void addSlavesToMasters() {
+        this.doc.elementsWithTag("machine")
                 .filter(Utils::isValidMaster)
                 .forEach(this::addSlavesToMachine);
     }
@@ -210,7 +216,9 @@ class QueueNetworkBuilder {
                 .getFirstTagElement(machine, "master")
                 .getElementsByTagName("slave");
 
-        Utils.elementStreamOf(slaves)
+        IntStream.range(0, slaves.getLength())
+                .mapToObj(slaves::item)
+                .map(Element.class::cast)
                 .map(IconicoXML::elementId)
                 .map(Integer::parseInt)
                 .map(this.serviceCenters::get)

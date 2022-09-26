@@ -46,7 +46,6 @@ import java.util.Objects;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 /**
  * Realiza manupulações com o arquivo xml do modelo icônico
@@ -115,38 +114,30 @@ public class IconicoXML {
      * @throws IllegalArgumentException
      */
     public static void validarModelo(final Document doc) {
-        if (IconicoXML.isElementEmpty(doc, "owner")) {
+        final var document = new DocumentWrapper(doc);
+
+        if (document.hasEmptyTag("owner")) {
             throw new IllegalArgumentException("The model has no users.");
         }
 
-        if (IconicoXML.isElementEmpty(doc, "machine") &&
-            IconicoXML.isElementEmpty(doc, "cluster")) {
+        if (document.hasEmptyTag("machine") &&
+            document.hasEmptyTag("cluster")) {
             throw new IllegalArgumentException("The model has no icons.");
         }
 
-        if (IconicoXML.isElementEmpty(doc, "load")) {
+        if (document.hasEmptyTag("load")) {
             throw new IllegalArgumentException(
                     "One or more  workloads have not been configured.");
         }
 
         final boolean hasNoValidMaster =
-                IconicoXML.docElementStream(doc, "machine")
+                document.elementsWithTag("machine")
                         .noneMatch(Utils::isValidMaster);
 
         if (hasNoValidMaster) {
             throw new IllegalArgumentException(
                     "One or more parameters have not been configured.");
         }
-    }
-
-    private static boolean isElementEmpty(
-            final Document doc, final String tag) {
-        return doc.getElementsByTagName(tag).getLength() == 0;
-    }
-
-    private static Stream<Element> docElementStream(
-            final Document doc, final String tag) {
-        return Utils.elementStreamOf(doc.getElementsByTagName(tag));
     }
 
     /**
@@ -549,7 +540,7 @@ public class IconicoXML {
     }
 
     public static HashSet<String> newSetUsers(final Document doc) {
-        return IconicoXML.docElementStream(doc, "owner")
+        return new DocumentWrapper(doc).elementsWithTag("owner")
                 .map(IconicoXML::elementId)
                 .collect(Collectors.toCollection(HashSet::new));
     }
@@ -559,13 +550,13 @@ public class IconicoXML {
     }
 
     public static List<String> newListUsers(final Document doc) {
-        return IconicoXML.docElementStream(doc, "owner")
+        return new DocumentWrapper(doc).elementsWithTag("owner")
                 .map(o -> o.getAttribute("id"))
                 .toList();
     }
 
     public static HashSet<VirtualMachine> newListVirtualMachines(final Document doc) {
-        return IconicoXML.docElementStream(doc, "virtualMac")
+        return new DocumentWrapper(doc).elementsWithTag("virtualMac")
                 .map(IconicoXML::virtualMachineFromElement)
                 .collect(Collectors.toCollection(HashSet::new));
     }
