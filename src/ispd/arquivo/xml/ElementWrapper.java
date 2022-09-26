@@ -29,77 +29,78 @@ public class ElementWrapper implements Element {
     }
 
     @Override
-    public String getAttribute(String s) {
+    public String getAttribute(final String s) {
         return null;
     }
 
     @Override
-    public void setAttribute(String s, String s1) throws DOMException {
+    public void setAttribute(final String s, final String s1) throws DOMException {
 
     }
 
     @Override
-    public void removeAttribute(String s) throws DOMException {
+    public void removeAttribute(final String s) throws DOMException {
 
     }
 
     @Override
-    public Attr getAttributeNode(String s) {
+    public Attr getAttributeNode(final String s) {
         return null;
     }
 
     @Override
-    public Attr setAttributeNode(Attr attr) throws DOMException {
+    public Attr setAttributeNode(final Attr attr) throws DOMException {
         return null;
     }
 
     @Override
-    public Attr removeAttributeNode(Attr attr) throws DOMException {
+    public Attr removeAttributeNode(final Attr attr) throws DOMException {
         return null;
     }
 
     @Override
-    public NodeList getElementsByTagName(String s) {
+    public NodeList getElementsByTagName(final String s) {
         return null;
     }
 
     @Override
-    public String getAttributeNS(String s, String s1) throws DOMException {
+    public String getAttributeNS(final String s, final String s1) throws DOMException {
         return null;
     }
 
     @Override
-    public void setAttributeNS(String s, String s1, String s2) throws DOMException {
+    public void setAttributeNS(final String s, final String s1,
+                               final String s2) throws DOMException {
 
     }
 
     @Override
-    public void removeAttributeNS(String s, String s1) throws DOMException {
+    public void removeAttributeNS(final String s, final String s1) throws DOMException {
 
     }
 
     @Override
-    public Attr getAttributeNodeNS(String s, String s1) throws DOMException {
+    public Attr getAttributeNodeNS(final String s, final String s1) throws DOMException {
         return null;
     }
 
     @Override
-    public Attr setAttributeNodeNS(Attr attr) throws DOMException {
+    public Attr setAttributeNodeNS(final Attr attr) throws DOMException {
         return null;
     }
 
     @Override
-    public NodeList getElementsByTagNameNS(String s, String s1) throws DOMException {
+    public NodeList getElementsByTagNameNS(final String s, final String s1) throws DOMException {
         return null;
     }
 
     @Override
-    public boolean hasAttribute(String s) {
+    public boolean hasAttribute(final String s) {
         return false;
     }
 
     @Override
-    public boolean hasAttributeNS(String s, String s1) throws DOMException {
+    public boolean hasAttributeNS(final String s, final String s1) throws DOMException {
         return false;
     }
 
@@ -109,17 +110,18 @@ public class ElementWrapper implements Element {
     }
 
     @Override
-    public void setIdAttribute(String s, boolean b) throws DOMException {
+    public void setIdAttribute(final String s, final boolean b) throws DOMException {
 
     }
 
     @Override
-    public void setIdAttributeNS(String s, String s1, boolean b) throws DOMException {
+    public void setIdAttributeNS(final String s, final String s1,
+                                 final boolean b) throws DOMException {
 
     }
 
     @Override
-    public void setIdAttributeNode(Attr attr, boolean b) throws DOMException {
+    public void setIdAttributeNode(final Attr attr, final boolean b) throws DOMException {
 
     }
 
@@ -134,7 +136,7 @@ public class ElementWrapper implements Element {
     }
 
     @Override
-    public void setNodeValue(String s) throws DOMException {
+    public void setNodeValue(final String s) throws DOMException {
 
     }
 
@@ -184,22 +186,22 @@ public class ElementWrapper implements Element {
     }
 
     @Override
-    public Node insertBefore(Node node, Node node1) throws DOMException {
+    public Node insertBefore(final Node node, final Node node1) throws DOMException {
         return null;
     }
 
     @Override
-    public Node replaceChild(Node node, Node node1) throws DOMException {
+    public Node replaceChild(final Node node, final Node node1) throws DOMException {
         return null;
     }
 
     @Override
-    public Node removeChild(Node node) throws DOMException {
+    public Node removeChild(final Node node) throws DOMException {
         return null;
     }
 
     @Override
-    public Node appendChild(Node node) throws DOMException {
+    public Node appendChild(final Node node) throws DOMException {
         return null;
     }
 
@@ -209,7 +211,7 @@ public class ElementWrapper implements Element {
     }
 
     @Override
-    public Node cloneNode(boolean b) {
+    public Node cloneNode(final boolean b) {
         return null;
     }
 
@@ -219,7 +221,7 @@ public class ElementWrapper implements Element {
     }
 
     @Override
-    public boolean isSupported(String s, String s1) {
+    public boolean isSupported(final String s, final String s1) {
         return false;
     }
 
@@ -234,7 +236,7 @@ public class ElementWrapper implements Element {
     }
 
     @Override
-    public void setPrefix(String s) throws DOMException {
+    public void setPrefix(final String s) throws DOMException {
 
     }
 
@@ -254,7 +256,7 @@ public class ElementWrapper implements Element {
     }
 
     @Override
-    public short compareDocumentPosition(Node node) throws DOMException {
+    public short compareDocumentPosition(final Node node) throws DOMException {
         return 0;
     }
 
@@ -264,48 +266,48 @@ public class ElementWrapper implements Element {
     }
 
     @Override
-    public void setTextContent(String s) throws DOMException {
+    public void setTextContent(final String s) throws DOMException {
 
     }
 
     @Override
-    public boolean isSameNode(Node node) {
+    public boolean isSameNode(final Node node) {
         return false;
     }
 
     @Override
-    public String lookupPrefix(String s) {
+    public String lookupPrefix(final String s) {
         return null;
     }
 
     @Override
-    public boolean isDefaultNamespace(String s) {
+    public boolean isDefaultNamespace(final String s) {
         return false;
     }
 
     @Override
-    public String lookupNamespaceURI(String s) {
+    public String lookupNamespaceURI(final String s) {
         return null;
     }
 
     @Override
-    public boolean isEqualNode(Node node) {
+    public boolean isEqualNode(final Node node) {
         return false;
     }
 
     @Override
-    public Object getFeature(String s, String s1) {
+    public Object getFeature(final String s, final String s1) {
         return null;
     }
 
     @Override
-    public Object setUserData(String s, Object o,
-                              UserDataHandler userDataHandler) {
+    public Object setUserData(final String s, final Object o,
+                              final UserDataHandler userDataHandler) {
         return null;
     }
 
     @Override
-    public Object getUserData(String s) {
+    public Object getUserData(final String s) {
         return null;
     }
 }

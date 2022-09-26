@@ -22,7 +22,7 @@ import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
 class QueueNetworkBuilder {
-    private final Map<String, Double> users = new HashMap<>(0);
+    private final Map<String, Double> powerLimits = new HashMap<>(0);
     private final HashMap<Integer, CentroServico> serviceCenters =
             new HashMap<>(0);
     private final HashMap<CentroServico, List<CS_Maquina>> clusterSlaves =
@@ -39,7 +39,7 @@ class QueueNetworkBuilder {
         this.doc = new DocumentWrapper(doc);
 
         final Map<String, Consumer<Element>> processingSteps = Map.of(
-                "owner", this::setUserPowerLimit,
+                "owner", this::setOwnerPowerLimit,
                 "machine", this::processMachineElement,
                 "cluster", this::processClusterElement,
                 "internet", this::processNetElement,
@@ -51,9 +51,9 @@ class QueueNetworkBuilder {
         this.addSlavesToMasters();
     }
 
-    private void setUserPowerLimit(final Element user) {
+    private void setOwnerPowerLimit(final Element user) {
         final var id = user.getAttribute("id");
-        this.users.put(id, 0.0);
+        this.powerLimits.put(id, 0.0);
     }
 
     private void processMachineElement(final Element elem) {
@@ -175,8 +175,8 @@ class QueueNetworkBuilder {
     }
 
     private void increaseUserPower(final String user, final double value) {
-        final var oldValue = this.users.get(user);
-        this.users.put(user, oldValue + value);
+        final var oldValue = this.powerLimits.get(user);
+        this.powerLimits.put(user, oldValue + value);
     }
 
     private static CS_Internet internetFromElement(final Element elem) {
@@ -236,32 +236,38 @@ class QueueNetworkBuilder {
     }
 
     public RedeDeFilas build() {
-        this.users.forEach((user, power) -> {
+        this.powerLimits.forEach((user, power) -> {
             this.owners.add(user);
             this.powers.add(power);
         });
 
         this.masters.stream()
                 .map(CS_Mestre.class::cast)
-                .forEach(this::setUserMetrics);
+                .forEach(master -> QueueNetworkBuilder.setUserMetrics(
+                        master, this.owners, this.powers));
 
         final var queueNetwork = new RedeDeFilas(
                 this.masters, this.machines, this.links, this.internets);
 
-        this.makeUserMetrics();
+        final var metricasUsuarios =
+                QueueNetworkBuilder.makeUserMetrics(this.owners, this.powers);
 
         queueNetwork.setUsuarios(this.owners);
         return queueNetwork;
     }
 
-    private void setUserMetrics(final CS_Mestre master) {
+    private static void setUserMetrics(
+            final CS_Mestre master,
+            final List<String> users, final List<Double> powerLimits) {
         // TODO: Why create a new one every time?
-        master.getEscalonador().setMetricaUsuarios(this.makeUserMetrics());
+        master.getEscalonador().setMetricaUsuarios(
+                QueueNetworkBuilder.makeUserMetrics(users, powerLimits));
     }
 
-    private MetricasUsuarios makeUserMetrics() {
+    private static MetricasUsuarios makeUserMetrics(
+            final List<String> users, final List<Double> powerLimits) {
         final var metrics = new MetricasUsuarios();
-        metrics.addAllUsuarios(this.owners, this.powers);
+        metrics.addAllUsuarios(users, powerLimits);
         return metrics;
     }
 }

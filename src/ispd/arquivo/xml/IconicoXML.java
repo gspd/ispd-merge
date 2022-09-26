@@ -18,7 +18,6 @@ import ispd.motor.filas.RedeDeFilas;
 import ispd.motor.filas.RedeDeFilasCloud;
 import ispd.motor.filas.servidores.implementacao.CS_Link;
 import ispd.motor.filas.servidores.implementacao.CS_Maquina;
-import ispd.motor.filas.servidores.implementacao.CS_MaquinaCloud;
 import ispd.motor.filas.servidores.implementacao.CS_Mestre;
 import ispd.motor.filas.servidores.implementacao.CS_Switch;
 import ispd.utils.ValidaValores;
@@ -152,33 +151,6 @@ public class IconicoXML {
 
     public static RedeDeFilasCloud newRedeDeFilasCloud(final Document model) {
         return new CloudQueueNetworkBuilder(model).build();
-    }
-
-    public static CS_MaquinaCloud cloudMachineFromElement(
-            final Element cluster, final int id,
-            final Element cost, final Element processing,
-            final Element memory, final Element disk) {
-        return new CS_MaquinaCloud(
-                "%s.%d".formatted(cluster.getAttribute("id"), id),
-                cluster.getAttribute("owner"),
-                Double.parseDouble(processing.getAttribute("power")),
-                Integer.parseInt(processing.getAttribute("number")),
-                Double.parseDouble(memory.getAttribute("size")),
-                Double.parseDouble(disk.getAttribute("size")),
-                Double.parseDouble(cost.getAttribute("cost_proc")),
-                Double.parseDouble(cost.getAttribute("cost_mem")),
-                Double.parseDouble(cost.getAttribute("cost_disk")),
-                0.0,
-                id + 1
-        );
-    }
-
-    public static void connectMachineAndSwitch(
-            final CS_Switch theSwitch, final CS_MaquinaCloud maq) {
-        maq.addConexoesSaida(theSwitch);
-        maq.addConexoesEntrada(theSwitch);
-        theSwitch.addConexoesEntrada(maq);
-        theSwitch.addConexoesSaida(maq);
     }
 
     /**
