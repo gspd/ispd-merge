@@ -23,8 +23,6 @@ import java.util.stream.IntStream;
 
 class QueueNetworkBuilder {
     private final Map<String, Double> users = new HashMap<>(0);
-    // TODO: Investigate why profiles is query-less
-    private final Map<String, Double> profiles = new HashMap<>(0);
     private final HashMap<Integer, CentroServico> serviceCenters =
             new HashMap<>(0);
     private final HashMap<CentroServico, List<CS_Maquina>> clusterSlaves =
@@ -56,9 +54,6 @@ class QueueNetworkBuilder {
     private void setUserPowerLimit(final Element user) {
         final var id = user.getAttribute("id");
         this.users.put(id, 0.0);
-        this.profiles.put(id,
-                Utils.getValueAttribute(user, "powerlimit")
-        );
     }
 
     private void processMachineElement(final Element elem) {
