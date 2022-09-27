@@ -5,9 +5,8 @@ import org.w3c.dom.NodeList;
 
 
 /**
- * This is a planned class to add convenience methods to the Element class.
- * The idea is to function as a wrapper, outsourcing most method calls to the
- * inner object.
+ * This is a class to add convenience methods to manipulate XML Element objects.
+ * It functions as a wrapper, outsourcing most method calls to the inner object.
  */
 public class WrappedElement {
     private final Element element;
@@ -16,20 +15,33 @@ public class WrappedElement {
         this.element = element;
     }
 
-    NodeList mastersSlaves() {
-        return this.firstTagElement("master").getElementsByTagName("slave");
+    public int vertex(final String vertexEnd) {
+        final var connect = new WrappedElement(this.firstTagElement("connect"));
+        return connect.getInt(vertexEnd);
+    }
+
+    public String vmm(){
+        return this.getAttribute("vmm");
     }
 
     public Element firstTagElement(final String tagName) {
         return (Element) this.element.getElementsByTagName(tagName).item(0);
     }
 
-    public String id() {
-        return this.getAttribute("id");
+    public int getInt(final String attributeName) {
+        return Integer.parseInt(this.getAttribute(attributeName));
     }
 
-    public String getAttribute(final String s) {
+    private String getAttribute(final String s) {
         return this.element.getAttribute(s);
+    }
+
+    NodeList mastersSlaves() {
+        return this.firstTagElement("master").getElementsByTagName("slave");
+    }
+
+    public String id() {
+        return this.getAttribute("id");
     }
 
     public double bandwidth() {
@@ -50,16 +62,29 @@ public class WrappedElement {
         return idElement.getInt("global");
     }
 
-    public int getInt(final String attributeName) {
-        return Integer.parseInt(this.getAttribute(attributeName));
-    }
-
     public String owner() {
         return this.getAttribute("owner");
     }
 
     public double power() {
         return this.getDouble("power");
+    }
+
+    public int powerAsInt(){
+        // TODO: Is this function necessary?
+        return this.getInt("power");
+    }
+
+    public double memAlloc(){
+        return this.getDouble("mem_alloc");
+    }
+
+    public double diskAlloc(){
+        return this.getDouble("disk_alloc");
+    }
+
+    public String opSystem(){
+        return this.getAttribute("op_system");
     }
 
     public String mastersScheduler() {

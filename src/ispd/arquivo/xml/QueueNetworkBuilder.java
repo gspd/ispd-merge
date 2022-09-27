@@ -32,10 +32,10 @@ class QueueNetworkBuilder {
     private final List<CS_Maquina> machines = new ArrayList<>(0);
     private final List<CS_Comunicacao> links = new ArrayList<>(0);
     private final List<CS_Internet> internets = new ArrayList<>(0);
-    private final DocumentWrapper doc;
+    private final WrappedDocument doc;
 
     QueueNetworkBuilder(final Document doc) {
-        this.doc = new DocumentWrapper(doc);
+        this.doc = new WrappedDocument(doc);
 
         final Map<String, Consumer<Element>> processingSteps = Map.of(
                 "owner", this::setOwnerPowerLimit,
@@ -52,8 +52,7 @@ class QueueNetworkBuilder {
 
     private void setOwnerPowerLimit(final Element user) {
         final var e = new WrappedElement(user);
-        final var id = e.id();
-        this.powerLimits.put(id, 0.0);
+        this.setOwnerPowerLimit(e);
     }
 
     private void processMachineElement(final Element elem) {
@@ -92,9 +91,7 @@ class QueueNetworkBuilder {
             this.masters.add(cluster);
             this.serviceCenters.put(id, cluster);
 
-            final int slaveCount = IconicoXML.getIntValueAttribute(
-                    elem, "nodes"
-            );
+            final int slaveCount = new WrappedElement(elem).getInt("nodes");
 
             final double power =
                     cluster.getPoderComputacional() * (slaveCount + 1);
@@ -127,7 +124,7 @@ class QueueNetworkBuilder {
 
             final double power =
                     new WrappedElement(elem).getDouble("power")
-                    * IconicoXML.getIntValueAttribute(elem, "nodes");
+                    * new WrappedElement(elem).getInt("nodes");
 
             this.increaseUserPower(elem.getAttribute("owner"), power);
 
@@ -176,6 +173,11 @@ class QueueNetworkBuilder {
                 .filter(WrappedElement::hasMasterAttribute)
                 .map(WrappedElement::getElement)
                 .forEach(this::addSlavesToMachine);
+    }
+
+    private void setOwnerPowerLimit(final WrappedElement user) {
+        final var id = user.id();
+        this.powerLimits.put(id, 0.0);
     }
 
     private static CS_Mestre masterFromElement(final WrappedElement e) {
@@ -241,7 +243,8 @@ class QueueNetworkBuilder {
 
     private Vertice getElementVertex(final Element elem,
                                      final String vertexEnd) {
-        return (Vertice) this.serviceCenters.get(IconicoXML.getIntValueAttribute(IconicoXML.getFirstTagElement(elem, "connect"), vertexEnd));
+        final var e = new WrappedElement(elem);
+        return (Vertice) this.serviceCenters.get(e.vertex(vertexEnd));
     }
 
     private void addSlavesToMachine(final Element machine) {
@@ -254,7 +257,7 @@ class QueueNetworkBuilder {
         IntStream.range(0, slaves.getLength())
                 .mapToObj(slaves::item)
                 .map(Element.class::cast)
-                .map(IconicoXML::elementId)
+                .map(e1 -> new WrappedElement(e1).id())
                 .map(Integer::parseInt)
                 .map(this.serviceCenters::get)
                 .forEach(sc -> this.processServiceCenter(sc, master));
@@ -301,8 +304,18 @@ class QueueNetworkBuilder {
         private final List<Double> limits;
 
         private UserPowerLimitHelper(final Map<String, Double> powerLimits) {
-            this.owners = new ArrayList<>(powerLimits.keySet());
-            this.limits = new ArrayList<>(powerLimits.values());
+            this.owners = new ArrayList<>(powerLimits.size());
+            this.limits = new ArrayList<>(powerLimits.size());
+
+            powerLimits.forEach((key, value) -> {
+                this.owners.add(key);
+                this.limits.add(value);
+            });
+
+            // Note: These look nice, but they return collection *Views*.
+            // Must study them further to guarantee their use is safe in here.
+//            this.owners = new ArrayList<>(powerLimits.keySet());
+//            this.limits = new ArrayList<>(powerLimits.values());
         }
 
         private void setSchedulerUserMetrics(final Escalonador scheduler) {

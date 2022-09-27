@@ -109,7 +109,7 @@ public class IconicoXML {
      * @throws IllegalArgumentException if the model is incomplete
      */
     public static void validarModelo(final Document doc) {
-        final var document = new DocumentWrapper(doc);
+        final var document = new WrappedDocument(doc);
 
         if (document.hasEmptyTag("owner")) {
             throw new IllegalArgumentException("The model has no users.");
@@ -126,8 +126,8 @@ public class IconicoXML {
         }
 
         final boolean hasNoValidMaster =
-                document.elementsWithTag("machine")
-                        .noneMatch(m -> new WrappedElement(m).hasMasterAttribute());
+                document.wElementsWithTag("machine")
+                        .noneMatch(WrappedElement::hasMasterAttribute);
 
         if (hasNoValidMaster) {
             throw new IllegalArgumentException(
@@ -505,37 +505,29 @@ public class IconicoXML {
     }
 
     public static HashSet<String> newSetUsers(final Document doc) {
-        return new DocumentWrapper(doc).elementsWithTag("owner")
-                .map(IconicoXML::elementId)
+        return new WrappedDocument(doc).elementsWithTag("owner")
+                .map(WrappedElement::new)
+                .map(WrappedElement::id)
                 .collect(Collectors.toCollection(HashSet::new));
     }
 
-    public static String elementId(final Element e) {
-        return e.getAttribute("id");
-    }
-
     public static List<String> newListUsers(final Document doc) {
-        return new DocumentWrapper(doc).elementsWithTag("owner")
-                .map(o -> o.getAttribute("id"))
+        return new WrappedDocument(doc).elementsWithTag("owner")
+                .map(WrappedElement::new)
+                .map(WrappedElement::id)
                 .toList();
     }
 
     public static HashSet<VirtualMachine> newListVirtualMachines(final Document doc) {
-        return new DocumentWrapper(doc).elementsWithTag("virtualMac")
+        return new WrappedDocument(doc).elementsWithTag("virtualMac")
+                .map(WrappedElement::new)
                 .map(IconicoXML::virtualMachineFromElement)
                 .collect(Collectors.toCollection(HashSet::new));
     }
 
-    private static VirtualMachine virtualMachineFromElement(final Element owner) {
-        return new VirtualMachine(
-                owner.getAttribute("id"),
-                owner.getAttribute("owner"),
-                owner.getAttribute("vmm"),
-                Integer.parseInt(owner.getAttribute("power")),
-                Double.parseDouble(owner.getAttribute("mem_alloc")),
-                Double.parseDouble(owner.getAttribute("disk_alloc")),
-                owner.getAttribute("op_system")
-        );
+    private static VirtualMachine virtualMachineFromElement(final WrappedElement e) {
+        return new VirtualMachine(e.id(), e.owner(), e.vmm(), e.powerAsInt(),
+                e.memAlloc(), e.diskAlloc(), e.opSystem());
     }
 
     public static Document[] clone(final File file, final int number)
@@ -577,11 +569,6 @@ public class IconicoXML {
                 (prev, next) -> next,
                 HashMap::new
         );
-    }
-
-    public static int getIntValueAttribute(final Element elem,
-                                           final String attr) {
-        return Integer.parseInt(elem.getAttribute(attr));
     }
 
     public void addUsers(final Collection<String> users,

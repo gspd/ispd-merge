@@ -7,7 +7,7 @@ import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-public record DocumentWrapper(Document document) {
+public record WrappedDocument(Document document) {
     public void forEachElementWithTag(
             final String tag, final Consumer<? super Element> action) {
         this.elementsWithTag(tag).forEach(action);
@@ -18,6 +18,10 @@ public record DocumentWrapper(Document document) {
         return IntStream.range(0, list.getLength())
                 .mapToObj(list::item)
                 .map(Element.class::cast);
+    }
+
+    public Stream<WrappedElement> wElementsWithTag(final String tag){
+        return this.elementsWithTag(tag).map(WrappedElement::new);
     }
 
     public boolean hasEmptyTag(final String tag) {
