@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class CloudQueueNetworkBuilder {
+public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
     private final NodeList docMachines;
     private final NodeList docClusters;
     private final NodeList docInternet;
@@ -44,6 +44,7 @@ public class CloudQueueNetworkBuilder {
     private final List<Double> powers = new ArrayList<>(0);
 
     public CloudQueueNetworkBuilder(final Document model) {
+        super(model);
         this.docMachines = model.getElementsByTagName("machine");
         this.docClusters = model.getElementsByTagName("cluster");
         this.docInternet = model.getElementsByTagName("internet");
@@ -91,7 +92,7 @@ public class CloudQueueNetworkBuilder {
             final Element id =
                     IconicoXML.getFirstTagElement(maquina, "icon_id");
             final int global = Integer.parseInt(id.getAttribute("global"));
-            if (Utils.isValidMaster(maquina)) {
+            if (new WrappedElement(maquina).hasMasterAttribute()) {
                 final Element master =
                         IconicoXML.getFirstTagElement(maquina,
                                 "master");
@@ -326,7 +327,7 @@ public class CloudQueueNetworkBuilder {
             final Element id =
                     IconicoXML.getFirstTagElement(maquina, "icon_id");
             final int global = Integer.parseInt(id.getAttribute("global"));
-            if (Utils.isValidMaster(maquina)) {
+            if (new WrappedElement(maquina).hasMasterAttribute()) {
                 final Element master =
                         IconicoXML.getFirstTagElement(maquina,
                                 "master");

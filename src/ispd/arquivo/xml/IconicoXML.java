@@ -16,10 +16,6 @@ import ispd.motor.carga.CargaTrace;
 import ispd.motor.carga.GerarCarga;
 import ispd.motor.filas.RedeDeFilas;
 import ispd.motor.filas.RedeDeFilasCloud;
-import ispd.motor.filas.servidores.implementacao.CS_Link;
-import ispd.motor.filas.servidores.implementacao.CS_Maquina;
-import ispd.motor.filas.servidores.implementacao.CS_Mestre;
-import ispd.motor.filas.servidores.implementacao.CS_Switch;
 import ispd.utils.ValidaValores;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -110,7 +106,7 @@ public class IconicoXML {
     /**
      * Verifica se modelo está completo
      *
-     * @throws IllegalArgumentException
+     * @throws IllegalArgumentException if the model is incomplete
      */
     public static void validarModelo(final Document doc) {
         final var document = new DocumentWrapper(doc);
@@ -131,7 +127,7 @@ public class IconicoXML {
 
         final boolean hasNoValidMaster =
                 document.elementsWithTag("machine")
-                        .noneMatch(Utils::isValidMaster);
+                        .noneMatch(m -> new WrappedElement(m).hasMasterAttribute());
 
         if (hasNoValidMaster) {
             throw new IllegalArgumentException(
@@ -350,7 +346,7 @@ public class IconicoXML {
         //Realiza leitura dos mestres
         for (int i = 0; i < machines.getLength(); i++) {
             final Element maquina = (Element) machines.item(i);
-            if (Utils.isValidMaster(maquina)) {
+            if (new WrappedElement(maquina).hasMasterAttribute()) {
                 final Element id =
                         IconicoXML.getFirstTagElement(maquina, "icon_id");
                 final int global = Integer.parseInt(id.getAttribute("global"));
@@ -406,7 +402,8 @@ public class IconicoXML {
 
     static Element getFirstTagElement(
             final Element element, final String tag) {
-        return (Element) element.getElementsByTagName(tag).item(0);
+        // TODO: Inline this method
+        return new WrappedElement(element).firstTagElement(tag);
     }
 
     private static void setGridItemCharacteristics(
@@ -432,7 +429,6 @@ public class IconicoXML {
         if (item instanceof Cluster cluster) {
             cluster.setComputationalPower(power);
             cluster.setCoreCount(Integer.valueOf(cores));
-
             cluster.setRam(Double.parseDouble(memorySize));
             cluster.setHardDisk(Double.parseDouble(diskSize));
 
@@ -449,12 +445,9 @@ public class IconicoXML {
             cluster.setCostPerDisk(Double.parseDouble(cost.getAttribute(
                     "cost_disk")));
         } else if (item instanceof Machine machine) {
-
-
             machine.setComputationalPower(power);
             machine.setCoreCount(Integer.valueOf(cores));
             machine.setRam(Double.valueOf(memorySize));
-
             machine.setHardDisk(Double.valueOf(diskSize));
 
             if (!IconicoXML.hasCostProperties(characteristics)) {
@@ -586,105 +579,9 @@ public class IconicoXML {
         );
     }
 
-    public static int getIconGlobalId(final Element icon) {
-        return IconicoXML.getIntValueAttribute((
-                IconicoXML.getFirstTagElement(icon, "icon_id")
-        ), "global");
-    }
-
     public static int getIntValueAttribute(final Element elem,
                                            final String attr) {
         return Integer.parseInt(elem.getAttribute(attr));
-    }
-
-    public static CS_Mestre masterFromElement(final Element elem) {
-        return new CS_Mestre(
-                elem.getAttribute("id"),
-                elem.getAttribute("owner"),
-                Utils.getValueAttribute(elem, "power"),
-                Utils.getValueAttribute(elem, "load"),
-                IconicoXML.getScheduler(elem),
-                Utils.getValueAttribute(elem, "energy")
-        );
-    }
-
-    private static String getScheduler(final Element machine) {
-        return IconicoXML.getFirstTagElement(machine, "master").getAttribute(
-                "scheduler");
-    }
-
-    public static CS_Maquina machineFromElement(final Element elem) {
-        return new CS_Maquina(
-                elem.getAttribute("id"),
-                elem.getAttribute("owner"),
-                Utils.getValueAttribute(elem, "power"),
-                1,
-                Utils.getValueAttribute(elem, "load"),
-                Utils.getValueAttribute(elem, "energy")
-        );
-    }
-
-    public static CS_Switch switchFromElement(final Element elem) {
-        return new CS_Switch(
-                elem.getAttribute("id"),
-                Utils.getValueAttribute(elem, "bandwidth"),
-                0.0,
-                Utils.getValueAttribute(elem, "latency")
-        );
-    }
-
-    public static boolean isMaster(final Element cluster) {
-        return Boolean.parseBoolean(cluster.getAttribute("master"));
-    }
-
-    public static CS_Mestre clusterFromElement(final Element elem) {
-        return new CS_Mestre(
-                elem.getAttribute("id"),
-                elem.getAttribute("owner"),
-                Utils.getValueAttribute(elem, "power"),
-                0.0,
-                elem.getAttribute("scheduler"),
-                Utils.getValueAttribute(elem, "energy")
-        );
-    }
-
-    public static void connectMachineAndSwitch(final CS_Maquina machine,
-                                               final CS_Switch theSwitch) {
-        machine.addConexoesSaida(theSwitch);
-        machine.addConexoesEntrada(theSwitch);
-
-        theSwitch.addConexoesEntrada(machine);
-        theSwitch.addConexoesSaida(machine);
-    }
-
-    public static CS_Maquina machineFromElement(final Element cluster,
-                                                final int id) {
-        return new CS_Maquina(
-                cluster.getAttribute("id"),
-                cluster.getAttribute("owner"),
-                Utils.getValueAttribute(cluster, "power"),
-                1,
-                0.0,
-                id + 1,
-                Utils.getValueAttribute(cluster, "energy")
-        );
-    }
-
-    public static CS_Link linkFromElement(final Element elem) {
-        return new CS_Link(
-                elem.getAttribute("id"),
-                Utils.getValueAttribute(elem, "bandwidth"),
-                Utils.getValueAttribute(elem, "load"),
-                Utils.getValueAttribute(elem, "latency")
-        );
-    }
-
-    public static void connectClusterAndSwitch(final CS_Mestre cluster,
-                                               final CS_Switch theSwitch) {
-        cluster.addConexoesEntrada(theSwitch);
-        cluster.addConexoesSaida(theSwitch);
-        theSwitch.addConexoesEntrada(cluster);
-        theSwitch.addConexoesSaida(cluster);
     }
 
     public void addUsers(final Collection<String> users,
@@ -916,14 +813,15 @@ public class IconicoXML {
             final Double costPerDisk,
             final boolean isMaster, final Collection<Integer> slaves,
             final Object[][] extraAttrs, final Object[][] extraMasterAttrs) {
-        final var attrs = Arrays.asList(new Object[][] {
+        // Note: Arrays.asList returns an abstract list, which throws on .add()
+        final var attrList = Arrays.stream(new Object[][] {
                 { "id", name },
                 { "power", power },
                 { "load", occupancy },
                 { "owner", owner },
-        });
+        }).collect(Collectors.toList());
 
-        attrs.addAll(Arrays.asList(extraAttrs));
+        attrList.addAll(Arrays.asList(extraAttrs));
 
         final Node characteristic;
 
@@ -940,7 +838,7 @@ public class IconicoXML {
         }
 
         final var machine = this.anElement(
-                "machine", attrs.toArray(Object[][]::new), new Node[] {
+                "machine", attrList.toArray(Object[][]::new), new Node[] {
                         this.aPositionElement(x, y),
                         this.anIconIdElement(globalId, localId),
                         characteristic,
@@ -959,14 +857,14 @@ public class IconicoXML {
     private Element aMasterElement(final String scheduler,
                                    final Collection<Integer> slaves,
                                    final Object[][] extraAttrs) {
-        final var attrs = Arrays.asList(new Object[][] {
+        final var attrList = Arrays.asList(new Object[][] {
                 { "scheduler", scheduler },
         });
 
-        attrs.addAll(Arrays.asList(extraAttrs));
+        attrList.addAll(Arrays.asList(extraAttrs));
 
         return this.anElement(
-                "master", attrs.toArray(Object[][]::new),
+                "master", attrList.toArray(Object[][]::new),
                 slaves.stream()
                         .map(this::aSlaveElement)
                         .toArray(Element[]::new)

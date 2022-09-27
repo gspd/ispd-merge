@@ -1,5 +1,6 @@
 package ispd.arquivo.xml;
 
+import ispd.escalonador.Escalonador;
 import ispd.motor.filas.RedeDeFilas;
 import ispd.motor.filas.servidores.CS_Comunicacao;
 import ispd.motor.filas.servidores.CS_Processamento;
@@ -31,8 +32,6 @@ class QueueNetworkBuilder {
     private final List<CS_Maquina> machines = new ArrayList<>(0);
     private final List<CS_Comunicacao> links = new ArrayList<>(0);
     private final List<CS_Internet> internets = new ArrayList<>(0);
-    private final List<String> owners = new ArrayList<>(0);
-    private final List<Double> powers = new ArrayList<>(0);
     private final DocumentWrapper doc;
 
     QueueNetworkBuilder(final Document doc) {
@@ -52,25 +51,24 @@ class QueueNetworkBuilder {
     }
 
     private void setOwnerPowerLimit(final Element user) {
-        final var id = user.getAttribute("id");
+        final var e = new WrappedElement(user);
+        final var id = e.id();
         this.powerLimits.put(id, 0.0);
     }
 
     private void processMachineElement(final Element elem) {
-        final var isMaster = Utils.isValidMaster(elem);
+        final var e = new WrappedElement(elem);
+        final var isMaster = e.hasMasterAttribute();
 
         final CS_Processamento machine;
 
         if (isMaster) {
-            machine = IconicoXML.masterFromElement(elem);
+            machine = QueueNetworkBuilder.masterFromElement(e);
         } else {
-            machine = IconicoXML.machineFromElement(elem);
+            machine = QueueNetworkBuilder.machineFromElement(e);
         }
 
-        this.serviceCenters.put(
-                IconicoXML.getIconGlobalId(elem),
-                machine
-        );
+        this.serviceCenters.put(e.globalIconId(), machine);
 
         if (isMaster) {
             this.masters.add(machine);
@@ -85,10 +83,11 @@ class QueueNetworkBuilder {
     }
 
     private void processClusterElement(final Element elem) {
-        final int id = IconicoXML.getIconGlobalId(elem);
+        final var e = new WrappedElement(elem);
+        final int id = e.globalIconId();
 
-        if (IconicoXML.isMaster(elem)) {
-            final var cluster = IconicoXML.clusterFromElement(elem);
+        if (e.isMaster()) {
+            final var cluster = QueueNetworkBuilder.masterFromElementNoLoad(e);
 
             this.masters.add(cluster);
             this.serviceCenters.put(id, cluster);
@@ -102,15 +101,17 @@ class QueueNetworkBuilder {
 
             this.increaseUserPower(cluster.getProprietario(), power);
 
-            final var theSwitch = IconicoXML.switchFromElement(elem);
+            final var theSwitch = QueueNetworkBuilder.switchFromElement(e);
 
             this.links.add(theSwitch);
 
-            IconicoXML.connectClusterAndSwitch(cluster, theSwitch);
+            QueueNetworkBuilder.connectClusterAndSwitch(cluster, theSwitch);
 
             for (int i = 0; i < slaveCount; i++) {
-                final var machine = IconicoXML.machineFromElement(elem, i);
-                IconicoXML.connectMachineAndSwitch(machine, theSwitch);
+                final var e1 = new WrappedElement(elem);
+                final var machine =
+                        QueueNetworkBuilder.machineFromElement(i, e1);
+                QueueNetworkBuilder.connectMachineAndSwitch(machine, theSwitch);
 
                 machine.addMestre(cluster);
                 cluster.addEscravo(machine);
@@ -119,13 +120,13 @@ class QueueNetworkBuilder {
             }
 
         } else {
-            final var theSwitch = IconicoXML.switchFromElement(elem);
+            final var theSwitch = QueueNetworkBuilder.switchFromElement(e);
 
             this.links.add(theSwitch);
             this.serviceCenters.put(id, theSwitch);
 
             final double power =
-                    Utils.getValueAttribute(elem, "power")
+                    new WrappedElement(elem).getDouble("power")
                     * IconicoXML.getIntValueAttribute(elem, "nodes");
 
             this.increaseUserPower(elem.getAttribute("owner"), power);
@@ -137,8 +138,10 @@ class QueueNetworkBuilder {
             final var slaves = new ArrayList<CS_Maquina>(slaveCount);
 
             for (int i = 0; i < slaveCount; i++) {
-                final var machine = IconicoXML.machineFromElement(elem, i);
-                IconicoXML.connectMachineAndSwitch(machine, theSwitch);
+                final var e1 = new WrappedElement(elem);
+                final var machine =
+                        QueueNetworkBuilder.machineFromElement(i, e1);
+                QueueNetworkBuilder.connectMachineAndSwitch(machine, theSwitch);
                 slaves.add(machine);
             }
 
@@ -147,18 +150,17 @@ class QueueNetworkBuilder {
         }
     }
 
-    private void processNetElement(final Element inet) {
-        final var net = QueueNetworkBuilder.internetFromElement(inet);
+    private void processNetElement(final Element internet) {
+        final var e = new WrappedElement(internet);
+        final var net = QueueNetworkBuilder.internetFromElement(e);
 
         this.internets.add(net);
-        this.serviceCenters.put(
-                IconicoXML.getIconGlobalId(inet),
-                net
-        );
+        this.serviceCenters.put(e.globalIconId(), net);
     }
 
     private void processLinkElement(final Element elem) {
-        final var link = IconicoXML.linkFromElement(elem);
+        final var e = new WrappedElement(elem);
+        final var link = QueueNetworkBuilder.linkFromElement(e);
 
         this.links.add(link);
 
@@ -170,8 +172,20 @@ class QueueNetworkBuilder {
 
     private void addSlavesToMasters() {
         this.doc.elementsWithTag("machine")
-                .filter(Utils::isValidMaster)
+                .map(WrappedElement::new)
+                .filter(WrappedElement::hasMasterAttribute)
+                .map(WrappedElement::getElement)
                 .forEach(this::addSlavesToMachine);
+    }
+
+    private static CS_Mestre masterFromElement(final WrappedElement e) {
+        return new CS_Mestre(e.id(), e.owner(), e.power(), e.load(),
+                e.mastersScheduler(), e.energy());
+    }
+
+    private static CS_Maquina machineFromElement(final WrappedElement e) {
+        return new CS_Maquina(e.id(), e.owner(), e.power(), 1,
+                e.load(), e.energy());
     }
 
     private void increaseUserPower(final String user, final double value) {
@@ -179,13 +193,41 @@ class QueueNetworkBuilder {
         this.powerLimits.put(user, oldValue + value);
     }
 
-    private static CS_Internet internetFromElement(final Element elem) {
-        return new CS_Internet(
-                elem.getAttribute("id"),
-                Utils.getValueAttribute(elem, "bandwidth"),
-                Utils.getValueAttribute(elem, "load"),
-                Utils.getValueAttribute(elem, "latency")
-        );
+    private static CS_Mestre masterFromElementNoLoad(final WrappedElement e) {
+        return new CS_Mestre(e.id(), e.owner(), e.power(), 0.0,
+                e.scheduler(), e.energy());
+    }
+
+    private static CS_Switch switchFromElement(final WrappedElement e) {
+        return new CS_Switch(e.id(), e.bandwidth(), 0.0, e.latency());
+    }
+
+    private static void connectClusterAndSwitch(
+            final CS_Mestre cluster, final CS_Switch theSwitch) {
+        cluster.addConexoesEntrada(theSwitch);
+        cluster.addConexoesSaida(theSwitch);
+        QueueNetworkBuilder.connectSwitchAndServiceCenter(theSwitch, cluster);
+    }
+
+    private static CS_Maquina machineFromElement(
+            final int id, final WrappedElement e) {
+        return new CS_Maquina(e.id(), e.owner(), e.power(), 1, 0.0,
+                id + 1, e.energy());
+    }
+
+    private static void connectMachineAndSwitch(
+            final CS_Maquina machine, final CS_Switch theSwitch) {
+        machine.addConexoesSaida(theSwitch);
+        machine.addConexoesEntrada(theSwitch);
+        QueueNetworkBuilder.connectSwitchAndServiceCenter(theSwitch, machine);
+    }
+
+    private static CS_Internet internetFromElement(final WrappedElement e) {
+        return new CS_Internet(e.id(), e.bandwidth(), e.load(), e.latency());
+    }
+
+    private static CS_Link linkFromElement(final WrappedElement e) {
+        return new CS_Link(e.id(), e.bandwidth(), e.load(), e.latency());
     }
 
     private static void connectLinkAndVertices(final CS_Link link,
@@ -203,13 +245,11 @@ class QueueNetworkBuilder {
     }
 
     private void addSlavesToMachine(final Element machine) {
-        final var master = (CS_Mestre) this.serviceCenters.get(
-                IconicoXML.getIconGlobalId(machine)
-        );
+        final var e = new WrappedElement(machine);
+        final var master =
+                (CS_Mestre) this.serviceCenters.get(e.globalIconId());
 
-        final var slaves = IconicoXML
-                .getFirstTagElement(machine, "master")
-                .getElementsByTagName("slave");
+        final var slaves = e.mastersSlaves();
 
         IntStream.range(0, slaves.getLength())
                 .mapToObj(slaves::item)
@@ -218,6 +258,12 @@ class QueueNetworkBuilder {
                 .map(Integer::parseInt)
                 .map(this.serviceCenters::get)
                 .forEach(sc -> this.processServiceCenter(sc, master));
+    }
+
+    private static void connectSwitchAndServiceCenter(
+            final CS_Switch theSwitch, final CentroServico serviceCenter) {
+        theSwitch.addConexoesEntrada(serviceCenter);
+        theSwitch.addConexoesSaida(serviceCenter);
     }
 
     private void processServiceCenter(
@@ -236,38 +282,41 @@ class QueueNetworkBuilder {
     }
 
     public RedeDeFilas build() {
-        this.powerLimits.forEach((user, power) -> {
-            this.owners.add(user);
-            this.powers.add(power);
-        });
+        final var helper = new UserPowerLimitHelper(this.powerLimits);
 
         this.masters.stream()
                 .map(CS_Mestre.class::cast)
-                .forEach(master -> QueueNetworkBuilder.setUserMetrics(
-                        master, this.owners, this.powers));
+                .map(CS_Mestre::getEscalonador)
+                .forEach(helper::setSchedulerUserMetrics);
 
         final var queueNetwork = new RedeDeFilas(
                 this.masters, this.machines, this.links, this.internets);
 
-        final var metricasUsuarios =
-                QueueNetworkBuilder.makeUserMetrics(this.owners, this.powers);
-
-        queueNetwork.setUsuarios(this.owners);
+        queueNetwork.setUsuarios(helper.getOwners());
         return queueNetwork;
     }
 
-    private static void setUserMetrics(
-            final CS_Mestre master,
-            final List<String> users, final List<Double> powerLimits) {
-        // TODO: Why create a new one every time?
-        master.getEscalonador().setMetricaUsuarios(
-                QueueNetworkBuilder.makeUserMetrics(users, powerLimits));
-    }
+    static class UserPowerLimitHelper {
+        private final List<String> owners;
+        private final List<Double> limits;
 
-    private static MetricasUsuarios makeUserMetrics(
-            final List<String> users, final List<Double> powerLimits) {
-        final var metrics = new MetricasUsuarios();
-        metrics.addAllUsuarios(users, powerLimits);
-        return metrics;
+        private UserPowerLimitHelper(final Map<String, Double> powerLimits) {
+            this.owners = new ArrayList<>(powerLimits.keySet());
+            this.limits = new ArrayList<>(powerLimits.values());
+        }
+
+        private void setSchedulerUserMetrics(final Escalonador scheduler) {
+            scheduler.setMetricaUsuarios(this.makeUserMetrics());
+        }
+
+        private MetricasUsuarios makeUserMetrics() {
+            final var metrics = new MetricasUsuarios();
+            metrics.addAllUsuarios(this.owners, this.limits);
+            return metrics;
+        }
+
+        public List<String> getOwners() {
+            return this.owners;
+        }
     }
 }
