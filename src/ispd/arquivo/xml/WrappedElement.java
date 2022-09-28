@@ -26,7 +26,7 @@ public class WrappedElement {
         return new WrappedElement(this.firstTagElement(tagName));
     }
 
-    private String getAttribute(final String s) {
+    public String getAttribute(final String s) {
         return this.element.getAttribute(s);
     }
 
@@ -40,14 +40,18 @@ public class WrappedElement {
 
     public Stream<WrappedElement> wMastersSlaves() {
         final var ms = this.mastersSlaves();
-        return IntStream.range(0, ms.getLength())
-                .mapToObj(ms::item)
-                .map(Element.class::cast)
-                .map(WrappedElement::new);
+        return WrappedElement.nodeListToWrappedElementStream(ms);
     }
 
     public NodeList mastersSlaves() {
         return this.firstTagElement("master").getElementsByTagName("slave");
+    }
+
+    private static Stream<WrappedElement> nodeListToWrappedElementStream(final NodeList nl) {
+        return IntStream.range(0, nl.getLength())
+                .mapToObj(nl::item)
+                .map(Element.class::cast)
+                .map(WrappedElement::new);
     }
 
     public WrappedElement(final Element element) {
@@ -123,8 +127,56 @@ public class WrappedElement {
         return this.element.getElementsByTagName("master").getLength() > 0;
     }
 
+    public boolean hasCharacteristicAttribute() {
+        return this.element.getElementsByTagName("characteristic").getLength() > 0;
+    }
+
+    public boolean hasCostAttribute() {
+        return this.element.getElementsByTagName("cost").getLength() > 0;
+    }
+
+    public double costProcessing() {
+        return this.getDouble("cost_proc");
+    }
+
+    public double costMemory() {
+        return this.getDouble("cost_mem");
+    }
+
+    public int x() {
+        return this.getInt("x");
+    }
+
+    public int y() {
+        return this.getInt("y");
+    }
+
+    public int global(){
+        return this.getInt("global");
+    }
+
+    public double powerLimit(){
+        return this.getDouble("powerlimit");
+    }
+
+    public int local() {
+        return this.getInt("local");
+    }
+
+    public double costDisk() {
+        return this.getDouble("cost_disk");
+    }
+
+    public double size() {
+        return this.getDouble("size");
+    }
+
     public Element getElement() {
         // TODO: Check if this method is removable
         return this.element;
+    }
+
+    public int number() {
+        return this.getInt("number");
     }
 }

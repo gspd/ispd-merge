@@ -38,9 +38,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * Realiza manupulações com o arquivo xml do modelo icônico
@@ -122,7 +120,7 @@ public class IconicoXML {
 
         if (document.hasEmptyTag("load")) {
             throw new IllegalArgumentException(
-                    "One or more  workloads have not been configured.");
+                    "One or more workloads have not been configured.");
         }
 
         final boolean hasNoValidMaster =
@@ -298,7 +296,8 @@ public class IconicoXML {
             clust.getId().setName(cluster.getAttribute("id"));
             ValidaValores.addNomeIcone(clust.getId().getName());
             clust.setComputationalPower(Double.parseDouble(cluster.getAttribute("power")));
-            IconicoXML.setGridItemCharacteristics(clust, cluster);
+            final var e = new WrappedElement(cluster);
+            IconicoXML.setGridItemCharacteristics(clust, e);
             clust.setSlaveCount(Integer.parseInt(cluster.getAttribute("nodes")));
             clust.setBandwidth(Double.parseDouble(cluster.getAttribute(
                     "bandwidth")));
@@ -338,7 +337,8 @@ public class IconicoXML {
                 final Machine maq = IconicoXML.createMachineMaybe(icons,
                         maquina);
                 vertices.add(maq);
-                IconicoXML.doSomethingUsefulAsWell(maquina, maq);
+                final var e = new WrappedElement(maquina);
+                machineFromElement(maq, e);
             } else {
                 IconicoXML.createMachineMaybe(icons, maquina);
             }
@@ -352,7 +352,8 @@ public class IconicoXML {
                 final int global = Integer.parseInt(id.getAttribute("global"));
                 final Machine maq = (Machine) icons.get(global);
                 vertices.add(maq);
-                IconicoXML.doSomethingUsefulAsWell(maquina, maq);
+                final var e = new WrappedElement(maquina);
+                machineFromElement(maq, e);
                 final Element master = IconicoXML.getFirstTagElement(maquina,
                         "master");
                 maq.setSchedulingAlgorithm(master.getAttribute("scheduler"));
@@ -407,120 +408,100 @@ public class IconicoXML {
     }
 
     private static void setGridItemCharacteristics(
-            final GridItem item, final Element elem) {
-        if (IconicoXML.hasCharacteristics(elem))
+            final GridItem item, final WrappedElement e) {
+        if (!e.hasCharacteristicAttribute()) {
             return;
+        }
 
-        final var characteristics =
-                IconicoXML.getFirstTagElement(elem, "characteristic");
-        final var process =
-                IconicoXML.getFirstTagElement(characteristics, "process");
+        final var characteristic = e.wFirstTagElement("characteristic");
 
-        // TODO: Extract cost interface in both Cluster and Machine
-        final var power = Double.parseDouble(process.getAttribute(
-                "power"));
-        final var cores = process.getAttribute(
-                "number");
-        final var memorySize = IconicoXML.getFirstTagElement(characteristics,
-                "memory").getAttribute("size");
-        final var diskSize = IconicoXML.getFirstTagElement(characteristics,
-                "hard_disk").getAttribute("size");
+        final var process = characteristic.wFirstTagElement("process");
+
+        final var memorySize =
+                characteristic.wFirstTagElement("memory").size();
+        final var diskSize =
+                characteristic.wFirstTagElement("hard_disk").size();
 
         if (item instanceof Cluster cluster) {
-            cluster.setComputationalPower(power);
-            cluster.setCoreCount(Integer.valueOf(cores));
-            cluster.setRam(Double.parseDouble(memorySize));
-            cluster.setHardDisk(Double.parseDouble(diskSize));
+            cluster.setComputationalPower(process.power());
+            cluster.setCoreCount(process.number());
+            cluster.setRam(memorySize);
+            cluster.setHardDisk(diskSize);
 
-            if (!IconicoXML.hasCostProperties(characteristics)) {
+            if (!characteristic.hasCostAttribute()) {
                 return;
             }
 
-            final Element cost =
-                    IconicoXML.getFirstTagElement(characteristics, "cost");
-            cluster.setCostPerProcessing(Double.parseDouble(cost.getAttribute(
-                    "cost_proc")));
-            cluster.setCostPerMemory(Double.parseDouble(cost.getAttribute(
-                    "cost_mem")));
-            cluster.setCostPerDisk(Double.parseDouble(cost.getAttribute(
-                    "cost_disk")));
+            final var co = characteristic.wFirstTagElement("cost");
+
+            cluster.setCostPerProcessing(co.costProcessing());
+            cluster.setCostPerMemory(co.costMemory());
+            cluster.setCostPerDisk(co.costDisk());
+
         } else if (item instanceof Machine machine) {
-            machine.setComputationalPower(power);
-            machine.setCoreCount(Integer.valueOf(cores));
-            machine.setRam(Double.valueOf(memorySize));
-            machine.setHardDisk(Double.valueOf(diskSize));
+            machine.setComputationalPower(process.power());
+            machine.setCoreCount(process.number());
+            machine.setRam(memorySize);
+            machine.setHardDisk(diskSize);
 
-            if (!IconicoXML.hasCostProperties(characteristics)) {
+            if (!characteristic.hasCostAttribute()) {
                 return;
             }
 
-            final Element cost =
-                    IconicoXML.getFirstTagElement(characteristics, "cost");
-            machine.setCostPerProcessing(Double.valueOf(cost.getAttribute(
-                    "cost_proc")));
-            machine.setCostPerMemory(Double.valueOf(cost.getAttribute(
-                    "cost_mem")));
-            machine.setCostPerDisk(Double.valueOf(cost.getAttribute(
-                    "cost_disk")));
+            final var co = characteristic.wFirstTagElement("cost");
 
+            machine.setCostPerProcessing(co.costProcessing());
+            machine.setCostPerMemory(co.costMemory());
+            machine.setCostPerDisk(co.costDisk());
         }
     }
 
     private static Machine createMachineMaybe(
             final Map<? super Integer, Object> icons, final Element machine) {
-        final Element pos = IconicoXML.getFirstTagElement(machine, "position");
-        final int x = Integer.parseInt(pos.getAttribute("x"));
-        final int y = Integer.parseInt(pos.getAttribute("y"));
-        final Element id =
-                IconicoXML.getFirstTagElement(machine, "icon_id");
-        final int global = Integer.parseInt(id.getAttribute("global"));
-        final int local = Integer.parseInt(id.getAttribute("local"));
-        final var maq = new Machine(x, y, local, global,
-                Double.parseDouble(machine.getAttribute("energy")));
+
+        final var m = new WrappedElement(machine);
+
+        final var info = IconInfo.fromElement(m);
+
+        final var maq = new Machine(
+                info.x(), info.y(),
+                info.localId(), info.globalId(),
+                m.energy()
+        );
+
         maq.setSelected(false);
-        icons.put(global, maq);
+
+        icons.put(maq.getId().getGlobalId(), maq);
         return maq;
     }
 
-    private static void doSomethingUsefulAsWell(
-            final Element elem, final Machine machine) {
-        final var newName = elem.getAttribute("id");
+    private static void machineFromElement(Machine machine, WrappedElement e) {
+        final var newName = e.id();
         machine.getId().setName(newName);
-        ValidaValores.addNomeIcone(machine.getId().getName());
+        ValidaValores.addNomeIcone(newName);
 
-        machine.setComputationalPower(Double.parseDouble(elem.getAttribute(
-                "power")));
-        IconicoXML.setGridItemCharacteristics(machine, elem);
-        machine.setLoadFactor(Double.parseDouble(elem.getAttribute(
-                "load")));
-        machine.setOwner(elem.getAttribute("owner"));
-    }
+        machine.setComputationalPower(e.power());
 
-    private static boolean hasCharacteristics(final Element elem) {
-        return elem.getElementsByTagName("characteristic").getLength() <= 0;
-    }
+        IconicoXML.setGridItemCharacteristics(machine, e);
 
-    private static boolean hasCostProperties(final Element characteristics) {
-        return characteristics.getElementsByTagName("cost").getLength() > 0;
+        machine.setLoadFactor(e.load());
+        machine.setOwner(e.owner());
     }
 
     public static HashSet<String> newSetUsers(final Document doc) {
-        return new WrappedDocument(doc).elementsWithTag("owner")
-                .map(WrappedElement::new)
+        return new WrappedDocument(doc).wElementsWithTag("owner")
                 .map(WrappedElement::id)
                 .collect(Collectors.toCollection(HashSet::new));
     }
 
     public static List<String> newListUsers(final Document doc) {
-        return new WrappedDocument(doc).elementsWithTag("owner")
-                .map(WrappedElement::new)
+        return new WrappedDocument(doc).wElementsWithTag("owner")
                 .map(WrappedElement::id)
                 .toList();
     }
 
     public static HashSet<VirtualMachine> newListVirtualMachines(final Document doc) {
-        return new WrappedDocument(doc).elementsWithTag("virtualMac")
-                .map(WrappedElement::new)
+        return new WrappedDocument(doc).wElementsWithTag("virtualMac")
                 .map(IconicoXML::virtualMachineFromElement)
                 .collect(Collectors.toCollection(HashSet::new));
     }
@@ -538,7 +519,7 @@ public class IconicoXML {
         final var docs = new Document[number];
 
         for (int i = 0; i < number; i++) {
-            // TODO: setEntityResolver outside loop?
+            // TODO: can EntityResolver be set outside loop?
             builder.setEntityResolver(new CloningEntityResolver());
             docs[i] = builder.parse(file);
         }
@@ -554,26 +535,18 @@ public class IconicoXML {
     }
 
     public static HashMap<String, Double> newListPerfil(final Document doc) {
-        final var owners = doc.getElementsByTagName("owner");
-
-        return IntStream.range(0, owners.getLength())
-                .mapToObj(owners::item)
-                .map(Element.class::cast)
-                .collect(IconicoXML.mapOwnerToPowerLimit());
-    }
-
-    private static Collector<Element, ?, HashMap<String, Double>> mapOwnerToPowerLimit() {
-        return Collectors.toMap(
-                o -> o.getAttribute("id"),
-                o -> Double.parseDouble(o.getAttribute("powerlimit")),
-                (prev, next) -> next,
-                HashMap::new
-        );
+        return new WrappedDocument(doc).wElementsWithTag("owner")
+                .collect(Collectors.toMap(
+                        WrappedElement::id,
+                        WrappedElement::powerLimit,
+                        (prev, next) -> next,
+                        HashMap::new
+                ));
     }
 
     public void addUsers(final Collection<String> users,
                          final Map<String, Double> limits) {
-        // TODO: Iterate over the HashMap instead?
+        // TODO: Could I iterate over the map instead? Why need arg 'users'?
         users.stream()
                 .map(user -> this.anElement("owner",
                         "id", user,
@@ -990,6 +963,18 @@ public class IconicoXML {
 
     public Document getDescricao() {
         return this.doc;
+    }
+
+    private record IconInfo(int x, int y, int globalId, int localId) {
+        public static IconInfo fromElement(final WrappedElement e) {
+            final var position = e.wFirstTagElement("position");
+            final var iconId = e.wFirstTagElement("icon_id");
+
+            return new IconInfo(
+                    position.x(), position.y(),
+                    iconId.global(), iconId.local()
+            );
+        }
     }
 
     private static class CloningEntityResolver implements EntityResolver {
