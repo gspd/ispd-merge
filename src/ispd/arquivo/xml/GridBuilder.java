@@ -16,13 +16,26 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 class GridBuilder {
 
-    public static void buildGrid(Document doc,
-                                 Collection<? super Vertex> vertices,
-                                 Collection<? super Edge> edges) {
-        final var icons = new HashMap<Integer, Object>(0);
+    private final Collection<? super Vertex> vertices;
+    private final Collection<? super Edge> edges;
+    private final WrappedDocument doc;
+    private final Map<Integer, Object> icons = new HashMap<>(0);
+
+    public GridBuilder(
+            final Document doc,
+            final Collection<? super Vertex> vertices,
+            final Collection<? super Edge> edges) {
+        this.doc = new WrappedDocument(doc);
+        this.vertices = vertices;
+        this.edges = edges;
+    }
+
+    public void buildGrid() {
+        final Document doc = this.doc.document();
 
         final var machines = doc.getElementsByTagName("machine");
         final var clusters = doc.getElementsByTagName("cluster");
@@ -37,17 +50,17 @@ class GridBuilder {
             final var cluster = new Cluster(
                     info.x(), info.y(),
                     info.localId(), info.globalId(),
-                    c.power()
+                    c.power() // TODO: Supposed to be .energy()?
             );
 
             cluster.setSelected(false);
-            vertices.add(cluster);
+            this.vertices.add(cluster);
 
-            icons.put(cluster.getId().getGlobalId(), cluster);
+            this.icons.put(cluster.getId().getGlobalId(), cluster);
             cluster.getId().setName(c.id());
             ValidaValores.addNomeIcone(cluster.getId().getName());
             cluster.setComputationalPower(c.power());
-            setGridItemCharacteristics(cluster, c);
+            GridBuilder.setGridItemCharacteristics(cluster, c);
             cluster.setSlaveCount(c.nodes());
             cluster.setBandwidth(c.bandwidth());
             cluster.setLatency(c.latency());
@@ -61,10 +74,10 @@ class GridBuilder {
             final Element inet = (Element) internet.item(i);
             final var wInet = new WrappedElement(inet);
 
-            final Internet net = netIconFromElement(wInet);
+            final Internet net = GridBuilder.netIconFromElement(wInet);
 
-            vertices.add(net);
-            icons.put(net.getId().getGlobalId(), net);
+            this.vertices.add(net);
+            this.icons.put(net.getId().getGlobalId(), net);
             net.getId().setName(wInet.id());
 
             ValidaValores.addNomeIcone(net.getId().getName());
@@ -81,15 +94,15 @@ class GridBuilder {
             if (maquina.getElementsByTagName("master").getLength() <= 0) {
 
 
-                final Machine maq1 = machineIconFromElement(m);
+                final Machine maq1 = GridBuilder.machineIconFromElement(m);
 
-                icons.put(maq1.getId().getGlobalId(), maq1);
-                vertices.add(maq1);
-                machineFromElement(maq1, m);
+                this.icons.put(maq1.getId().getGlobalId(), maq1);
+                this.vertices.add(maq1);
+                GridBuilder.machineFromElement(maq1, m);
             } else {
-                final Machine maq = machineIconFromElement(m);
+                final Machine maq = GridBuilder.machineIconFromElement(m);
 
-                icons.put(maq.getId().getGlobalId(), maq);
+                this.icons.put(maq.getId().getGlobalId(), maq);
             }
         }
         //Realiza leitura dos mestres
@@ -97,13 +110,13 @@ class GridBuilder {
             final Element maquina = (Element) machines.item(i);
             if (new WrappedElement(maquina).hasMasterAttribute()) {
                 final Element id =
-                        getFirstTagElement(maquina, "icon_id");
+                        GridBuilder.getFirstTagElement(maquina, "icon_id");
                 final int global = Integer.parseInt(id.getAttribute("global"));
-                final Machine maq = (Machine) icons.get(global);
-                vertices.add(maq);
+                final Machine maq = (Machine) this.icons.get(global);
+                this.vertices.add(maq);
                 final var e = new WrappedElement(maquina);
-                machineFromElement(maq, e);
-                final Element master = getFirstTagElement(maquina,
+                GridBuilder.machineFromElement(maq, e);
+                final Element master = GridBuilder.getFirstTagElement(maquina,
                         "master");
                 maq.setSchedulingAlgorithm(master.getAttribute("scheduler"));
                 maq.setVmmAllocationPolicy(master.getAttribute("vm_alloc"));
@@ -114,7 +127,7 @@ class GridBuilder {
                 for (int j = 0; j < slaves.getLength(); j++) {
                     final Element slave = (Element) slaves.item(j);
                     final GridItem escravo =
-                            (GridItem) icons.get(Integer.parseInt(slave.getAttribute("id")));
+                            (GridItem) this.icons.get(Integer.parseInt(slave.getAttribute("id")));
                     if (escravo != null) {
                         escravos.add(escravo);
                     }
@@ -126,45 +139,28 @@ class GridBuilder {
         for (int i = 0; i < links.getLength(); i++) {
             final Element link = (Element) links.item(i);
             final Element id =
-                    getFirstTagElement(link, "icon_id");
+                    GridBuilder.getFirstTagElement(link, "icon_id");
             final int global = Integer.parseInt(id.getAttribute("global"));
             final int local = Integer.parseInt(id.getAttribute("local"));
             final Element connect =
-                    getFirstTagElement(link, "connect");
+                    GridBuilder.getFirstTagElement(link, "connect");
             final Vertex origem =
-                    (Vertex) icons.get(Integer.parseInt(connect.getAttribute(
+                    (Vertex) this.icons.get(Integer.parseInt(connect.getAttribute(
                             "origination")));
             final Vertex destino =
-                    (Vertex) icons.get(Integer.parseInt(connect.getAttribute(
+                    (Vertex) this.icons.get(Integer.parseInt(connect.getAttribute(
                             "destination")));
             final Link lk = new Link(origem, destino, local, global);
             lk.setSelected(false);
             ((GridItem) origem).getOutboundConnections().add(lk);
             ((GridItem) destino).getInboundConnections().add(lk);
-            edges.add(lk);
+            this.edges.add(lk);
             lk.getId().setName(link.getAttribute("id"));
             ValidaValores.addNomeIcone(lk.getId().getName());
             lk.setBandwidth(Double.parseDouble(link.getAttribute("bandwidth")));
             lk.setLoadFactor(Double.parseDouble(link.getAttribute("load")));
             lk.setLatency(Double.parseDouble(link.getAttribute("latency")));
         }
-    }
-
-    private static Internet netIconFromElement(final WrappedElement e) {
-        final var info = IconInfo.fromElement(e);
-        final Internet net = new Internet(
-                info.x(), info.y(),
-                info.localId(), info.globalId()
-        );
-
-        net.setSelected(false);
-        return net;
-    }
-
-    static Element getFirstTagElement(
-            final Element element, final String tag) {
-        // TODO: Inline this method
-        return new WrappedElement(element).firstTagElement(tag);
     }
 
     private static void setGridItemCharacteristics(
@@ -216,6 +212,17 @@ class GridBuilder {
         }
     }
 
+    private static Internet netIconFromElement(final WrappedElement e) {
+        final var info = IconInfo.fromElement(e);
+        final Internet net = new Internet(
+                info.x(), info.y(),
+                info.localId(), info.globalId()
+        );
+
+        net.setSelected(false);
+        return net;
+    }
+
     private static Machine machineIconFromElement(final WrappedElement m) {
         final var info = IconInfo.fromElement(m);
 
@@ -235,19 +242,25 @@ class GridBuilder {
         machine.getId().setName(newName);
         ValidaValores.addNomeIcone(newName);
 
-        setMachinePropertiesFromElement(machine, e);
+        GridBuilder.setMachinePropertiesFromElement(machine, e);
+    }
+
+    static Element getFirstTagElement(
+            final Element element, final String tag) {
+        // TODO: Inline this method
+        return new WrappedElement(element).firstTagElement(tag);
     }
 
     private static void setMachinePropertiesFromElement(
             final Machine machine, final WrappedElement e) {
         machine.setComputationalPower(e.power());
-        setGridItemCharacteristics(machine, e);
+        GridBuilder.setGridItemCharacteristics(machine, e);
         machine.setLoadFactor(e.load());
         machine.setOwner(e.owner());
     }
 
     private record IconInfo(int x, int y, int globalId, int localId) {
-        public static IconInfo fromElement(final WrappedElement e) {
+        private static IconInfo fromElement(final WrappedElement e) {
             final var position = e.wFirstTagElement("position");
             final var iconId = e.wFirstTagElement("icon_id");
 
