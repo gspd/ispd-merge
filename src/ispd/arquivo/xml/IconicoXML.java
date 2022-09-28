@@ -3,11 +3,6 @@ package ispd.arquivo.xml;
 import ispd.gui.PickModelTypeDialog;
 import ispd.gui.iconico.Edge;
 import ispd.gui.iconico.Vertex;
-import ispd.gui.iconico.grade.Cluster;
-import ispd.gui.iconico.grade.GridItem;
-import ispd.gui.iconico.grade.Internet;
-import ispd.gui.iconico.grade.Link;
-import ispd.gui.iconico.grade.Machine;
 import ispd.gui.iconico.grade.VirtualMachine;
 import ispd.motor.carga.CargaForNode;
 import ispd.motor.carga.CargaList;
@@ -16,7 +11,6 @@ import ispd.motor.carga.CargaTrace;
 import ispd.motor.carga.GerarCarga;
 import ispd.motor.filas.RedeDeFilas;
 import ispd.motor.filas.RedeDeFilasCloud;
-import ispd.utils.ValidaValores;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -271,221 +265,7 @@ public class IconicoXML {
             final Document doc,
             final Collection<? super Vertex> vertices,
             final Collection<? super Edge> edges) {
-        final var icons = new HashMap<Integer, Object>(0);
-
-        final var machines = doc.getElementsByTagName("machine");
-        final var clusters = doc.getElementsByTagName("cluster");
-        final var internet = doc.getElementsByTagName("internet");
-        final var links = doc.getElementsByTagName("link");
-        //Realiza leitura dos icones de cluster
-        for (int i = 0; i < clusters.getLength(); i++) {
-            final Element cluster = (Element) clusters.item(i);
-            final Element pos =
-                    IconicoXML.getFirstTagElement(cluster, "position");
-            final int x = Integer.parseInt(pos.getAttribute("x"));
-            final int y = Integer.parseInt(pos.getAttribute("y"));
-            final Element id =
-                    IconicoXML.getFirstTagElement(cluster, "icon_id");
-            final int global = Integer.parseInt(id.getAttribute("global"));
-            final int local = Integer.parseInt(id.getAttribute("local"));
-            final Cluster clust = new Cluster(x, y, local, global,
-                    Double.parseDouble(cluster.getAttribute("power")));
-            clust.setSelected(false);
-            vertices.add(clust);
-            icons.put(global, clust);
-            clust.getId().setName(cluster.getAttribute("id"));
-            ValidaValores.addNomeIcone(clust.getId().getName());
-            clust.setComputationalPower(Double.parseDouble(cluster.getAttribute("power")));
-            final var e = new WrappedElement(cluster);
-            IconicoXML.setGridItemCharacteristics(clust, e);
-            clust.setSlaveCount(Integer.parseInt(cluster.getAttribute("nodes")));
-            clust.setBandwidth(Double.parseDouble(cluster.getAttribute(
-                    "bandwidth")));
-            clust.setLatency(Double.parseDouble(cluster.getAttribute("latency"
-            )));
-            clust.setSchedulingAlgorithm(cluster.getAttribute("scheduler"));
-            clust.setVmmAllocationPolicy(cluster.getAttribute("vm_alloc"));
-            clust.setOwner(cluster.getAttribute("owner"));
-            clust.setMaster(Boolean.parseBoolean(cluster.getAttribute("master"
-            )));
-        }
-        //Realiza leitura dos icones de internet
-        for (int i = 0; i < internet.getLength(); i++) {
-            final Element inet = (Element) internet.item(i);
-            final Element pos =
-                    IconicoXML.getFirstTagElement(inet, "position");
-            final int x = Integer.parseInt(pos.getAttribute("x"));
-            final int y = Integer.parseInt(pos.getAttribute("y"));
-            final Element id =
-                    IconicoXML.getFirstTagElement(inet, "icon_id");
-            final int global = Integer.parseInt(id.getAttribute("global"));
-            final int local = Integer.parseInt(id.getAttribute("local"));
-            final Internet net = new Internet(x, y, local, global);
-            net.setSelected(false);
-            vertices.add(net);
-            icons.put(global, net);
-            net.getId().setName(inet.getAttribute("id"));
-            ValidaValores.addNomeIcone(net.getId().getName());
-            net.setBandwidth(Double.parseDouble(inet.getAttribute("bandwidth")));
-            net.setLoadFactor(Double.parseDouble(inet.getAttribute("load")));
-            net.setLatency(Double.parseDouble(inet.getAttribute("latency")));
-        }
-        //Realiza leitura dos icones de máquina
-        for (int i = 0; i < machines.getLength(); i++) {
-            final Element maquina = (Element) machines.item(i);
-            if (maquina.getElementsByTagName("master").getLength() <= 0) {
-                final Machine maq = IconicoXML.createMachineMaybe(icons,
-                        maquina);
-                vertices.add(maq);
-                final var e = new WrappedElement(maquina);
-                machineFromElement(maq, e);
-            } else {
-                IconicoXML.createMachineMaybe(icons, maquina);
-            }
-        }
-        //Realiza leitura dos mestres
-        for (int i = 0; i < machines.getLength(); i++) {
-            final Element maquina = (Element) machines.item(i);
-            if (new WrappedElement(maquina).hasMasterAttribute()) {
-                final Element id =
-                        IconicoXML.getFirstTagElement(maquina, "icon_id");
-                final int global = Integer.parseInt(id.getAttribute("global"));
-                final Machine maq = (Machine) icons.get(global);
-                vertices.add(maq);
-                final var e = new WrappedElement(maquina);
-                machineFromElement(maq, e);
-                final Element master = IconicoXML.getFirstTagElement(maquina,
-                        "master");
-                maq.setSchedulingAlgorithm(master.getAttribute("scheduler"));
-                maq.setVmmAllocationPolicy(master.getAttribute("vm_alloc"));
-                maq.setMaster(true);
-                final NodeList slaves = master.getElementsByTagName("slave");
-                final List<GridItem> escravos =
-                        new ArrayList<>(slaves.getLength());
-                for (int j = 0; j < slaves.getLength(); j++) {
-                    final Element slave = (Element) slaves.item(j);
-                    final GridItem escravo =
-                            (GridItem) icons.get(Integer.parseInt(slave.getAttribute("id")));
-                    if (escravo != null) {
-                        escravos.add(escravo);
-                    }
-                }
-                maq.setSlaves(escravos);
-            }
-        }
-        //Realiza leitura dos icones de rede
-        for (int i = 0; i < links.getLength(); i++) {
-            final Element link = (Element) links.item(i);
-            final Element id =
-                    IconicoXML.getFirstTagElement(link, "icon_id");
-            final int global = Integer.parseInt(id.getAttribute("global"));
-            final int local = Integer.parseInt(id.getAttribute("local"));
-            final Element connect =
-                    IconicoXML.getFirstTagElement(link, "connect");
-            final Vertex origem =
-                    (Vertex) icons.get(Integer.parseInt(connect.getAttribute(
-                            "origination")));
-            final Vertex destino =
-                    (Vertex) icons.get(Integer.parseInt(connect.getAttribute(
-                            "destination")));
-            final Link lk = new Link(origem, destino, local, global);
-            lk.setSelected(false);
-            ((GridItem) origem).getOutboundConnections().add(lk);
-            ((GridItem) destino).getInboundConnections().add(lk);
-            edges.add(lk);
-            lk.getId().setName(link.getAttribute("id"));
-            ValidaValores.addNomeIcone(lk.getId().getName());
-            lk.setBandwidth(Double.parseDouble(link.getAttribute("bandwidth")));
-            lk.setLoadFactor(Double.parseDouble(link.getAttribute("load")));
-            lk.setLatency(Double.parseDouble(link.getAttribute("latency")));
-        }
-    }
-
-    static Element getFirstTagElement(
-            final Element element, final String tag) {
-        // TODO: Inline this method
-        return new WrappedElement(element).firstTagElement(tag);
-    }
-
-    private static void setGridItemCharacteristics(
-            final GridItem item, final WrappedElement e) {
-        if (!e.hasCharacteristicAttribute()) {
-            return;
-        }
-
-        final var characteristic = e.wFirstTagElement("characteristic");
-
-        final var process = characteristic.wFirstTagElement("process");
-
-        final var memorySize =
-                characteristic.wFirstTagElement("memory").size();
-        final var diskSize =
-                characteristic.wFirstTagElement("hard_disk").size();
-
-        if (item instanceof Cluster cluster) {
-            cluster.setComputationalPower(process.power());
-            cluster.setCoreCount(process.number());
-            cluster.setRam(memorySize);
-            cluster.setHardDisk(diskSize);
-
-            if (!characteristic.hasCostAttribute()) {
-                return;
-            }
-
-            final var co = characteristic.wFirstTagElement("cost");
-
-            cluster.setCostPerProcessing(co.costProcessing());
-            cluster.setCostPerMemory(co.costMemory());
-            cluster.setCostPerDisk(co.costDisk());
-
-        } else if (item instanceof Machine machine) {
-            machine.setComputationalPower(process.power());
-            machine.setCoreCount(process.number());
-            machine.setRam(memorySize);
-            machine.setHardDisk(diskSize);
-
-            if (!characteristic.hasCostAttribute()) {
-                return;
-            }
-
-            final var co = characteristic.wFirstTagElement("cost");
-
-            machine.setCostPerProcessing(co.costProcessing());
-            machine.setCostPerMemory(co.costMemory());
-            machine.setCostPerDisk(co.costDisk());
-        }
-    }
-
-    private static Machine createMachineMaybe(
-            final Map<? super Integer, Object> icons, final Element machine) {
-
-        final var m = new WrappedElement(machine);
-
-        final var info = IconInfo.fromElement(m);
-
-        final var maq = new Machine(
-                info.x(), info.y(),
-                info.localId(), info.globalId(),
-                m.energy()
-        );
-
-        maq.setSelected(false);
-
-        icons.put(maq.getId().getGlobalId(), maq);
-        return maq;
-    }
-
-    private static void machineFromElement(Machine machine, WrappedElement e) {
-        final var newName = e.id();
-        machine.getId().setName(newName);
-        ValidaValores.addNomeIcone(newName);
-
-        machine.setComputationalPower(e.power());
-
-        IconicoXML.setGridItemCharacteristics(machine, e);
-
-        machine.setLoadFactor(e.load());
-        machine.setOwner(e.owner());
+        GridBuilder.buildGrid(doc, vertices, edges);
     }
 
     public static HashSet<String> newSetUsers(final Document doc) {
@@ -963,18 +743,6 @@ public class IconicoXML {
 
     public Document getDescricao() {
         return this.doc;
-    }
-
-    private record IconInfo(int x, int y, int globalId, int localId) {
-        public static IconInfo fromElement(final WrappedElement e) {
-            final var position = e.wFirstTagElement("position");
-            final var iconId = e.wFirstTagElement("icon_id");
-
-            return new IconInfo(
-                    position.x(), position.y(),
-                    iconId.global(), iconId.local()
-            );
-        }
     }
 
     private static class CloningEntityResolver implements EntityResolver {

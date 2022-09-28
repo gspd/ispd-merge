@@ -90,22 +90,22 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
         for (int i = 0; i < this.docMachines.getLength(); i++) {
             final Element maquina = (Element) this.docMachines.item(i);
             final Element id =
-                    IconicoXML.getFirstTagElement(maquina, "icon_id");
+                    GridBuilder.getFirstTagElement(maquina, "icon_id");
             final int global = Integer.parseInt(id.getAttribute("global"));
             if (new WrappedElement(maquina).hasMasterAttribute()) {
                 final Element master =
-                        IconicoXML.getFirstTagElement(maquina,
+                        GridBuilder.getFirstTagElement(maquina,
                                 "master");
-                final Element carac = IconicoXML.getFirstTagElement(maquina,
+                final Element carac = GridBuilder.getFirstTagElement(maquina,
                         "characteristic");
                 final Element proc =
-                        IconicoXML.getFirstTagElement(carac, "process");
-                final Element memoria = IconicoXML.getFirstTagElement(carac,
+                        GridBuilder.getFirstTagElement(carac, "process");
+                final Element memoria = GridBuilder.getFirstTagElement(carac,
                         "memory");
-                final Element disco = IconicoXML.getFirstTagElement(carac,
+                final Element disco = GridBuilder.getFirstTagElement(carac,
                         "hard_disk");
                 final Element custo =
-                        IconicoXML.getFirstTagElement(carac, "cost");
+                        GridBuilder.getFirstTagElement(carac, "cost");
                 //instancia o CS_VMM
                 final CS_Processamento mestre = new CS_VMM(
                         maquina.getAttribute("id"),
@@ -124,19 +124,19 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
             } else {
                 //acessa as características do máquina
                 final Element caracteristica =
-                        IconicoXML.getFirstTagElement(maquina,
+                        GridBuilder.getFirstTagElement(maquina,
                                 "characteristic");
                 final Element custo =
-                        IconicoXML.getFirstTagElement(caracteristica,
+                        GridBuilder.getFirstTagElement(caracteristica,
                                 "cost");
                 final Element processamento =
-                        IconicoXML.getFirstTagElement(caracteristica,
+                        GridBuilder.getFirstTagElement(caracteristica,
                                 "process");
                 final Element memoria =
-                        IconicoXML.getFirstTagElement(caracteristica,
+                        GridBuilder.getFirstTagElement(caracteristica,
                                 "memory");
                 final Element disco =
-                        IconicoXML.getFirstTagElement(caracteristica,
+                        GridBuilder.getFirstTagElement(caracteristica,
                                 "hard_disk");
                 //instancia um CS_MaquinaCloud
                 final CS_MaquinaCloud maq = new CS_MaquinaCloud(
@@ -163,15 +163,15 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
         for (int i = 0; i < this.docClusters.getLength(); i++) {
             final Element cluster = (Element) this.docClusters.item(i);
             final Element id =
-                    IconicoXML.getFirstTagElement(cluster, "icon_id");
-            final Element carac = IconicoXML.getFirstTagElement(cluster,
+                    GridBuilder.getFirstTagElement(cluster, "icon_id");
+            final Element carac = GridBuilder.getFirstTagElement(cluster,
                     "characteristic");
             final Element proc =
-                    IconicoXML.getFirstTagElement(carac, "process");
+                    GridBuilder.getFirstTagElement(carac, "process");
             final Element mem =
-                    IconicoXML.getFirstTagElement(carac, "memory");
+                    GridBuilder.getFirstTagElement(carac, "memory");
             final Element disc =
-                    IconicoXML.getFirstTagElement(carac, "hard_disk");
+                    GridBuilder.getFirstTagElement(carac, "hard_disk");
 
             final int global = Integer.parseInt(id.getAttribute("global"));
             if (Boolean.parseBoolean(cluster.getAttribute("master"))) {
@@ -207,19 +207,19 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
                 Switch.addConexoesSaida(clust);
                 for (int j = 0; j < numeroEscravos; j++) {
                     final Element caracteristica =
-                            IconicoXML.getFirstTagElement(cluster,
+                            GridBuilder.getFirstTagElement(cluster,
                                     "characteristic");
                     final Element custo =
-                            IconicoXML.getFirstTagElement(caracteristica,
+                            GridBuilder.getFirstTagElement(caracteristica,
                                     "cost");
                     final Element processamento =
-                            IconicoXML.getFirstTagElement(caracteristica,
+                            GridBuilder.getFirstTagElement(caracteristica,
                                     "process");
                     final Element memoria =
-                            IconicoXML.getFirstTagElement(caracteristica,
+                            GridBuilder.getFirstTagElement(caracteristica,
                                     "memory");
                     final Element disco =
-                            IconicoXML.getFirstTagElement(caracteristica,
+                            GridBuilder.getFirstTagElement(caracteristica,
                                     "hard_disk");
                     final var maq =
                             cloudMachineFromElement(cluster, j,
@@ -288,7 +288,7 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
         for (int i = 0; i < this.docInternet.getLength(); i++) {
             final Element inet = (Element) this.docInternet.item(i);
             final Element id =
-                    IconicoXML.getFirstTagElement(inet, "icon_id");
+                    GridBuilder.getFirstTagElement(inet, "icon_id");
             final int global = Integer.parseInt(id.getAttribute("global"));
             final CS_Internet net = new CS_Internet(
                     inet.getAttribute("id"),
@@ -311,7 +311,7 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
 
             //adiciona entrada e saida desta conexão
             final Element connect =
-                    IconicoXML.getFirstTagElement(link, "connect");
+                    GridBuilder.getFirstTagElement(link, "connect");
             final Vertice origem =
                     (Vertice) this.serviceCenters.get(Integer.parseInt(connect.getAttribute("origination")));
             final Vertice destino =
@@ -325,11 +325,11 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
         for (int i = 0; i < this.docMachines.getLength(); i++) {
             final Element maquina = (Element) this.docMachines.item(i);
             final Element id =
-                    IconicoXML.getFirstTagElement(maquina, "icon_id");
+                    GridBuilder.getFirstTagElement(maquina, "icon_id");
             final int global = Integer.parseInt(id.getAttribute("global"));
             if (new WrappedElement(maquina).hasMasterAttribute()) {
                 final Element master =
-                        IconicoXML.getFirstTagElement(maquina,
+                        GridBuilder.getFirstTagElement(maquina,
                                 "master");
                 final NodeList slaves = master.getElementsByTagName(
                         "slave");

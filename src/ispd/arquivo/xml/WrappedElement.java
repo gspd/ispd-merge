@@ -95,6 +95,14 @@ public class WrappedElement {
         return this.getDouble("mem_alloc");
     }
 
+    public int nodes() {
+        return this.getInt("nodes");
+    }
+
+    public String vmAlloc() {
+        return this.getAttribute("vm_alloc");
+    }
+
     public double diskAlloc() {
         return this.getDouble("disk_alloc");
     }
