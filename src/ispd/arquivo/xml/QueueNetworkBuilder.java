@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.stream.IntStream;
 
 class QueueNetworkBuilder {
     private final Map<String, Double> powerLimits = new HashMap<>(0);
@@ -168,16 +167,13 @@ class QueueNetworkBuilder {
     }
 
     private void addSlavesToMasters() {
-        this.doc.elementsWithTag("machine")
-                .map(WrappedElement::new)
+        this.doc.wElementsWithTag("machine")
                 .filter(WrappedElement::hasMasterAttribute)
-                .map(WrappedElement::getElement)
                 .forEach(this::addSlavesToMachine);
     }
 
     private void setOwnerPowerLimit(final WrappedElement user) {
-        final var id = user.id();
-        this.powerLimits.put(id, 0.0);
+        this.powerLimits.put(user.id(), 0.0);
     }
 
     private static CS_Mestre masterFromElement(final WrappedElement e) {
@@ -190,9 +186,9 @@ class QueueNetworkBuilder {
                 e.load(), e.energy());
     }
 
-    private void increaseUserPower(final String user, final double value) {
+    private void increaseUserPower(final String user, final double increment) {
         final var oldValue = this.powerLimits.get(user);
-        this.powerLimits.put(user, oldValue + value);
+        this.powerLimits.put(user, oldValue + increment);
     }
 
     private static CS_Mestre masterFromElementNoLoad(final WrappedElement e) {
@@ -247,17 +243,13 @@ class QueueNetworkBuilder {
         return (Vertice) this.serviceCenters.get(e.vertex(vertexEnd));
     }
 
-    private void addSlavesToMachine(final Element machine) {
-        final var e = new WrappedElement(machine);
+    private void addSlavesToMachine(final WrappedElement e) {
         final var master =
                 (CS_Mestre) this.serviceCenters.get(e.globalIconId());
 
-        final var slaves = e.mastersSlaves();
+        final var slaves = e.wMastersSlaves();
 
-        IntStream.range(0, slaves.getLength())
-                .mapToObj(slaves::item)
-                .map(Element.class::cast)
-                .map(e1 -> new WrappedElement(e1).id())
+        slaves.map(WrappedElement::id)
                 .map(Integer::parseInt)
                 .map(this.serviceCenters::get)
                 .forEach(sc -> this.processServiceCenter(sc, master));
@@ -295,7 +287,11 @@ class QueueNetworkBuilder {
         final var queueNetwork = new RedeDeFilas(
                 this.masters, this.machines, this.links, this.internets);
 
-        queueNetwork.setUsuarios(helper.getOwners());
+        final var users = helper.getOwners();
+
+        System.out.println("Here are the users: " + users);
+
+        queueNetwork.setUsuarios(users);
         return queueNetwork;
     }
 
@@ -304,18 +300,18 @@ class QueueNetworkBuilder {
         private final List<Double> limits;
 
         private UserPowerLimitHelper(final Map<String, Double> powerLimits) {
-            this.owners = new ArrayList<>(powerLimits.size());
-            this.limits = new ArrayList<>(powerLimits.size());
+//            this.owners = new ArrayList<>(powerLimits.size());
+//            this.limits = new ArrayList<>(powerLimits.size());
+//
+//            powerLimits.forEach((key, value) -> {
+//                this.owners.add(key);
+//                this.limits.add(value);
+//            });
 
-            powerLimits.forEach((key, value) -> {
-                this.owners.add(key);
-                this.limits.add(value);
-            });
-
-            // Note: These look nice, but they return collection *Views*.
+            // Note: These return collection *Views*.
             // Must study them further to guarantee their use is safe in here.
-//            this.owners = new ArrayList<>(powerLimits.keySet());
-//            this.limits = new ArrayList<>(powerLimits.values());
+            this.owners = new ArrayList<>(powerLimits.keySet());
+            this.limits = new ArrayList<>(powerLimits.values());
         }
 
         private void setSchedulerUserMetrics(final Escalonador scheduler) {

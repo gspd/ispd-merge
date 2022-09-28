@@ -3,6 +3,9 @@ package ispd.arquivo.xml;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
 
 /**
  * This is a class to add convenience methods to manipulate XML Element objects.
@@ -11,33 +14,44 @@ import org.w3c.dom.NodeList;
 public class WrappedElement {
     private final Element element;
 
-    public WrappedElement(final Element element) {
-        this.element = element;
-    }
-
     public int vertex(final String vertexEnd) {
-        final var connect = new WrappedElement(this.firstTagElement("connect"));
-        return connect.getInt(vertexEnd);
-    }
-
-    public String vmm(){
-        return this.getAttribute("vmm");
-    }
-
-    public Element firstTagElement(final String tagName) {
-        return (Element) this.element.getElementsByTagName(tagName).item(0);
+        return this.wFirstTagElement("connect").getInt(vertexEnd);
     }
 
     public int getInt(final String attributeName) {
         return Integer.parseInt(this.getAttribute(attributeName));
     }
 
+    public WrappedElement wFirstTagElement(final String tagName) {
+        return new WrappedElement(this.firstTagElement(tagName));
+    }
+
     private String getAttribute(final String s) {
         return this.element.getAttribute(s);
     }
 
-    NodeList mastersSlaves() {
+    public Element firstTagElement(final String tagName) {
+        return (Element) this.element.getElementsByTagName(tagName).item(0);
+    }
+
+    public String vmm() {
+        return this.getAttribute("vmm");
+    }
+
+    public Stream<WrappedElement> wMastersSlaves() {
+        final var ms = this.mastersSlaves();
+        return IntStream.range(0, ms.getLength())
+                .mapToObj(ms::item)
+                .map(Element.class::cast)
+                .map(WrappedElement::new);
+    }
+
+    public NodeList mastersSlaves() {
         return this.firstTagElement("master").getElementsByTagName("slave");
+    }
+
+    public WrappedElement(final Element element) {
+        this.element = element;
     }
 
     public String id() {
@@ -57,9 +71,7 @@ public class WrappedElement {
     }
 
     public int globalIconId() {
-        final var idElement = new WrappedElement(this.firstTagElement(
-                "icon_id"));
-        return idElement.getInt("global");
+        return this.wFirstTagElement("icon_id").getInt("global");
     }
 
     public String owner() {
@@ -70,26 +82,25 @@ public class WrappedElement {
         return this.getDouble("power");
     }
 
-    public int powerAsInt(){
+    public int powerAsInt() {
         // TODO: Is this function necessary?
         return this.getInt("power");
     }
 
-    public double memAlloc(){
+    public double memAlloc() {
         return this.getDouble("mem_alloc");
     }
 
-    public double diskAlloc(){
+    public double diskAlloc() {
         return this.getDouble("disk_alloc");
     }
 
-    public String opSystem(){
+    public String opSystem() {
         return this.getAttribute("op_system");
     }
 
     public String mastersScheduler() {
-        final var master = new WrappedElement(this.firstTagElement("master"));
-        return master.scheduler();
+        return this.wFirstTagElement("master").scheduler();
     }
 
     public String scheduler() {
