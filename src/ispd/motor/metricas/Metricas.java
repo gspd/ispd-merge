@@ -673,9 +673,18 @@ public class Metricas implements Serializable {
             limitesConsumoTempoUso.put(user, limiteConsUso.multiply(BigDecimal.valueOf(fim - inicio)));
             tempoFinalExec.put(user, BigDecimal.valueOf(fim));
             tempoInicialExec.put(user, BigDecimal.valueOf(inicio));
-            
-            BigDecimal alpha = consumoMaxLocal.get(user).divide(consumoLocal.get(user), 2, RoundingMode.DOWN);
-            BigDecimal betaSim = (((consumoEnergiaTotalUsuario.get(user).negate()).add(consumoTotalSistema)).divide(limitesConsumoTempoSim.get(user), 2, RoundingMode.DOWN)).add(BigDecimal.ONE);
+
+            BigDecimal alpha;
+            if (consumoLocal.get(user).compareTo(BigDecimal.ZERO) == 0)
+                alpha = BigDecimal.ZERO;
+            else
+                alpha = consumoMaxLocal.get(user).divide(consumoLocal.get(user), 2, RoundingMode.DOWN);
+
+            BigDecimal betaSim;
+            if (limitesConsumoTempoSim.get(user).compareTo(BigDecimal.ZERO) == 0)
+                betaSim = BigDecimal.ZERO;
+            else
+                betaSim = (((consumoEnergiaTotalUsuario.get(user).negate()).add(consumoTotalSistema)).divide(limitesConsumoTempoSim.get(user), 2, RoundingMode.DOWN)).add(BigDecimal.ONE);
             
             alphaUsuarios.put(user, alpha);
             betaTempoSim.put(user, betaSim);
@@ -683,11 +692,9 @@ public class Metricas implements Serializable {
             BigDecimal satisGeralSim = (satisfacaoGeralSim.get(user)).multiply((alpha.multiply(betaSim)));
 
             satisfacaoGeralSim.put(user, satisGeralSim);
+            betaTempoUso.put(user, betaSim);
             
-            BigDecimal betaUso = (((consumoEnergiaTotalUsuario.get(user).negate()).add(consumoTotalSistema)).divide(limitesConsumoTempoUso.get(user), 2, RoundingMode.DOWN)).add(BigDecimal.ONE);
-            betaTempoUso.put(user, betaUso);
-            
-            BigDecimal satisGeralUso = (satisfacaoGeralUso.get(user)).multiply((alpha.multiply(betaUso)));
+            BigDecimal satisGeralUso = (satisfacaoGeralUso.get(user)).multiply((alpha.multiply(betaSim)));
             
             satisfacaoGeralUso.put(user, satisGeralUso);
             turnaroundTime.put(user,turnaroundTime.get(user).divide(BigDecimal.valueOf(tarefasConcluidas.get(user)),BigDecimal.ROUND_UP));
