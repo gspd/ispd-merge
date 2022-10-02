@@ -195,6 +195,7 @@ public class Metricas implements Serializable {
         this.usuarios = redeDeFilas.getUsuarios();
 
         //Maps
+        metricasSatisfacao = new HashMap<>();
         satisfacaoGeralSim = new HashMap<>();
         satisfacaoGeralUso = new HashMap<>();
         consumoEnergiaTotalUsuario = new HashMap<>();
@@ -950,5 +951,9 @@ public class Metricas implements Serializable {
 
     private Double getTEMPOSIM() {
         return this.tempoSIM;
+    }
+
+    public boolean hasCancelledTasks() {
+        return this.numTarefasCanceladas > 0;
     }
 }
