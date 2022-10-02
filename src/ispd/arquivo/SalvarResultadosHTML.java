@@ -40,6 +40,7 @@
 package ispd.arquivo;
 
 import ispd.gui.MainWindow;
+import ispd.gui.auxiliar.SimulationResultChartMaker;
 import ispd.motor.metricas.Metricas;
 import ispd.motor.metricas.MetricasGlobais;
 import java.awt.image.BufferedImage;
@@ -47,6 +48,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.stream.Stream;
 import javax.imageio.ImageIO;
 
 /**
@@ -261,6 +263,35 @@ public class SalvarResultadosHTML {
         arquivo = new File(diretorio, "Logo_UNESP.png");
         if (!arquivo.exists()) {
             ImageIO.write(ImageIO.read(MainWindow.class.getResource("imagens/Logo_UNESP.png")), "png", arquivo);
+        }
+    }
+
+    /**
+     * This method save the simulation results in the specified directory.
+     *
+     * @param directory the directory where the simulation results are saved.
+     * @param charts the simulation chart maker
+     */
+    public void saveHtml(final File directory,
+                          final SimulationResultChartMaker charts) {
+        final var chartsImage = Stream.of(
+                        charts.getProcessingBarChart(),
+                        charts.getProcessingPieChart(),
+                        charts.getCommunicationBarChart(),
+                        charts.getCommunicationPieChart(),
+                        charts.getComputingPowerPerMachineChart(),
+                        charts.getComputingPowerPerTaskChart(),
+                        charts.getComputingPowerPerUserChart()
+                ).map((chart) -> chart.getChart().createBufferedImage(1200, 600))
+                .toArray(BufferedImage[]::new);
+
+        this.setCharts(chartsImage);
+
+        try {
+            this.gerarHTML(directory);
+        } catch (final IOException e) {
+            throw new RuntimeException("An error occurred to generate the " +
+                    "HTML file containing the simulation results.", e);
         }
     }
 }

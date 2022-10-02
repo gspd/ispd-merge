@@ -39,8 +39,9 @@
  */
 package ispd.application;
 
+import ispd.arquivo.SalvarResultadosHTML;
 import ispd.arquivo.xml.IconicoXML;
-import ispd.gui.ResultsDialog;
+import ispd.gui.auxiliar.SimulationResultChartMaker;
 import ispd.motor.ProgressoSimulacao;
 import ispd.motor.Simulation;
 import ispd.motor.SimulacaoParalela;
@@ -343,8 +344,10 @@ public class TerminalApplication implements Application
             if (arquivoOut != null) {
                 resuladosGlobais = metricas.getMetricasGlobais();
                 double t1 = System.currentTimeMillis();
-                ResultsDialog result = new ResultsDialog(metricas);
-                result.salvarHTML(arquivoOut);
+                final var html = new SalvarResultadosHTML();
+                html.setMetricasTarefas(metricas);
+                html.setMetricasGlobais(metricas.getMetricasGlobais());
+                html.saveHtml(arquivoOut, new SimulationResultChartMaker(metricas));
                 double t2 = System.currentTimeMillis();
                 //Calcula tempo de simulação em segundos
                 double tempototal = (t2 - t1) / 1000;
@@ -421,8 +424,10 @@ public class TerminalApplication implements Application
             progrSim.println("Results:");
             if (arquivoOut != null) {
                 t1 = System.currentTimeMillis();
-                ResultsDialog result = new ResultsDialog(metricas);
-                result.salvarHTML(arquivoOut);
+                final var html = new SalvarResultadosHTML();
+                html.setMetricasTarefas(metricas);
+                html.setMetricasGlobais(metricas.getMetricasGlobais());
+                html.saveHtml(arquivoOut, new SimulationResultChartMaker(metricas));
                 t2 = System.currentTimeMillis();
                 //Calcula tempo de simulação em segundos
                 tempototal = (t2 - t1) / 1000;
