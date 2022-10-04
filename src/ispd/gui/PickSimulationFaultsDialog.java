@@ -62,8 +62,7 @@ public class PickSimulationFaultsDialog extends JFrame {
         final JButton jButtonSelecionarFalhas = new JButton();
         final JLabel jLabel22 = new JLabel();
 
-        this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); // Isso resolveu o problema
-        // this.setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE); // origem do bug da janela fechar aqui
+        this.setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         this.setTitle("SelectFaults");
         this.setLocation(new java.awt.Point(300, 100));
 
