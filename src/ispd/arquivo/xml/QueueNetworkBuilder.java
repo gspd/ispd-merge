@@ -1,13 +1,14 @@
 package ispd.arquivo.xml;
 
-import ispd.arquivo.xml.utils.Connection;
 import ispd.arquivo.xml.utils.ServiceCenterBuilder;
+import ispd.arquivo.xml.utils.SwitchConnection;
 import ispd.arquivo.xml.utils.UserPowerLimit;
 import ispd.motor.filas.RedeDeFilas;
 import ispd.motor.filas.servidores.CS_Comunicacao;
 import ispd.motor.filas.servidores.CS_Processamento;
 import ispd.motor.filas.servidores.CentroServico;
 import ispd.motor.filas.servidores.implementacao.CS_Internet;
+import ispd.motor.filas.servidores.implementacao.CS_Link;
 import ispd.motor.filas.servidores.implementacao.CS_Maquina;
 import ispd.motor.filas.servidores.implementacao.CS_Mestre;
 import ispd.motor.filas.servidores.implementacao.CS_Switch;
@@ -85,12 +86,12 @@ class QueueNetworkBuilder {
 
             this.links.add(theSwitch);
 
-            Connection.connectClusterAndSwitch(cluster, theSwitch);
+            SwitchConnection.toCluster(theSwitch, cluster);
 
             for (int i = 0; i < slaveCount; i++) {
                 final var machine =
                         ServiceCenterBuilder.aMachineWithId(e, i);
-                Connection.connectMachineAndSwitch(machine, theSwitch);
+                SwitchConnection.toMachine(theSwitch, machine);
 
                 machine.addMestre(cluster);
                 cluster.addEscravo(machine);
@@ -114,7 +115,7 @@ class QueueNetworkBuilder {
             for (int i = 0; i < slaveCount; i++) {
                 final var machine =
                         ServiceCenterBuilder.aMachineWithId(e, i);
-                Connection.connectMachineAndSwitch(machine, theSwitch);
+                SwitchConnection.toMachine(theSwitch, machine);
                 slaves.add(machine);
             }
 
@@ -135,7 +136,7 @@ class QueueNetworkBuilder {
 
         this.links.add(link);
 
-        Connection.connectLinkAndVertices(link,
+        QueueNetworkBuilder.connectLinkAndVertices(link,
                 this.getVertex(e.origination()),
                 this.getVertex(e.destination())
         );
@@ -155,6 +156,15 @@ class QueueNetworkBuilder {
     private void increaseUserPower(final String user, final double increment) {
         final var oldValue = this.powerLimits.get(user);
         this.powerLimits.put(user, oldValue + increment);
+    }
+
+    private static void connectLinkAndVertices(
+            final CS_Link link,
+            final Vertice origination, final Vertice destination) {
+        link.setConexoesEntrada((CentroServico) origination);
+        link.setConexoesSaida((CentroServico) destination);
+        origination.addConexoesSaida(link);
+        destination.addConexoesEntrada(link);
     }
 
     private Vertice getVertex(final int e) {

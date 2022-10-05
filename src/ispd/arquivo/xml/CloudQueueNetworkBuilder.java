@@ -1,5 +1,6 @@
 package ispd.arquivo.xml;
 
+import ispd.arquivo.xml.utils.SwitchConnection;
 import ispd.motor.filas.RedeDeFilasCloud;
 import ispd.motor.filas.servidores.CS_Comunicacao;
 import ispd.motor.filas.servidores.CS_Processamento;
@@ -51,33 +52,6 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
         this.docLinks = model.getElementsByTagName("link");
         this.docOwners = model.getElementsByTagName("owner");
         this.docVms = model.getElementsByTagName("virtualMac");
-    }
-
-    public static CS_MaquinaCloud cloudMachineFromElement(
-            final Element cluster, final int id,
-            final Element cost, final Element processing,
-            final Element memory, final Element disk) {
-        return new CS_MaquinaCloud(
-                "%s.%d".formatted(cluster.getAttribute("id"), id),
-                cluster.getAttribute("owner"),
-                Double.parseDouble(processing.getAttribute("power")),
-                Integer.parseInt(processing.getAttribute("number")),
-                Double.parseDouble(memory.getAttribute("size")),
-                Double.parseDouble(disk.getAttribute("size")),
-                Double.parseDouble(cost.getAttribute("cost_proc")),
-                Double.parseDouble(cost.getAttribute("cost_mem")),
-                Double.parseDouble(cost.getAttribute("cost_disk")),
-                0.0,
-                id + 1
-        );
-    }
-
-    public static void connectMachineAndSwitch(
-            final CS_Switch theSwitch, final CS_MaquinaCloud maq) {
-        maq.addConexoesSaida(theSwitch);
-        maq.addConexoesEntrada(theSwitch);
-        theSwitch.addConexoesEntrada(maq);
-        theSwitch.addConexoesSaida(maq);
     }
 
     public RedeDeFilasCloud build() {
@@ -222,11 +196,25 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
                             GridBuilder.getFirstTagElement(caracteristica,
                                     "hard_disk");
                     final var maq =
-                            cloudMachineFromElement(cluster, j,
-                                    custo,
-                                    processamento, memoria, disco);
+                            new CS_MaquinaCloud(
+                                    "%s.%d".formatted(cluster.getAttribute(
+                                            "id"), j),
+                                    cluster.getAttribute("owner"),
+                                    Double.parseDouble(processamento.getAttribute("power")),
+                                    Integer.parseInt(processamento.getAttribute("number")),
+                                    Double.parseDouble(memoria.getAttribute(
+                                            "size")),
+                                    Double.parseDouble(disco.getAttribute(
+                                            "size")),
+                                    Double.parseDouble(custo.getAttribute(
+                                            "cost_proc")),
+                                    Double.parseDouble(custo.getAttribute("cost_mem")),
+                                    Double.parseDouble(custo.getAttribute("cost_disk")),
+                                    0.0,
+                                    j + 1
+                            );
 
-                    connectMachineAndSwitch(Switch, maq);
+                    SwitchConnection.toCloudMachine(maq, Switch);
 
                     maq.addMestre(clust);
                     clust.addEscravo(maq);
@@ -274,9 +262,21 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
                             (Element) caracteristica.getElementsByTagName(
                                     "hard_disk");
                     final var maq =
-                            cloudMachineFromElement(cluster, j,
-                                    custo, processamento, memoria, disco);
-                    connectMachineAndSwitch(Switch, maq);
+                            new CS_MaquinaCloud(
+                                    "%s.%d".formatted(cluster.getAttribute(
+                                            "id"), j),
+                                    cluster.getAttribute("owner"),
+                                    Double.parseDouble(processamento.getAttribute("power")),
+                                    Integer.parseInt(processamento.getAttribute("number")),
+                                    Double.parseDouble(memoria.getAttribute("size")),
+                                    Double.parseDouble(disco.getAttribute("size")),
+                                    Double.parseDouble(custo.getAttribute("cost_proc")),
+                                    Double.parseDouble(custo.getAttribute("cost_mem")),
+                                    Double.parseDouble(custo.getAttribute("cost_disk")),
+                                    0.0,
+                                    j + 1
+                            );
+                    SwitchConnection.toCloudMachine(maq, Switch);
                     maqTemp.add(maq);
                     this.machines.add(maq);
                 }
