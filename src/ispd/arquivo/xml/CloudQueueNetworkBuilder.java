@@ -52,15 +52,33 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
         this.docLinks = model.getElementsByTagName("link");
         this.docOwners = model.getElementsByTagName("owner");
         this.docVms = model.getElementsByTagName("virtualMac");
+
+        processOwners();
+        //cria maquinas, mestres, internets e mestres dos clusters
+        //Realiza leitura dos icones de máquina
+        processMachines();
+        //Realiza leitura dos icones de cluster
+        processClusters();
+
+        //Realiza leitura dos icones de internet
+        processInternets();
+        //cria os links e realiza a conexão entre os recursos
+        processLinks();
+        //adiciona os escravos aos mestres
+        processMasters();
+
+        //Realiza leitura dos ícones de máquina virtual
+        processVirtualMachines();
     }
 
-    public RedeDeFilasCloud build() {
+    private void processOwners() {
         for (int i = 0; i < this.docOwners.getLength(); i++) {
             final Element owner = (Element) this.docOwners.item(i);
             this.users.put(owner.getAttribute("id"), 0.0);
         }
-        //cria maquinas, mestres, internets e mestres dos clusters
-        //Realiza leitura dos icones de máquina
+    }
+
+    private void processMachines() {
         for (int i = 0; i < this.docMachines.getLength(); i++) {
             final Element maquina = (Element) this.docMachines.item(i);
             final Element id =
@@ -133,7 +151,9 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
                         this.users.get(maq.getProprietario()) + maq.getPoderComputacional());
             }
         }
-        //Realiza leitura dos icones de cluster
+    }
+
+    private void processClusters() {
         for (int i = 0; i < this.docClusters.getLength(); i++) {
             final Element cluster = (Element) this.docClusters.item(i);
             final Element id =
@@ -208,8 +228,10 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
                                             "size")),
                                     Double.parseDouble(custo.getAttribute(
                                             "cost_proc")),
-                                    Double.parseDouble(custo.getAttribute("cost_mem")),
-                                    Double.parseDouble(custo.getAttribute("cost_disk")),
+                                    Double.parseDouble(custo.getAttribute(
+                                            "cost_mem")),
+                                    Double.parseDouble(custo.getAttribute(
+                                            "cost_disk")),
                                     0.0,
                                     j + 1
                             );
@@ -268,11 +290,16 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
                                     cluster.getAttribute("owner"),
                                     Double.parseDouble(processamento.getAttribute("power")),
                                     Integer.parseInt(processamento.getAttribute("number")),
-                                    Double.parseDouble(memoria.getAttribute("size")),
-                                    Double.parseDouble(disco.getAttribute("size")),
-                                    Double.parseDouble(custo.getAttribute("cost_proc")),
-                                    Double.parseDouble(custo.getAttribute("cost_mem")),
-                                    Double.parseDouble(custo.getAttribute("cost_disk")),
+                                    Double.parseDouble(memoria.getAttribute(
+                                            "size")),
+                                    Double.parseDouble(disco.getAttribute(
+                                            "size")),
+                                    Double.parseDouble(custo.getAttribute(
+                                            "cost_proc")),
+                                    Double.parseDouble(custo.getAttribute(
+                                            "cost_mem")),
+                                    Double.parseDouble(custo.getAttribute(
+                                            "cost_disk")),
                                     0.0,
                                     j + 1
                             );
@@ -283,8 +310,9 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
                 this.clusterSlaves.put(Switch, maqTemp);
             }
         }
+    }
 
-        //Realiza leitura dos icones de internet
+    private void processInternets() {
         for (int i = 0; i < this.docInternet.getLength(); i++) {
             final Element inet = (Element) this.docInternet.item(i);
             final Element id =
@@ -298,7 +326,9 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
             this.internets.add(net);
             this.serviceCenters.put(global, net);
         }
-        //cria os links e realiza a conexão entre os recursos
+    }
+
+    private void processLinks() {
         for (int i = 0; i < this.docLinks.getLength(); i++) {
             final Element link = (Element) this.docLinks.item(i);
 
@@ -321,7 +351,9 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
             cslink.setConexoesEntrada((CentroServico) origem);
             origem.addConexoesSaida(cslink);
         }
-        //adiciona os escravos aos mestres
+    }
+
+    private void processMasters() {
         for (int i = 0; i < this.docMachines.getLength(); i++) {
             final Element maquina = (Element) this.docMachines.item(i);
             final Element id =
@@ -358,8 +390,9 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
                 }
             }
         }
+    }
 
-        //Realiza leitura dos ícones de máquina virtual
+    private void processVirtualMachines() {
         for (int i = 0; i < this.docVms.getLength(); i++) {
             final Element virtualMac = (Element) this.docVms.item(i);
             final CS_VirtualMac VM =
@@ -390,7 +423,9 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
             }
             this.virtualMachines.add(VM);
         }
+    }
 
+    public RedeDeFilasCloud build() {
         for (final Map.Entry<String, Double> entry : this.users.entrySet()) {
             this.owners.add(entry.getKey());
             this.powers.add(entry.getValue());

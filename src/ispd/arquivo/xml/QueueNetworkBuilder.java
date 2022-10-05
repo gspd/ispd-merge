@@ -31,7 +31,7 @@ class QueueNetworkBuilder {
     private final List<CS_Internet> internets = new ArrayList<>(0);
     private final Map<String, Double> powerLimits;
 
-    QueueNetworkBuilder(final WrappedDocument doc) {
+    public QueueNetworkBuilder(final WrappedDocument doc) {
         this.powerLimits = doc.owners().collect(Collectors.toMap(
                 WrappedElement::id, o -> 0.0,
                 (prev, next) -> next, HashMap::new
