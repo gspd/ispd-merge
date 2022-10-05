@@ -45,7 +45,7 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
     private final List<Double> powers = new ArrayList<>(0);
 
     public CloudQueueNetworkBuilder(final Document model) {
-        super(model);
+        super(new WrappedDocument(model));
         this.docMachines = model.getElementsByTagName("machine");
         this.docClusters = model.getElementsByTagName("cluster");
         this.docInternet = model.getElementsByTagName("internet");

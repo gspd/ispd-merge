@@ -13,7 +13,6 @@ import ispd.motor.filas.servidores.implementacao.CS_Maquina;
 import ispd.motor.filas.servidores.implementacao.CS_Mestre;
 import ispd.motor.filas.servidores.implementacao.CS_Switch;
 import ispd.motor.filas.servidores.implementacao.Vertice;
-import org.w3c.dom.Document;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,9 +31,7 @@ class QueueNetworkBuilder {
     private final List<CS_Internet> internets = new ArrayList<>(0);
     private final Map<String, Double> powerLimits;
 
-    QueueNetworkBuilder(final Document document) {
-        final var doc = new WrappedDocument(document);
-
+    QueueNetworkBuilder(final WrappedDocument doc) {
         this.powerLimits = doc.owners().collect(Collectors.toMap(
                 WrappedElement::id, o -> 0.0,
                 (prev, next) -> next, HashMap::new
