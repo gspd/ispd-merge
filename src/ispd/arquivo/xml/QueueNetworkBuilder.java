@@ -14,7 +14,6 @@ import ispd.motor.filas.servidores.implementacao.CS_Switch;
 import ispd.motor.filas.servidores.implementacao.Vertice;
 import ispd.motor.metricas.MetricasUsuarios;
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -136,7 +135,7 @@ class QueueNetworkBuilder {
         this.serviceCenters.put(e.globalIconId(), net);
     }
 
-    private void processLinkElement(WrappedElement e) {
+    private void processLinkElement(final WrappedElement e) {
         final var link = ServiceCenterBuilder.aLink(e);
 
         this.links.add(link);
@@ -151,12 +150,11 @@ class QueueNetworkBuilder {
         final var master =
                 (CS_Mestre) this.serviceCenters.get(e.globalIconId());
 
-        final var slaves = e.wMastersSlaves();
-
-        slaves.map(WrappedElement::id)
+        e.master().slaves()
+                .map(WrappedElement::id)
                 .map(Integer::parseInt)
                 .map(this.serviceCenters::get)
-                .forEach(sc -> this.processServiceCenter(sc, master));
+                .forEach(sc -> this.addServiceCenterSlaves(sc, master));
     }
 
     private void increaseUserPower(final String user, final double increment) {
@@ -168,7 +166,7 @@ class QueueNetworkBuilder {
         return (Vertice) this.serviceCenters.get(e);
     }
 
-    private void processServiceCenter(
+    private void addServiceCenterSlaves(
             final CentroServico serviceCenter, final CS_Mestre master) {
         if (serviceCenter instanceof CS_Processamento proc) {
             master.addEscravo(proc);
@@ -181,16 +179,6 @@ class QueueNetworkBuilder {
                 master.addEscravo(slave);
             }
         }
-    }
-
-    private void processNetElement(final Element internet) {
-        final var e = new WrappedElement(internet);
-        this.processInternetElement(e);
-    }
-
-    private void processLinkElement(final Element elem) {
-        final var e = new WrappedElement(elem);
-        processLinkElement(e);
     }
 
     public RedeDeFilas build() {

@@ -46,13 +46,18 @@ public class WrappedElement {
         return this.getAttribute("vmm");
     }
 
-    public Stream<WrappedElement> wMastersSlaves() {
-        final var ms = this.mastersSlaves();
-        return WrappedElement.nodeListToWrappedElementStream(ms);
+    public WrappedElement master() {
+        return this.wFirstTagElement("master");
     }
 
-    public NodeList mastersSlaves() {
-        return this.firstTagElement("master").getElementsByTagName("slave");
+    private Stream<WrappedElement> elementsWithTag(final String tag) {
+        return WrappedElement.nodeListToWrappedElementStream(
+                this.element.getElementsByTagName(tag)
+        );
+    }
+
+    public Stream<WrappedElement> slaves() {
+        return this.elementsWithTag("slave");
     }
 
     private static Stream<WrappedElement> nodeListToWrappedElementStream(final NodeList nl) {
