@@ -18,6 +18,14 @@ public class WrappedElement {
         return this.wFirstTagElement("connect").getInt(vertexEnd);
     }
 
+    public int origination() {
+        return this.vertex("origination");
+    }
+
+    public int destination() {
+        return this.vertex("destination");
+    }
+
     public int getInt(final String attributeName) {
         return Integer.parseInt(this.getAttribute(attributeName));
     }

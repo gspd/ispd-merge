@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 
 class QueueNetworkBuilder {
     private final Map<String, Double> powerLimits = new HashMap<>(0);
@@ -32,31 +31,23 @@ class QueueNetworkBuilder {
     private final List<CS_Maquina> machines = new ArrayList<>(0);
     private final List<CS_Comunicacao> links = new ArrayList<>(0);
     private final List<CS_Internet> internets = new ArrayList<>(0);
-    private final WrappedDocument doc;
 
-    QueueNetworkBuilder(final Document doc) {
-        this.doc = new WrappedDocument(doc);
+    QueueNetworkBuilder(final Document document) {
+        final var doc = new WrappedDocument(document);
 
-        final Map<String, Consumer<Element>> processingSteps = Map.of(
-                "owner", this::setOwnerPowerLimit,
-                "machine", this::processMachineElement,
-                "cluster", this::processClusterElement,
-                "internet", this::processNetElement,
-                "link", this::processLinkElement
-        );
-
-        processingSteps.forEach(this.doc::forEachElementWithTag);
-
-        this.addSlavesToMasters();
+        doc.owners().forEach(this::setOwnerPowerLimit);
+        doc.machines().forEach(this::processMachineElement);
+        doc.clusters().forEach(this::processClusterElement);
+        doc.internets().forEach(this::processInternetElement);
+        doc.links().forEach(this::processLinkElement);
+        doc.masters().forEach(this::addSlavesToMachine);
     }
 
-    private void setOwnerPowerLimit(final Element user) {
-        final var e = new WrappedElement(user);
-        this.setOwnerPowerLimit(e);
+    private void setOwnerPowerLimit(final WrappedElement user) {
+        this.powerLimits.put(user.id(), 0.0);
     }
 
-    private void processMachineElement(final Element elem) {
-        final var e = new WrappedElement(elem);
+    private void processMachineElement(final WrappedElement e) {
         final var isMaster = e.hasMasterAttribute();
 
         final CS_Processamento machine;
@@ -81,17 +72,14 @@ class QueueNetworkBuilder {
         );
     }
 
-    private void processClusterElement(final Element elem) {
-        final var e = new WrappedElement(elem);
-        final int id = e.globalIconId();
-
+    private void processClusterElement(final WrappedElement e) {
         if (e.isMaster()) {
             final var cluster = ServiceCenterBuilder.aMasterWithNoLoad(e);
 
             this.masters.add(cluster);
-            this.serviceCenters.put(id, cluster);
+            this.serviceCenters.put(e.globalIconId(), cluster);
 
-            final int slaveCount = new WrappedElement(elem).getInt("nodes");
+            final int slaveCount = e.nodes();
 
             final double power =
                     cluster.getPoderComputacional() * (slaveCount + 1);
@@ -105,9 +93,8 @@ class QueueNetworkBuilder {
             Connection.connectClusterAndSwitch(cluster, theSwitch);
 
             for (int i = 0; i < slaveCount; i++) {
-                final var e1 = new WrappedElement(elem);
                 final var machine =
-                        ServiceCenterBuilder.aMachineWithId(e1, i);
+                        ServiceCenterBuilder.aMachineWithId(e, i);
                 Connection.connectMachineAndSwitch(machine, theSwitch);
 
                 machine.addMestre(cluster);
@@ -120,24 +107,19 @@ class QueueNetworkBuilder {
             final var theSwitch = ServiceCenterBuilder.aSwitch(e);
 
             this.links.add(theSwitch);
-            this.serviceCenters.put(id, theSwitch);
+            this.serviceCenters.put(e.globalIconId(), theSwitch);
 
-            final double power =
-                    new WrappedElement(elem).getDouble("power")
-                    * new WrappedElement(elem).getInt("nodes");
+            final double power = e.power() * e.nodes();
 
-            this.increaseUserPower(elem.getAttribute("owner"), power);
+            this.increaseUserPower(e.owner(), power);
 
-            final int slaveCount = Integer.parseInt(
-                    elem.getAttribute("nodes")
-            );
+            final int slaveCount = e.nodes();
 
             final var slaves = new ArrayList<CS_Maquina>(slaveCount);
 
             for (int i = 0; i < slaveCount; i++) {
-                final var e1 = new WrappedElement(elem);
                 final var machine =
-                        ServiceCenterBuilder.aMachineWithId(e1, i);
+                        ServiceCenterBuilder.aMachineWithId(e, i);
                 Connection.connectMachineAndSwitch(machine, theSwitch);
                 slaves.add(machine);
             }
@@ -147,45 +129,22 @@ class QueueNetworkBuilder {
         }
     }
 
-    private void processNetElement(final Element internet) {
-        final var e = new WrappedElement(internet);
+    private void processInternetElement(final WrappedElement e) {
         final var net = ServiceCenterBuilder.anInternet(e);
 
         this.internets.add(net);
         this.serviceCenters.put(e.globalIconId(), net);
     }
 
-    private void processLinkElement(final Element elem) {
-        final var e = new WrappedElement(elem);
+    private void processLinkElement(WrappedElement e) {
         final var link = ServiceCenterBuilder.aLink(e);
 
         this.links.add(link);
 
         Connection.connectLinkAndVertices(link,
-                this.getElementVertex(elem, "origination"),
-                this.getElementVertex(elem, "destination")
+                this.getVertex(e.origination()),
+                this.getVertex(e.destination())
         );
-    }
-
-    private void addSlavesToMasters() {
-        this.doc.wElementsWithTag("machine")
-                .filter(WrappedElement::hasMasterAttribute)
-                .forEach(this::addSlavesToMachine);
-    }
-
-    private void setOwnerPowerLimit(final WrappedElement user) {
-        this.powerLimits.put(user.id(), 0.0);
-    }
-
-    private void increaseUserPower(final String user, final double increment) {
-        final var oldValue = this.powerLimits.get(user);
-        this.powerLimits.put(user, oldValue + increment);
-    }
-
-    private Vertice getElementVertex(final Element elem,
-                                     final String vertexEnd) {
-        final var e = new WrappedElement(elem);
-        return (Vertice) this.serviceCenters.get(e.vertex(vertexEnd));
     }
 
     private void addSlavesToMachine(final WrappedElement e) {
@@ -198,6 +157,15 @@ class QueueNetworkBuilder {
                 .map(Integer::parseInt)
                 .map(this.serviceCenters::get)
                 .forEach(sc -> this.processServiceCenter(sc, master));
+    }
+
+    private void increaseUserPower(final String user, final double increment) {
+        final var oldValue = this.powerLimits.get(user);
+        this.powerLimits.put(user, oldValue + increment);
+    }
+
+    private Vertice getVertex(final int e) {
+        return (Vertice) this.serviceCenters.get(e);
     }
 
     private void processServiceCenter(
@@ -213,6 +181,16 @@ class QueueNetworkBuilder {
                 master.addEscravo(slave);
             }
         }
+    }
+
+    private void processNetElement(final Element internet) {
+        final var e = new WrappedElement(internet);
+        this.processInternetElement(e);
+    }
+
+    private void processLinkElement(final Element elem) {
+        final var e = new WrappedElement(elem);
+        processLinkElement(e);
     }
 
     public RedeDeFilas build() {

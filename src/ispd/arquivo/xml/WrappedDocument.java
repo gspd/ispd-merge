@@ -27,4 +27,29 @@ public record WrappedDocument(Document document) {
     public boolean hasEmptyTag(final String tag) {
         return this.document.getElementsByTagName(tag).getLength() == 0;
     }
+
+    public Stream<WrappedElement> owners() {
+        return this.wElementsWithTag("owner");
+    }
+
+    public Stream<WrappedElement> machines() {
+        return this.wElementsWithTag("machine");
+    }
+
+    public Stream<WrappedElement> masters() {
+        return this.machines()
+                .filter(WrappedElement::hasMasterAttribute);
+    }
+
+    public Stream<WrappedElement> clusters() {
+        return this.wElementsWithTag("cluster");
+    }
+
+    public Stream<WrappedElement> internets() {
+        return this.wElementsWithTag("internet");
+    }
+
+    public Stream<WrappedElement> links() {
+        return this.wElementsWithTag("link");
+    }
 }
