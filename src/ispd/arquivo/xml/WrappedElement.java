@@ -14,32 +14,36 @@ import java.util.stream.Stream;
 public class WrappedElement {
     private final Element element;
 
-    public int vertex(final String vertexEnd) {
-        return this.wFirstTagElement("connect").getInt(vertexEnd);
-    }
-
     public int origination() {
         return this.vertex("origination");
     }
 
-    public int destination() {
-        return this.vertex("destination");
+    public int vertex(final String vertexEnd) {
+        return this.connection().getInt(vertexEnd);
     }
 
     public int getInt(final String attributeName) {
         return Integer.parseInt(this.getAttribute(attributeName));
     }
 
-    public WrappedElement wFirstTagElement(final String tagName) {
-        return new WrappedElement(this.firstTagElement(tagName));
+    public WrappedElement connection() {
+        return this.wFirstTagElement("connect");
     }
 
     public String getAttribute(final String s) {
         return this.element.getAttribute(s);
     }
 
+    public WrappedElement wFirstTagElement(final String tagName) {
+        return new WrappedElement(this.firstTagElement(tagName));
+    }
+
     public Element firstTagElement(final String tagName) {
         return (Element) this.element.getElementsByTagName(tagName).item(0);
+    }
+
+    public int destination() {
+        return this.vertex("destination");
     }
 
     public String vmm() {
@@ -50,14 +54,14 @@ public class WrappedElement {
         return this.wFirstTagElement("master");
     }
 
+    public Stream<WrappedElement> slaves() {
+        return this.elementsWithTag("slave");
+    }
+
     private Stream<WrappedElement> elementsWithTag(final String tag) {
         return WrappedElement.nodeListToWrappedElementStream(
                 this.element.getElementsByTagName(tag)
         );
-    }
-
-    public Stream<WrappedElement> slaves() {
-        return this.elementsWithTag("slave");
     }
 
     private static Stream<WrappedElement> nodeListToWrappedElementStream(final NodeList nl) {
@@ -88,7 +92,15 @@ public class WrappedElement {
     }
 
     public int globalIconId() {
-        return this.wFirstTagElement("icon_id").getInt("global");
+        return this.iconId().global();
+    }
+
+    public int global() {
+        return this.getInt("global");
+    }
+
+    public WrappedElement iconId() {
+        return this.wFirstTagElement("icon_id");
     }
 
     public String owner() {
@@ -122,10 +134,6 @@ public class WrappedElement {
 
     public String opSystem() {
         return this.getAttribute("op_system");
-    }
-
-    public String mastersScheduler() {
-        return this.wFirstTagElement("master").scheduler();
     }
 
     public String scheduler() {
@@ -172,16 +180,12 @@ public class WrappedElement {
         return this.getInt("y");
     }
 
-    public int global(){
-        return this.getInt("global");
-    }
-
-    public double powerLimit(){
-        return this.getDouble("powerlimit");
-    }
-
     public int local() {
         return this.getInt("local");
+    }
+
+    public double powerLimit() {
+        return this.getDouble("powerlimit");
     }
 
     public double costDisk() {
@@ -190,11 +194,6 @@ public class WrappedElement {
 
     public double size() {
         return this.getDouble("size");
-    }
-
-    public Element getElement() {
-        // TODO: Check if this method is removable
-        return this.element;
     }
 
     public int number() {

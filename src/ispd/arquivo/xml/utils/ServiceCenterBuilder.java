@@ -10,7 +10,7 @@ import ispd.motor.filas.servidores.implementacao.CS_Switch;
 public class ServiceCenterBuilder {
     public static CS_Mestre aMaster(final WrappedElement e) {
         return new CS_Mestre(e.id(), e.owner(), e.power(), e.load(),
-                e.mastersScheduler(), e.energy());
+                e.master().scheduler(), e.energy());
     }
 
     public static CS_Maquina aMachine(final WrappedElement e) {
