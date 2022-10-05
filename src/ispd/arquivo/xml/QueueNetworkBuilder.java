@@ -2,7 +2,7 @@ package ispd.arquivo.xml;
 
 import ispd.arquivo.xml.utils.Connection;
 import ispd.arquivo.xml.utils.ServiceCenterBuilder;
-import ispd.escalonador.Escalonador;
+import ispd.arquivo.xml.utils.UserPowerLimit;
 import ispd.motor.filas.RedeDeFilas;
 import ispd.motor.filas.servidores.CS_Comunicacao;
 import ispd.motor.filas.servidores.CS_Processamento;
@@ -12,16 +12,15 @@ import ispd.motor.filas.servidores.implementacao.CS_Maquina;
 import ispd.motor.filas.servidores.implementacao.CS_Mestre;
 import ispd.motor.filas.servidores.implementacao.CS_Switch;
 import ispd.motor.filas.servidores.implementacao.Vertice;
-import ispd.motor.metricas.MetricasUsuarios;
 import org.w3c.dom.Document;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 class QueueNetworkBuilder {
-    private final Map<String, Double> powerLimits = new HashMap<>(0);
     private final HashMap<Integer, CentroServico> serviceCenters =
             new HashMap<>(0);
     private final HashMap<CentroServico, List<CS_Maquina>> clusterSlaves =
@@ -30,20 +29,21 @@ class QueueNetworkBuilder {
     private final List<CS_Maquina> machines = new ArrayList<>(0);
     private final List<CS_Comunicacao> links = new ArrayList<>(0);
     private final List<CS_Internet> internets = new ArrayList<>(0);
+    private final Map<String, Double> powerLimits;
 
     QueueNetworkBuilder(final Document document) {
         final var doc = new WrappedDocument(document);
 
-        doc.owners().forEach(this::setOwnerPowerLimit);
+        this.powerLimits = doc.owners().collect(Collectors.toMap(
+                WrappedElement::id, o -> 0.0,
+                (prev, next) -> next, HashMap::new
+        ));
+
         doc.machines().forEach(this::processMachineElement);
         doc.clusters().forEach(this::processClusterElement);
         doc.internets().forEach(this::processInternetElement);
         doc.links().forEach(this::processLinkElement);
         doc.masters().forEach(this::addSlavesToMachine);
-    }
-
-    private void setOwnerPowerLimit(final WrappedElement user) {
-        this.powerLimits.put(user.id(), 0.0);
     }
 
     private void processMachineElement(final WrappedElement e) {
@@ -53,17 +53,13 @@ class QueueNetworkBuilder {
 
         if (isMaster) {
             machine = ServiceCenterBuilder.aMaster(e);
+            this.masters.add(machine);
         } else {
             machine = ServiceCenterBuilder.aMachine(e);
+            this.machines.add((CS_Maquina) machine);
         }
 
         this.serviceCenters.put(e.globalIconId(), machine);
-
-        if (isMaster) {
-            this.masters.add(machine);
-        } else {
-            this.machines.add((CS_Maquina) machine);
-        }
 
         this.increaseUserPower(
                 machine.getProprietario(),
@@ -101,7 +97,6 @@ class QueueNetworkBuilder {
 
                 this.machines.add(machine);
             }
-
         } else {
             final var theSwitch = ServiceCenterBuilder.aSwitch(e);
 
@@ -182,7 +177,7 @@ class QueueNetworkBuilder {
     }
 
     public RedeDeFilas build() {
-        final var helper = new UserPowerLimitHelper(this.powerLimits);
+        final var helper = new UserPowerLimit(this.powerLimits);
 
         this.masters.stream()
                 .map(CS_Mestre.class::cast)
@@ -200,29 +195,5 @@ class QueueNetworkBuilder {
                 this.links, this.internets,
                 this.powerLimits
         );
-    }
-
-    static class UserPowerLimitHelper {
-        private final List<String> owners;
-        private final List<Double> limits;
-
-        private UserPowerLimitHelper(final Map<String, Double> powerLimits) {
-            this.owners = new ArrayList<>(powerLimits.keySet());
-            this.limits = new ArrayList<>(powerLimits.values());
-        }
-
-        private void setSchedulerUserMetrics(final Escalonador scheduler) {
-            scheduler.setMetricaUsuarios(this.makeUserMetrics());
-        }
-
-        private MetricasUsuarios makeUserMetrics() {
-            final var metrics = new MetricasUsuarios();
-            metrics.addAllUsuarios(this.owners, this.limits);
-            return metrics;
-        }
-
-        public List<String> getOwners() {
-            return this.owners;
-        }
     }
 }
