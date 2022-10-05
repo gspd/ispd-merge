@@ -273,9 +273,6 @@ public class Metricas implements Serializable {
 
         final var limits = redeDeFilas.getLimites();
 
-        System.out.println("Limits: " + limits);
-        System.out.println("Users (metrics): " + usuarios);
-
         for (String user : usuarios) {
             if (!limits.containsKey(user))
             {
