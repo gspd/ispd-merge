@@ -29,7 +29,7 @@ class QueueNetworkBuilder {
     private final List<CS_Maquina> machines = new ArrayList<>(0);
     protected final List<CS_Comunicacao> links = new ArrayList<>(0);
     protected final List<CS_Internet> internets = new ArrayList<>(0);
-    private final Map<String, Double> powerLimits;
+    protected final Map<String, Double> powerLimits;
 
     public QueueNetworkBuilder(final WrappedDocument doc) {
         this.powerLimits = doc.owners().collect(Collectors.toMap(
