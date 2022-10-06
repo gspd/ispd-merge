@@ -9,7 +9,6 @@ import ispd.gui.iconico.grade.GridItem;
 import ispd.gui.iconico.grade.Internet;
 import ispd.gui.iconico.grade.Link;
 import ispd.gui.iconico.grade.Machine;
-import ispd.utils.ValidaValores;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -54,7 +53,6 @@ public class GridBuilder {
 
             this.icons.put(cluster.getId().getGlobalId(), cluster);
             cluster.getId().setName(c.id());
-            ValidaValores.addNomeIcone(cluster.getId().getName());
             cluster.setComputationalPower(c.power());
             GridBuilder.setGridItemCharacteristics(cluster, c);
             cluster.setSlaveCount(c.nodes());
@@ -75,8 +73,6 @@ public class GridBuilder {
             this.vertices.add(net);
             this.icons.put(net.getId().getGlobalId(), net);
             net.getId().setName(wInet.id());
-
-            ValidaValores.addNomeIcone(net.getId().getName());
 
             net.setBandwidth(wInet.bandwidth());
             net.setLoadFactor(wInet.load());
@@ -152,7 +148,6 @@ public class GridBuilder {
             ((GridItem) destino).getInboundConnections().add(lk);
             this.edges.add(lk);
             lk.getId().setName(link.getAttribute("id"));
-            ValidaValores.addNomeIcone(lk.getId().getName());
             lk.setBandwidth(Double.parseDouble(link.getAttribute("bandwidth")));
             lk.setLoadFactor(Double.parseDouble(link.getAttribute("load")));
             lk.setLatency(Double.parseDouble(link.getAttribute("latency")));
@@ -231,7 +226,6 @@ public class GridBuilder {
             final Machine machine, final WrappedElement e) {
         final var newName = e.id();
         machine.getId().setName(newName);
-        ValidaValores.addNomeIcone(newName);
 
         GridBuilder.setMachinePropertiesFromElement(machine, e);
     }
