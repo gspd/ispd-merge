@@ -144,7 +144,7 @@ public class IconicoXML {
      * @return carga de trabalho contida no modelo
      */
     public static GerarCarga newGerarCarga(final Document modelo) {
-        return LoadBuilder.buildLoad(modelo);
+        return LoadBuilder.build(modelo);
     }
 
     public static void newGrade(

@@ -272,8 +272,12 @@ public class WrappedElement {
         return this.getAttribute("id_master");
     }
 
-    private boolean hasEmptyTag(final String tag) {
-        return this.element.getElementsByTagName(tag).getLength() == 0;
+    public String filePath() {
+        return this.getAttribute("file_path");
+    }
+
+    public String format() {
+        return this.getAttribute("format");
     }
 
     public Stream<WrappedElement> randomLoads() {

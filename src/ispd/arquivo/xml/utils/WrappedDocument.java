@@ -70,4 +70,8 @@ public class WrappedDocument {
     public Stream<WrappedElement> virtualMachines() {
         return this.elementsWithTag("virtualMac");
     }
+
+    public Stream<WrappedElement> loads() {
+        return this.elementsWithTag("load");
+    }
 }
