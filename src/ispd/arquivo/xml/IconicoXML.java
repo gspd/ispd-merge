@@ -2,6 +2,7 @@ package ispd.arquivo.xml;
 
 import ispd.arquivo.xml.models.builders.CloudQueueNetworkBuilder;
 import ispd.arquivo.xml.models.builders.GridBuilder;
+import ispd.arquivo.xml.models.builders.LoadBuilder;
 import ispd.arquivo.xml.models.builders.QueueNetworkBuilder;
 import ispd.arquivo.xml.models.builders.ServiceCenterBuilder;
 import ispd.arquivo.xml.utils.WrappedDocument;
