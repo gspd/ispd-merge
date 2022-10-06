@@ -1,7 +1,8 @@
-package ispd.arquivo.xml.modelBuilders;
+package ispd.arquivo.xml.models.builders;
 
 import ispd.arquivo.xml.WrappedDocument;
 import ispd.arquivo.xml.WrappedElement;
+import ispd.arquivo.xml.models.IconicModel;
 import ispd.gui.iconico.Edge;
 import ispd.gui.iconico.Vertex;
 import ispd.gui.iconico.grade.Cluster;
@@ -263,11 +264,6 @@ public class GridBuilder {
         GridBuilder.setGridItemCharacteristics(machine, e);
         machine.setLoadFactor(e.load());
         machine.setOwner(e.owner());
-    }
-
-    public record IconicModel(
-            Collection<Vertex> vertices,
-            Collection<Edge> edges) {
     }
 
     private record IconInfo(int x, int y, int globalId, int localId) {

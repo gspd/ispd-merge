@@ -1,4 +1,4 @@
-package ispd.arquivo.xml.modelBuilders;
+package ispd.arquivo.xml.models.builders;
 
 import ispd.arquivo.xml.WrappedDocument;
 import ispd.arquivo.xml.WrappedElement;
