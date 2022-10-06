@@ -44,18 +44,8 @@ class QueueNetworkBuilder {
         doc.masters().forEach(this::addSlavesToMachine);
     }
 
-    private void processMachineElement(final WrappedElement e) {
-        final var isMaster = e.hasMasterAttribute();
-
-        final CS_Processamento machine;
-
-        if (isMaster) {
-            machine = ServiceCenterBuilder.aMaster(e);
-            this.masters.add(machine);
-        } else {
-            machine = ServiceCenterBuilder.aMachine(e);
-            this.machines.add((CS_Maquina) machine);
-        }
+    protected void processMachineElement(final WrappedElement e) {
+        final var machine = this.makeAndAddMachine(e);
 
         this.serviceCenters.put(e.globalIconId(), machine);
 
@@ -63,6 +53,20 @@ class QueueNetworkBuilder {
                 machine.getProprietario(),
                 machine.getPoderComputacional()
         );
+    }
+
+    protected CS_Processamento makeAndAddMachine(final WrappedElement e) {
+        final CS_Processamento machine;
+
+        if (e.hasMasterAttribute()) {
+            machine = ServiceCenterBuilder.aMaster(e);
+            this.masters.add(machine);
+        } else {
+            machine = ServiceCenterBuilder.aMachine(e);
+            this.machines.add((CS_Maquina) machine);
+        }
+
+        return machine;
     }
 
     private void processClusterElement(final WrappedElement e) {
@@ -150,7 +154,7 @@ class QueueNetworkBuilder {
                 .forEach(sc -> this.addServiceCenterSlaves(sc, master));
     }
 
-    private void increaseUserPower(final String user, final double increment) {
+    protected void increaseUserPower(final String user, final double increment) {
         final var oldValue = this.powerLimits.get(user);
         this.powerLimits.put(user, oldValue + increment);
     }

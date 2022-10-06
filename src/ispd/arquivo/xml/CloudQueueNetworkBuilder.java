@@ -1,5 +1,6 @@
 package ispd.arquivo.xml;
 
+import ispd.arquivo.xml.utils.ServiceCenterBuilder;
 import ispd.arquivo.xml.utils.SwitchConnection;
 import ispd.motor.filas.RedeDeFilasCloud;
 import ispd.motor.filas.servidores.CS_Processamento;
@@ -21,7 +22,6 @@ import java.util.Map;
 public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
     private final NodeList docMachines;
     private final NodeList docClusters;
-    private final NodeList docOwners;
     private final NodeList docVms;
     private final HashMap<CentroServico, List<CS_MaquinaCloud>> clusterSlaves =
             new HashMap<>(0);
@@ -37,101 +37,24 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
 
         this.docMachines = model.getElementsByTagName("machine");
         this.docClusters = model.getElementsByTagName("cluster");
-        this.docOwners = model.getElementsByTagName("owner");
         this.docVms = model.getElementsByTagName("virtualMac");
 
         //cria maquinas, mestres, internets e mestres dos clusters
         //Realiza leitura dos icones de máquina
-        processMachines();
+        doc.masters().forEach(this::processMachineElement);
+
         //Realiza leitura dos icones de cluster
-        processClusters();
+        this.processClusters();
 
         doc.internets().forEach(this::processInternetElement);
-
-
         doc.links().forEach(this::processLinkElement);
 
 
         //adiciona os escravos aos mestres
-        processMasters();
+        this.processMasters();
 
         //Realiza leitura dos ícones de máquina virtual
-        processVirtualMachines();
-    }
-
-    private void processMachines() {
-        for (int i = 0; i < this.docMachines.getLength(); i++) {
-            final Element maquina = (Element) this.docMachines.item(i);
-            final Element id =
-                    GridBuilder.getFirstTagElement(maquina, "icon_id");
-            final int global = Integer.parseInt(id.getAttribute("global"));
-            if (new WrappedElement(maquina).hasMasterAttribute()) {
-                final Element master =
-                        GridBuilder.getFirstTagElement(maquina,
-                                "master");
-                final Element carac = GridBuilder.getFirstTagElement(maquina,
-                        "characteristic");
-                final Element proc =
-                        GridBuilder.getFirstTagElement(carac, "process");
-                final Element memoria = GridBuilder.getFirstTagElement(carac,
-                        "memory");
-                final Element disco = GridBuilder.getFirstTagElement(carac,
-                        "hard_disk");
-                final Element custo =
-                        GridBuilder.getFirstTagElement(carac, "cost");
-                //instancia o CS_VMM
-                final CS_Processamento mestre = new CS_VMM(
-                        maquina.getAttribute("id"),
-                        maquina.getAttribute("owner"),
-                        Double.parseDouble(proc.getAttribute("power")),
-                        Double.parseDouble(memoria.getAttribute("size")),
-                        Double.parseDouble(disco.getAttribute("size")),
-                        Double.parseDouble(maquina.getAttribute("load")),
-                        master.getAttribute("scheduler")/*Escalonador*/,
-                        master.getAttribute("vm_alloc"));
-                this.virtualMachineMasters.add(mestre);
-                this.serviceCenters.put(global, mestre);
-                //Contabiliza para o usuario poder computacional do mestre
-                this.powerLimits.put(mestre.getProprietario(),
-                        this.powerLimits.get(mestre.getProprietario()) + mestre.getPoderComputacional());
-            } else {
-                //acessa as características do máquina
-                final Element caracteristica =
-                        GridBuilder.getFirstTagElement(maquina,
-                                "characteristic");
-                final Element custo =
-                        GridBuilder.getFirstTagElement(caracteristica,
-                                "cost");
-                final Element processamento =
-                        GridBuilder.getFirstTagElement(caracteristica,
-                                "process");
-                final Element memoria =
-                        GridBuilder.getFirstTagElement(caracteristica,
-                                "memory");
-                final Element disco =
-                        GridBuilder.getFirstTagElement(caracteristica,
-                                "hard_disk");
-                //instancia um CS_MaquinaCloud
-                final CS_MaquinaCloud maq = new CS_MaquinaCloud(
-                        maquina.getAttribute("id"),
-                        maquina.getAttribute("owner"),
-                        Double.parseDouble(processamento.getAttribute(
-                                "power")),
-                        Integer.parseInt(processamento.getAttribute(
-                                "number")),
-                        Double.parseDouble(maquina.getAttribute("load")),
-                        Double.parseDouble(memoria.getAttribute("size")),
-                        Double.parseDouble(disco.getAttribute("size")),
-                        Double.parseDouble(custo.getAttribute("cost_proc")),
-                        Double.parseDouble(custo.getAttribute("cost_mem")),
-                        Double.parseDouble(custo.getAttribute("cost_disk"))
-                );
-                this.machines.add(maq);
-                this.serviceCenters.put(global, maq);
-                this.powerLimits.put(maq.getProprietario(),
-                        this.powerLimits.get(maq.getProprietario()) + maq.getPoderComputacional());
-            }
-        }
+        this.processVirtualMachines();
     }
 
     private void processClusters() {
@@ -361,9 +284,24 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
         }
     }
 
+    @Override
+    protected CS_Processamento makeAndAddMachine(final WrappedElement e) {
+        final CS_Processamento machine;
+
+        if (e.hasMasterAttribute()) {
+            machine = ServiceCenterBuilder.aVirtualMachineMaster(e);
+            this.virtualMachineMasters.add(machine);
+        } else {
+            machine = ServiceCenterBuilder.aCloudMachine(e);
+            this.machines.add((CS_MaquinaCloud) machine);
+        }
+
+        return machine;
+    }
+
     public RedeDeFilasCloud build() {
-        List<String> owners = new ArrayList<>(0);
-        List<Double> powers = new ArrayList<>(0);
+        final List<String> owners = new ArrayList<>(0);
+        final List<Double> powers = new ArrayList<>(0);
 
         for (final Map.Entry<String, Double> entry :
                 this.powerLimits.entrySet()) {

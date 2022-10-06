@@ -199,4 +199,24 @@ public class WrappedElement {
     public int number() {
         return this.getInt("number");
     }
+
+    public WrappedElement characteristics() {
+        return this.wFirstTagElement("characteristic");
+    }
+
+    public WrappedElement processor() {
+        return this.wFirstTagElement("process");
+    }
+
+    public WrappedElement memory() {
+        return this.wFirstTagElement("memory");
+    }
+
+    public WrappedElement hardDisk() {
+        return this.wFirstTagElement("hard_disk");
+    }
+
+    public WrappedElement costs() {
+        return this.wFirstTagElement("cost");
+    }
 }
