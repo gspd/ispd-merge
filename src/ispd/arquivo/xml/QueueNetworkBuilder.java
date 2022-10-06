@@ -131,12 +131,12 @@ class QueueNetworkBuilder {
     protected void processLinkElement(final WrappedElement e) {
         final var link = ServiceCenterBuilder.aLink(e);
 
-        this.links.add(link);
-
         QueueNetworkBuilder.connectLinkAndVertices(link,
                 this.getVertex(e.origination()),
                 this.getVertex(e.destination())
         );
+
+        this.links.add(link);
     }
 
     private void addSlavesToMachine(final WrappedElement e) {

@@ -40,7 +40,6 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
         this.docOwners = model.getElementsByTagName("owner");
         this.docVms = model.getElementsByTagName("virtualMac");
 
-        processOwners();
         //cria maquinas, mestres, internets e mestres dos clusters
         //Realiza leitura dos icones de máquina
         processMachines();
@@ -58,13 +57,6 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
 
         //Realiza leitura dos ícones de máquina virtual
         processVirtualMachines();
-    }
-
-    private void processOwners() {
-        for (int i = 0; i < this.docOwners.getLength(); i++) {
-            final Element owner = (Element) this.docOwners.item(i);
-            this.powerLimits.put(owner.getAttribute("id"), 0.0);
-        }
     }
 
     private void processMachines() {
