@@ -21,22 +21,18 @@ import java.util.List;
 import java.util.Map;
 
 public class GridBuilder {
-
-    private final Collection<? super Vertex> vertices;
-    private final Collection<? super Edge> edges;
+    private final Collection<Vertex> vertices;
+    private final Collection<Edge> edges;
     private final WrappedDocument doc;
     private final Map<Integer, Object> icons = new HashMap<>(0);
 
-    public GridBuilder(
-            final Document doc,
-            final Collection<? super Vertex> vertices,
-            final Collection<? super Edge> edges) {
+    public GridBuilder(final Document doc) {
         this.doc = new WrappedDocument(doc);
-        this.vertices = vertices;
-        this.edges = edges;
+        this.vertices = new ArrayList<>(0);
+        this.edges = new ArrayList<>(0);
     }
 
-    public void buildGrid() {
+    public IconicModel buildGrid() {
         final Document doc = this.doc.document();
 
         final var machines = doc.getElementsByTagName("machine");
@@ -163,6 +159,8 @@ public class GridBuilder {
             lk.setLoadFactor(Double.parseDouble(link.getAttribute("load")));
             lk.setLatency(Double.parseDouble(link.getAttribute("latency")));
         }
+
+        return new IconicModel(this.vertices, this.edges);
     }
 
     private static void setGridItemCharacteristics(
@@ -171,42 +169,35 @@ public class GridBuilder {
             return;
         }
 
-        final var characteristic = e.wFirstTagElement("characteristic");
-
-        final var process = characteristic.wFirstTagElement("process");
-
-        final var memorySize =
-                characteristic.wFirstTagElement("memory").size();
-        final var diskSize =
-                characteristic.wFirstTagElement("hard_disk").size();
+        final var characteristic = e.characteristics();
 
         if (item instanceof Cluster cluster) {
-            cluster.setComputationalPower(process.power());
-            cluster.setCoreCount(process.number());
-            cluster.setRam(memorySize);
-            cluster.setHardDisk(diskSize);
+            cluster.setComputationalPower(characteristic.processor().power());
+            cluster.setCoreCount(characteristic.processor().number());
+            cluster.setRam(characteristic.memory().size());
+            cluster.setHardDisk(characteristic.hardDisk().size());
 
             if (!characteristic.hasCostAttribute()) {
                 return;
             }
 
-            final var co = characteristic.wFirstTagElement("cost");
+            final var co = characteristic.costs();
 
             cluster.setCostPerProcessing(co.costProcessing());
             cluster.setCostPerMemory(co.costMemory());
             cluster.setCostPerDisk(co.costDisk());
 
         } else if (item instanceof Machine machine) {
-            machine.setComputationalPower(process.power());
-            machine.setCoreCount(process.number());
-            machine.setRam(memorySize);
-            machine.setHardDisk(diskSize);
+            machine.setComputationalPower(characteristic.processor().power());
+            machine.setCoreCount(characteristic.processor().number());
+            machine.setRam(characteristic.memory().size());
+            machine.setHardDisk(characteristic.hardDisk().size());
 
             if (!characteristic.hasCostAttribute()) {
                 return;
             }
 
-            final var co = characteristic.wFirstTagElement("cost");
+            final var co = characteristic.costs();
 
             machine.setCostPerProcessing(co.costProcessing());
             machine.setCostPerMemory(co.costMemory());
@@ -259,6 +250,11 @@ public class GridBuilder {
         GridBuilder.setGridItemCharacteristics(machine, e);
         machine.setLoadFactor(e.load());
         machine.setOwner(e.owner());
+    }
+
+    public record IconicModel(
+            Collection<Vertex> vertices,
+            Collection<Edge> edges) {
     }
 
     private record IconInfo(int x, int y, int globalId, int localId) {

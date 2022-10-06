@@ -153,7 +153,9 @@ public class IconicoXML {
             final Document doc,
             final Collection<? super Vertex> vertices,
             final Collection<? super Edge> edges) {
-        new GridBuilder(doc, vertices, edges).buildGrid();
+        final var model = new GridBuilder(doc).buildGrid();
+        vertices.addAll(model.vertices());
+        edges.addAll(model.edges());
     }
 
     public static HashSet<String> newSetUsers(final Document doc) {
