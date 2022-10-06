@@ -23,7 +23,6 @@ import java.util.Map;
 
 public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
     private final NodeList docMachines;
-    private final NodeList docVms;
     private final HashMap<CentroServico, List<CS_MaquinaCloud>> clusterSlaves =
             new HashMap<>(0);
     private final List<CS_MaquinaCloud> cloudMachines = new ArrayList<>(0);
@@ -37,89 +36,19 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
         final var doc = new WrappedDocument(model);
 
         this.docMachines = model.getElementsByTagName("machine");
-        this.docVms = model.getElementsByTagName("virtualMac");
 
         doc.masters().forEach(this::processMachineElement);
         doc.clusters().forEach(this::processClusterElement);
         doc.internets().forEach(this::processInternetElement);
         doc.links().forEach(this::processLinkElement);
 
-
         //adiciona os escravos aos mestres
         this.processMasters();
 
-        //Realiza leitura dos ícones de máquina virtual
-        this.processVirtualMachines();
+        doc.virtualMachines().forEach(this::processVirtualMachineElement);
     }
 
-    private void processMasters() {
-        for (int i = 0; i < this.docMachines.getLength(); i++) {
-            final Element maquina = (Element) this.docMachines.item(i);
-            final Element id =
-                    GridBuilder.getFirstTagElement(maquina, "icon_id");
-            final int global = Integer.parseInt(id.getAttribute("global"));
-            if (new WrappedElement(maquina).hasMasterAttribute()) {
-                final Element master =
-                        GridBuilder.getFirstTagElement(maquina,
-                                "master");
-                final NodeList slaves = master.getElementsByTagName(
-                        "slave");
-                final CS_VMM mestre = (CS_VMM) this.serviceCenters.get(global);
-                for (int j = 0; j < slaves.getLength(); j++) {
-                    final Element slave = (Element) slaves.item(j);
-                    final CentroServico maq =
-                            this.serviceCenters.get(Integer.parseInt(slave.getAttribute("id")));
-                    if (maq instanceof CS_Processamento) {
-                        mestre.addEscravo((CS_Processamento) maq);
-                        if (maq instanceof CS_MaquinaCloud maqTemp) {
-                            maqTemp.addMestre(mestre);
-                        }
-                    } else if (maq instanceof CS_Switch) {
-                        for (final CS_MaquinaCloud escr :
-                                this.clusterSlaves.get(maq)) {
-                            escr.addMestre(mestre);
-                            mestre.addEscravo(escr);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private void processVirtualMachines() {
-        for (int i = 0; i < this.docVms.getLength(); i++) {
-            final Element virtualMac = (Element) this.docVms.item(i);
-            final CS_VirtualMac VM =
-                    new CS_VirtualMac(virtualMac.getAttribute("id"),
-                            virtualMac.getAttribute("owner"),
-                            Integer.parseInt(virtualMac.getAttribute(
-                                    "power")),
-                            Double.parseDouble(virtualMac.getAttribute(
-                                    "mem_alloc")),
-                            Double.parseDouble(virtualMac.getAttribute(
-                                    "disk_alloc")),
-                            virtualMac.getAttribute("op_system"));
-            //adicionando VMM responsável pela VM
-            for (final CS_Processamento aux : this.virtualMachineMasters) {
-                if (virtualMac.getAttribute("vmm").equals(aux.getId())) {
-                    //atentar ao fato de que a solução falha se o nome do
-                    // vmm
-                    // for alterado e não atualizado na tabela das vms
-                    //To do: corrigir problema futuramente
-                    VM.addVMM((CS_VMM) aux);
-                    //adicionando VM para o VMM
-
-                    final CS_VMM vmm = (CS_VMM) aux;
-                    vmm.addVM(VM);
-
-                }
-
-            }
-            this.virtualMachines.add(VM);
-        }
-    }
-
-    private void processClusterElement(WrappedElement e) {
+    private void processClusterElement(final WrappedElement e) {
         if (e.isMaster()) {
             final var clust = ServiceCenterBuilder.aVmmNoLoad(e);
 
@@ -171,6 +100,61 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
             this.cloudMachines.addAll(slaves);
             this.clusterSlaves.put(theSwitch, slaves);
         }
+    }
+
+    private void processMasters() {
+        for (int i = 0; i < this.docMachines.getLength(); i++) {
+            final Element maquina = (Element) this.docMachines.item(i);
+            final Element id =
+                    GridBuilder.getFirstTagElement(maquina, "icon_id");
+            final int global = Integer.parseInt(id.getAttribute("global"));
+            if (new WrappedElement(maquina).hasMasterAttribute()) {
+                final Element master =
+                        GridBuilder.getFirstTagElement(maquina,
+                                "master");
+                final NodeList slaves = master.getElementsByTagName(
+                        "slave");
+                final CS_VMM mestre = (CS_VMM) this.serviceCenters.get(global);
+                for (int j = 0; j < slaves.getLength(); j++) {
+                    final Element slave = (Element) slaves.item(j);
+                    final CentroServico maq =
+                            this.serviceCenters.get(Integer.parseInt(slave.getAttribute("id")));
+                    if (maq instanceof CS_Processamento) {
+                        mestre.addEscravo((CS_Processamento) maq);
+                        if (maq instanceof CS_MaquinaCloud maqTemp) {
+                            maqTemp.addMestre(mestre);
+                        }
+                    } else if (maq instanceof CS_Switch) {
+                        for (final CS_MaquinaCloud escr :
+                                this.clusterSlaves.get(maq)) {
+                            escr.addMestre(mestre);
+                            mestre.addEscravo(escr);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void processVirtualMachineElement(final WrappedElement e) {
+        final var virtualMachine =
+                ServiceCenterBuilder.aVirtualMachine(e);
+
+        final var masterId = e.vmm();
+
+        this.virtualMachineMasters.stream()
+                .filter(cs -> cs.getId().equals(masterId))
+                .map(CS_VMM.class::cast)
+                .forEach(master -> CloudQueueNetworkBuilder
+                        .connectVmAndMaster(virtualMachine, master));
+
+        this.virtualMachines.add(virtualMachine);
+    }
+
+    private static void connectVmAndMaster(
+            final CS_VirtualMac vm, final CS_VMM master) {
+        vm.addVMM(master);
+        master.addVM(vm);
     }
 
     @Override

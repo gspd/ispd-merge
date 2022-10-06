@@ -47,4 +47,8 @@ public record WrappedDocument(Document document) {
     public Stream<WrappedElement> links() {
         return this.wElementsWithTag("link");
     }
+
+    public Stream<WrappedElement> virtualMachines() {
+        return this.wElementsWithTag("virtualMac");
+    }
 }

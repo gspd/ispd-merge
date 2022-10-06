@@ -8,6 +8,7 @@ import ispd.motor.filas.servidores.implementacao.CS_MaquinaCloud;
 import ispd.motor.filas.servidores.implementacao.CS_Mestre;
 import ispd.motor.filas.servidores.implementacao.CS_Switch;
 import ispd.motor.filas.servidores.implementacao.CS_VMM;
+import ispd.motor.filas.servidores.implementacao.CS_VirtualMac;
 
 public class ServiceCenterBuilder {
     public static CS_Mestre aMaster(final WrappedElement e) {
@@ -97,6 +98,16 @@ public class ServiceCenterBuilder {
                 e.characteristics().costs().costDisk(),
                 0.0,
                 j + 1
+        );
+    }
+
+    public static CS_VirtualMac aVirtualMachine(WrappedElement e) {
+        return new CS_VirtualMac(e.id(),
+                e.owner(),
+                e.powerAsInt(),
+                e.memAlloc(),
+                e.diskAlloc(),
+                e.opSystem()
         );
     }
 }
