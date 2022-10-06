@@ -89,7 +89,7 @@ public class QueueNetworkBuilder {
 
             this.links.add(theSwitch);
 
-            SwitchConnection.toCluster(theSwitch, cluster);
+            SwitchConnection.toMaster(theSwitch, cluster);
 
             for (int i = 0; i < slaveCount; i++) {
                 final var machine =
@@ -107,9 +107,7 @@ public class QueueNetworkBuilder {
             this.links.add(theSwitch);
             this.serviceCenters.put(e.globalIconId(), theSwitch);
 
-            final double power = e.power() * e.nodes();
-
-            this.increaseUserPower(e.owner(), power);
+            this.increaseUserPower(e.owner(), e.power() * e.nodes());
 
             final int slaveCount = e.nodes();
 
