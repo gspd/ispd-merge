@@ -322,11 +322,6 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
                     if (maq instanceof CS_Processamento) {
                         mestre.addEscravo((CS_Processamento) maq);
                         if (maq instanceof CS_MaquinaCloud maqTemp) {
-                            //trecho de debbuging
-                            System.out.println(maqTemp.getId() + " " +
-                                               "adicionou " +
-                                               "como mestre: " + mestre.getId());
-                            //fim dbg
                             maqTemp.addMestre(mestre);
                         }
                     } else if (maq instanceof CS_Switch) {
