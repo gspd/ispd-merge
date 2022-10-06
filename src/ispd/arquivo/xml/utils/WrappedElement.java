@@ -264,19 +264,27 @@ public class WrappedElement {
         return this.getDouble("probability");
     }
 
+    public String application() {
+        return this.getAttribute("application");
+    }
+
+    public String masterId() {
+        return this.getAttribute("id_master");
+    }
+
     private boolean hasEmptyTag(final String tag) {
         return this.element.getElementsByTagName(tag).getLength() == 0;
     }
 
-    public boolean hasRandomLoads() {
-        return this.hasEmptyTag("random");
-    }
-
-    public Stream<WrappedElement> randomLoad() {
+    public Stream<WrappedElement> randomLoads() {
         return this.elementsWithTag("random");
     }
 
     public Stream<WrappedElement> nodeLoads () {
         return this.elementsWithTag("node");
+    }
+
+    public Stream<WrappedElement> traceLoads() {
+        return this.elementsWithTag("trace");
     }
 }

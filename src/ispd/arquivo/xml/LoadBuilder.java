@@ -12,8 +12,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 public class LoadBuilder {
     static GerarCarga buildLoad(final Document modelo) {
@@ -27,23 +25,23 @@ public class LoadBuilder {
 
 
         final Element cargaAux = (Element) cargas.item(0);
-        GerarCarga result = null;
-        final NodeList random = cargaAux.getElementsByTagName("random");
-        if (random.getLength() != 0) {
-            final Element carga = (Element) random.item(0);
-            final var e = new WrappedElement(carga);
-            result = LoadBuilder.randomLoadFromElement(e);
-        }
 
-        GerarCarga cargasConfiguracao;
-        cargasConfiguracao =
-                result;
-        cargasConfiguracao = LoadBuilder.getLoadByNode(cargasConfiguracao
-                , cargaAux);
-        cargasConfiguracao =
-                LoadBuilder.getLoadByTrace(cargasConfiguracao, cargaAux);
+        final var c = new WrappedElement(cargaAux);
 
-        return cargasConfiguracao;
+        final var randomLoad = c.randomLoads()
+                .findFirst()
+                .map(LoadBuilder::randomLoadFromElement)
+                .orElse(null);
+
+        if (randomLoad != null)
+            return randomLoad;
+
+        final var nodeLoad = LoadBuilder.perNodeLoadFromElement(c);
+
+        if (nodeLoad != null)
+            return nodeLoad;
+
+        return LoadBuilder.getLoadByTrace(cargaAux);
     }
 
     private static CargaRandom randomLoadFromElement(final WrappedElement e) {
@@ -61,88 +59,62 @@ public class LoadBuilder {
 
         return new CargaRandom(
                 e.tasks(),
-                (int) computation.minimum(),
-                (int) computation.maximum(),
-                (int) computation.average(),
-                computation.probability(),
-                (int) communication.minimum(),
-                (int) communication.maximum(),
+                (int) computation.minimum(), (int) computation.maximum(),
+                (int) computation.average(), computation.probability(),
+                (int) communication.minimum(), (int) communication.maximum(),
                 (int) communication.average(), communication.probability(),
                 e.arrivalTime()
         );
     }
 
-    private static GerarCarga getLoadByNode(final GerarCarga cargasConfiguracao,
-                                            final Element cargaAux) {
+    private static CargaList perNodeLoadFromElement(final WrappedElement e) {
+        final var nodeLoads = e.nodeLoads()
+                .map(LoadBuilder::nodeLoadFromElement)
+                .toList();
 
-        final var c = new WrappedElement(cargaAux);
+        if (nodeLoads.isEmpty())
+            return null;
 
-        final NodeList node = cargaAux.getElementsByTagName("node");
-
-        if (node.getLength() == 0) {
-            return cargasConfiguracao;
-        }
-
-        final List<CargaForNode> tarefasDoNo =
-                new ArrayList<CargaForNode>();
-        for (int i = 0; i < node.getLength(); i++) {
-            final Element carga = (Element) node.item(i);
-            final var e = new WrappedElement(carga);
-            final String aplicacao = carga.getAttribute("application");
-            final String proprietario = e.owner();
-            final String escalonador = carga.getAttribute("id_master");
-            final int numeroTarefas =
-                    Integer.parseInt(carga.getAttribute(
-                            "tasks"));
-            double minComputacao = 0;
-            double maxComputacao = 0;
-            double minComunicacao = 0;
-            double maxComunicacao = 0;
-            final NodeList size = carga.getElementsByTagName("size");
-            for (int j = 0; j < size.getLength(); j++) {
-                final Element size1 = (Element) size.item(j);
-                if ("computing".equals(size1.getAttribute("type"))) {
-                    minComputacao =
-                            Double.parseDouble(size1.getAttribute(
-                                    "minimum"));
-                    maxComputacao =
-                            Double.parseDouble(size1.getAttribute(
-                                    "maximum"));
-                } else if ("communication".equals(
-                        size1.getAttribute("type"))) {
-                    minComunicacao =
-                            Double.parseDouble(size1.getAttribute(
-                                    "minimum"));
-                    maxComunicacao =
-                            Double.parseDouble(size1.getAttribute(
-                                    "maximum"));
-                }
-            }
-            final CargaForNode item = new CargaForNode(aplicacao,
-                    proprietario, escalonador, numeroTarefas,
-                    maxComputacao, minComputacao, maxComunicacao,
-                    minComunicacao);
-            tarefasDoNo.add(item);
-        }
-
-        return new CargaList(tarefasDoNo, GerarCarga.FORNODE);
+        return new CargaList(nodeLoads, GerarCarga.FORNODE);
     }
 
-    private static GerarCarga getLoadByTrace(GerarCarga cargasConfiguracao,
-                                             final Element cargaAux) {
+    private static GerarCarga getLoadByTrace(final Element cargaAux) {
         final NodeList trace = cargaAux.getElementsByTagName("trace");
-        if (trace.getLength() != 0) {
-            final Element carga = (Element) trace.item(0);
-            final File filepath = new File(carga.getAttribute("file_path"));
-            final int taskCount = Integer.parseInt(carga.getAttribute(
-                    "tasks"));
-            final String formato = carga.getAttribute("format");
-            if (filepath.exists()) {
-                cargasConfiguracao = new CargaTrace(filepath, taskCount
-                        , formato);
-            }
+
+        if (trace.getLength() == 0) {
+            return null;
         }
-        return cargasConfiguracao;
+
+        final Element carga = (Element) trace.item(0);
+        final File filepath = new File(carga.getAttribute("file_path"));
+        final int taskCount = Integer.parseInt(carga.getAttribute(
+                "tasks"));
+        final String formato = carga.getAttribute("format");
+        if (filepath.exists()) {
+            return new CargaTrace(filepath, taskCount                    , formato);
+        }
+
+        return null;
+    }
+
+    private static CargaForNode nodeLoadFromElement(final WrappedElement e) {
+        final var computation = e.sizes()
+                .filter(WrappedElement::isComputingType)
+                .findFirst()
+                .map(SizeInfo::rangeFromElement)
+                .orElseGet(SizeInfo::new);
+
+        final var communication = e.sizes()
+                .filter(WrappedElement::isCommunicationType)
+                .findFirst()
+                .map(SizeInfo::rangeFromElement)
+                .orElseGet(SizeInfo::new);
+
+        return new CargaForNode(e.application(),
+                e.owner(), e.masterId(), e.tasks(),
+                computation.maximum(), computation.minimum(),
+                communication.maximum(), communication.minimum()
+        );
     }
 
     private record SizeInfo(
@@ -151,17 +123,20 @@ public class LoadBuilder {
         private SizeInfo() {
             this(0, 0, 0, 0);
         }
+
         private SizeInfo(final double minimum, final double maximum) {
             this(minimum, maximum, 0, 0);
         }
 
         private static SizeInfo fromElement(final WrappedElement e) {
             return new SizeInfo(
-                    e.minimum(),
-                    e.maximum(),
-                    e.average(),
-                    e.probability()
+                    e.minimum(), e.maximum(),
+                    e.average(), e.probability()
             );
+        }
+
+        private static SizeInfo rangeFromElement(final WrappedElement e) {
+            return new SizeInfo(e.minimum(), e.maximum(), 0, 0);
         }
     }
 }
