@@ -135,7 +135,8 @@ public class IconicoXML {
     }
 
     public static RedeDeFilasCloud newRedeDeFilasCloud(final Document model) {
-        return new CloudQueueNetworkBuilder(model).build();
+        return (RedeDeFilasCloud) new CloudQueueNetworkBuilder(
+                new WrappedDocument(model)).build();
     }
 
     /**

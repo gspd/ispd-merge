@@ -4,6 +4,8 @@ import ispd.arquivo.xml.WrappedDocument;
 import ispd.arquivo.xml.WrappedElement;
 import ispd.arquivo.xml.utils.ServiceCenterBuilder;
 import ispd.arquivo.xml.utils.SwitchConnection;
+import ispd.arquivo.xml.utils.UserPowerLimit;
+import ispd.motor.filas.RedeDeFilas;
 import ispd.motor.filas.RedeDeFilasCloud;
 import ispd.motor.filas.servidores.CS_Processamento;
 import ispd.motor.filas.servidores.CentroServico;
@@ -11,18 +13,12 @@ import ispd.motor.filas.servidores.implementacao.CS_MaquinaCloud;
 import ispd.motor.filas.servidores.implementacao.CS_Switch;
 import ispd.motor.filas.servidores.implementacao.CS_VMM;
 import ispd.motor.filas.servidores.implementacao.CS_VirtualMac;
-import ispd.motor.metricas.MetricasUsuarios;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
-    private final NodeList docMachines;
     private final HashMap<CentroServico, List<CS_MaquinaCloud>> clusterSlaves =
             new HashMap<>(0);
     private final List<CS_MaquinaCloud> cloudMachines = new ArrayList<>(0);
@@ -30,25 +26,13 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
     private final List<CS_Processamento> virtualMachineMasters =
             new ArrayList<>(0);
 
-    public CloudQueueNetworkBuilder(final Document model) {
-        super(new WrappedDocument(model));
-
-        final var doc = new WrappedDocument(model);
-
-        this.docMachines = model.getElementsByTagName("machine");
-
-        doc.masters().forEach(this::processMachineElement);
-        doc.clusters().forEach(this::processClusterElement);
-        doc.internets().forEach(this::processInternetElement);
-        doc.links().forEach(this::processLinkElement);
-
-        //adiciona os escravos aos mestres
-        this.processMasters();
-
+    public CloudQueueNetworkBuilder(final WrappedDocument doc) {
+        super(doc);
         doc.virtualMachines().forEach(this::processVirtualMachineElement);
     }
 
-    private void processClusterElement(final WrappedElement e) {
+    @Override
+    protected void processClusterElement(final WrappedElement e) {
         if (e.isMaster()) {
             final var clust = ServiceCenterBuilder.aVmmNoLoad(e);
 
@@ -102,40 +86,6 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
         }
     }
 
-    private void processMasters() {
-        for (int i = 0; i < this.docMachines.getLength(); i++) {
-            final Element maquina = (Element) this.docMachines.item(i);
-            final Element id =
-                    GridBuilder.getFirstTagElement(maquina, "icon_id");
-            final int global = Integer.parseInt(id.getAttribute("global"));
-            if (new WrappedElement(maquina).hasMasterAttribute()) {
-                final Element master =
-                        GridBuilder.getFirstTagElement(maquina,
-                                "master");
-                final NodeList slaves = master.getElementsByTagName(
-                        "slave");
-                final CS_VMM mestre = (CS_VMM) this.serviceCenters.get(global);
-                for (int j = 0; j < slaves.getLength(); j++) {
-                    final Element slave = (Element) slaves.item(j);
-                    final CentroServico maq =
-                            this.serviceCenters.get(Integer.parseInt(slave.getAttribute("id")));
-                    if (maq instanceof CS_Processamento) {
-                        mestre.addEscravo((CS_Processamento) maq);
-                        if (maq instanceof CS_MaquinaCloud maqTemp) {
-                            maqTemp.addMestre(mestre);
-                        }
-                    } else if (maq instanceof CS_Switch) {
-                        for (final CS_MaquinaCloud escr :
-                                this.clusterSlaves.get(maq)) {
-                            escr.addMestre(mestre);
-                            mestre.addEscravo(escr);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     private void processVirtualMachineElement(final WrappedElement e) {
         final var virtualMachine =
                 ServiceCenterBuilder.aVirtualMachine(e);
@@ -145,16 +95,29 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
         this.virtualMachineMasters.stream()
                 .filter(cs -> cs.getId().equals(masterId))
                 .map(CS_VMM.class::cast)
-                .forEach(master -> CloudQueueNetworkBuilder
-                        .connectVmAndMaster(virtualMachine, master));
+                .forEach(master -> {
+                    virtualMachine.addVMM(master);
+                    master.addVM(virtualMachine);
+                });
 
         this.virtualMachines.add(virtualMachine);
     }
 
-    private static void connectVmAndMaster(
-            final CS_VirtualMac vm, final CS_VMM master) {
-        vm.addVMM(master);
-        master.addVM(vm);
+    @Override
+    protected void addServiceCenterSlaves(
+            final CentroServico serviceCenter, final CS_Processamento m) {
+        final var master = (CS_VMM) m;
+        if (serviceCenter instanceof CS_Processamento proc) {
+            master.addEscravo(proc);
+            if (serviceCenter instanceof CS_MaquinaCloud machine) {
+                machine.addMestre(master);
+            }
+        } else if (serviceCenter instanceof CS_Switch) {
+            for (final var slave : this.clusterSlaves.get(serviceCenter)) {
+                slave.addMestre(master);
+                master.addEscravo(slave);
+            }
+        }
     }
 
     @Override
@@ -172,31 +135,20 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
         return machine;
     }
 
-    public RedeDeFilasCloud build() {
-        final List<String> owners = new ArrayList<>(0);
-        final List<Double> powers = new ArrayList<>(0);
+    @Override
+    protected void setSchedulersUserMetrics(final UserPowerLimit helper) {
+        this.virtualMachineMasters.stream()
+                .map(CS_VMM.class::cast)
+                .map(CS_VMM::getEscalonador)
+                .forEach(helper::setSchedulerUserMetrics);
+    }
 
-        for (final Map.Entry<String, Double> entry :
-                this.powerLimits.entrySet()) {
-            owners.add(entry.getKey());
-            powers.add(entry.getValue());
-        }
-        //cria as métricas de usuarios para cada mestre
-        for (final CS_Processamento mestre : this.virtualMachineMasters) {
-            final CS_VMM mst = (CS_VMM) mestre;
-            final MetricasUsuarios mu = new MetricasUsuarios();
-            mu.addAllUsuarios(owners, powers);
-            mst.getEscalonador().setMetricaUsuarios(mu);
-        }
-        final RedeDeFilasCloud rdf =
-                new RedeDeFilasCloud(this.virtualMachineMasters,
-                        this.cloudMachines, this.virtualMachines,
-                        this.links,
-                        this.internets);
-        //cria as métricas de usuarios globais da rede de filas
-        final MetricasUsuarios mu = new MetricasUsuarios();
-        mu.addAllUsuarios(owners, powers);
-        rdf.setUsuarios(owners);
-        return rdf;
+    @Override
+    protected RedeDeFilas initQueueNetwork() {
+        return new RedeDeFilasCloud(
+                this.virtualMachineMasters,
+                this.cloudMachines, this.virtualMachines,
+                this.links, this.internets
+        );
     }
 }

@@ -1,6 +1,7 @@
 package ispd.arquivo.xml.utils;
 
 import ispd.escalonador.Escalonador;
+import ispd.escalonadorCloud.EscalonadorCloud;
 import ispd.motor.metricas.MetricasUsuarios;
 
 import java.util.ArrayList;
@@ -12,8 +13,17 @@ public class UserPowerLimit {
     private final List<Double> limits;
 
     public UserPowerLimit(final Map<String, Double> powerLimits) {
-        this.owners = new ArrayList<>(powerLimits.keySet());
-        this.limits = new ArrayList<>(powerLimits.values());
+        // Note: Constructing from powerLimits.keySet() and .values() is
+        // tempting, however those methods do NOT guarantee the same relative
+        // order in the returned elements
+
+        this.owners = new ArrayList<>(powerLimits.size());
+        this.limits = new ArrayList<>(powerLimits.size());
+
+        for (final var entry : powerLimits.entrySet()) {
+            this.owners.add(entry.getKey());
+            this.limits.add(entry.getValue());
+        }
     }
 
     public void setSchedulerUserMetrics(final Escalonador scheduler) {
@@ -24,6 +34,10 @@ public class UserPowerLimit {
         final var metrics = new MetricasUsuarios();
         metrics.addAllUsuarios(this.owners, this.limits);
         return metrics;
+    }
+
+    public void setSchedulerUserMetrics(final EscalonadorCloud scheduler) {
+        scheduler.setMetricaUsuarios(this.makeUserMetrics());
     }
 
     public List<String> getOwners() {

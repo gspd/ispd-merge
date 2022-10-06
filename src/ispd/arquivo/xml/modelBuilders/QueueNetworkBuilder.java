@@ -31,7 +31,7 @@ public class QueueNetworkBuilder {
     private final List<CS_Maquina> machines = new ArrayList<>(0);
     protected final List<CS_Comunicacao> links = new ArrayList<>(0);
     protected final List<CS_Internet> internets = new ArrayList<>(0);
-    protected final Map<String, Double> powerLimits;
+    private final Map<String, Double> powerLimits;
 
     public QueueNetworkBuilder(final WrappedDocument doc) {
         this.powerLimits = doc.owners().collect(Collectors.toMap(
@@ -71,7 +71,7 @@ public class QueueNetworkBuilder {
         return machine;
     }
 
-    private void processClusterElement(final WrappedElement e) {
+    protected void processClusterElement(final WrappedElement e) {
         if (e.isMaster()) {
             final var cluster = ServiceCenterBuilder.aMasterWithNoLoad(e);
 
@@ -143,9 +143,9 @@ public class QueueNetworkBuilder {
         this.links.add(link);
     }
 
-    private void addSlavesToMachine(final WrappedElement e) {
+    protected void addSlavesToMachine(final WrappedElement e) {
         final var master =
-                (CS_Mestre) this.serviceCenters.get(e.globalIconId());
+                (CS_Processamento) this.serviceCenters.get(e.globalIconId());
 
         e.master().slaves()
                 .map(WrappedElement::id)
@@ -172,8 +172,9 @@ public class QueueNetworkBuilder {
         return (Vertice) this.serviceCenters.get(e);
     }
 
-    private void addServiceCenterSlaves(
-            final CentroServico serviceCenter, final CS_Mestre master) {
+    protected void addServiceCenterSlaves(
+            final CentroServico serviceCenter, final CS_Processamento m) {
+        final var master = (CS_Mestre) m;
         if (serviceCenter instanceof CS_Processamento proc) {
             master.addEscravo(proc);
             if (serviceCenter instanceof CS_Maquina machine) {
@@ -189,18 +190,21 @@ public class QueueNetworkBuilder {
 
     public RedeDeFilas build() {
         final var helper = new UserPowerLimit(this.powerLimits);
-
-        this.masters.stream()
-                .map(CS_Mestre.class::cast)
-                .map(CS_Mestre::getEscalonador)
-                .forEach(helper::setSchedulerUserMetrics);
+        this.setSchedulersUserMetrics(helper);
 
         final var queueNetwork = this.initQueueNetwork();
         queueNetwork.setUsuarios(helper.getOwners());
         return queueNetwork;
     }
 
-    private RedeDeFilas initQueueNetwork() {
+    protected void setSchedulersUserMetrics(final UserPowerLimit helper) {
+        this.masters.stream()
+                .map(CS_Mestre.class::cast)
+                .map(CS_Mestre::getEscalonador)
+                .forEach(helper::setSchedulerUserMetrics);
+    }
+
+    protected RedeDeFilas initQueueNetwork() {
         return new RedeDeFilas(
                 this.masters, this.machines,
                 this.links, this.internets,
