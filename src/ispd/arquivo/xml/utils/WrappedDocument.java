@@ -4,7 +4,12 @@ import org.w3c.dom.Document;
 
 import java.util.stream.Stream;
 
-public record WrappedDocument(Document document) {
+public class WrappedDocument {
+    private final Document document;
+
+    public WrappedDocument(final Document document) {
+        this.document = document;
+    }
 
     public boolean hasNoOwners() {
         return this.hasEmptyTag("owner");
