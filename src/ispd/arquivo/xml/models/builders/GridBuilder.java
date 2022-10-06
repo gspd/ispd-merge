@@ -7,7 +7,6 @@ import ispd.gui.iconico.Edge;
 import ispd.gui.iconico.Vertex;
 import ispd.gui.iconico.grade.Cluster;
 import ispd.gui.iconico.grade.GridItem;
-import ispd.gui.iconico.grade.Internet;
 import ispd.gui.iconico.grade.Link;
 import ispd.gui.iconico.grade.Machine;
 import org.w3c.dom.Document;
@@ -37,99 +36,20 @@ public class GridBuilder {
         destination.getInboundConnections().add(link);
     }
 
-    private static void setGridItemCharacteristics(
-            final GridItem item, final WrappedElement e) {
-        if (!e.hasCharacteristicAttribute()) {
-            return;
-        }
-
-        final var characteristic = e.characteristics();
-
-        if (item instanceof Cluster cluster) {
-            cluster.setComputationalPower(characteristic.processor().power());
-            cluster.setCoreCount(characteristic.processor().number());
-            cluster.setRam(characteristic.memory().size());
-            cluster.setHardDisk(characteristic.hardDisk().size());
-
-            if (!characteristic.hasCostAttribute()) {
-                return;
-            }
-
-            final var co = characteristic.costs();
-
-            cluster.setCostPerProcessing(co.costProcessing());
-            cluster.setCostPerMemory(co.costMemory());
-            cluster.setCostPerDisk(co.costDisk());
-
-        } else if (item instanceof Machine machine) {
-            machine.setComputationalPower(characteristic.processor().power());
-            machine.setCoreCount(characteristic.processor().number());
-            machine.setRam(characteristic.memory().size());
-            machine.setHardDisk(characteristic.hardDisk().size());
-
-            if (!characteristic.hasCostAttribute()) {
-                return;
-            }
-
-            final var co = characteristic.costs();
-
-            machine.setCostPerProcessing(co.costProcessing());
-            machine.setCostPerMemory(co.costMemory());
-            machine.setCostPerDisk(co.costDisk());
-        }
-    }
-
-    private static Internet netIconFromElement(final WrappedElement e) {
-        final var info = IconInfo.fromElement(e);
-
-        return new Internet(
-                info.x(), info.y(),
-                info.localId(), info.globalId()
-        );
-    }
-
-    private static Machine machineIconFromElement(final WrappedElement m) {
-        final var info = IconInfo.fromElement(m);
-
-        return new Machine(
-                info.x(), info.y(),
-                info.localId(), info.globalId(),
-                m.energy()
-        );
-    }
-
-    private static void machineFromElement(
-            final Machine machine, final WrappedElement e) {
-        final var newName = e.id();
-        machine.getId().setName(newName);
-
-        GridBuilder.setMachinePropertiesFromElement(machine, e);
-    }
-
     static Element getFirstTagElement(
             final Element element, final String tag) {
         // TODO: Inline this method
         return new WrappedElement(element).firstTagElement(tag);
     }
 
-    private static void setMachinePropertiesFromElement(
-            final Machine machine, final WrappedElement e) {
-        machine.setComputationalPower(e.power());
-        GridBuilder.setGridItemCharacteristics(machine, e);
-        machine.setLoadFactor(e.load());
-        machine.setOwner(e.owner());
-    }
-
     public IconicModel build() {
         final Document doc = this.doc.document();
 
         final var machines = doc.getElementsByTagName("machine");
-        final var clusters = doc.getElementsByTagName("cluster");
-        final var internet = doc.getElementsByTagName("internet");
-        //Realiza leitura dos icones de cluster
-        this.processCluster(clusters);
-        //Realiza leitura dos icones de internet
-        this.processInternet(internet);
+
+        this.doc.clusters().forEach(this::processClusterElement);
+        this.doc.internets().forEach(this::processInternetElement);
+
         //Realiza leitura dos icones de máquina
         this.processMachine(machines);
         //Realiza leitura dos mestres
@@ -166,19 +86,24 @@ public class GridBuilder {
         for (int i = 0; i < machines.getLength(); i++) {
             final Element maquina = (Element) machines.item(i);
             if (new WrappedElement(maquina).hasMasterAttribute()) {
-                processMachineElement(maquina);
+                processMaster(maquina);
             }
         }
     }
 
-    private void processMachineElement(Element maquina) {
+    private void processMaster(Element maquina) {
 
         final var e = new WrappedElement(maquina);
 
         final Machine maq = (Machine) this.icons.get(e.globalIconId());
         this.vertices.add(maq);
 
-        GridBuilder.machineFromElement(maq, e);
+        maq.getId().setName(e.id());
+
+        maq.setComputationalPower(e.power());
+        IconBuilder.setProcessingCenterCharacteristics(maq, e);
+        maq.setLoadFactor(e.load());
+        maq.setOwner(e.owner());
 
         final Element master = GridBuilder.getFirstTagElement(maquina,
                 "master");
@@ -205,74 +130,49 @@ public class GridBuilder {
             final var m = new WrappedElement(maquina);
 
             if (!m.hasMasterAttribute()) {
-                final Machine maq1 = GridBuilder.machineIconFromElement(m);
+                final var info = IconBuilder.IconInfo.fromElement(m);
+
+                final Machine maq1 = new Machine(
+                        info.x(), info.y(),
+                        info.localId(), info.globalId(),
+                        m.energy()
+                );
 
                 this.icons.put(maq1.getId().getGlobalId(), maq1);
                 this.vertices.add(maq1);
-                GridBuilder.machineFromElement(maq1, m);
-            } else {
-                final Machine maq = GridBuilder.machineIconFromElement(m);
+                final var newName = m.id();
+                maq1.getId().setName(newName);
 
-                this.icons.put(maq.getId().getGlobalId(), maq);
+                maq1.setComputationalPower(m.power());
+                IconBuilder.setProcessingCenterCharacteristics(maq1, m);
+                maq1.setLoadFactor(m.load());
+                maq1.setOwner(m.owner());
+            } else {
+                final var info = IconBuilder.IconInfo.fromElement(m);
+
+                final Machine maq = new Machine(
+                        info.x(), info.y(),
+                        info.localId(), info.globalId(),
+                        m.energy()
+                );
+
+                this.icons.put(m.globalIconId(), maq);
             }
         }
     }
 
-    private void processInternet(final NodeList internet) {
-        for (int i = 0; i < internet.getLength(); i++) {
-            final Element inet = (Element) internet.item(i);
-            final var wInet = new WrappedElement(inet);
+    private void processInternetElement(WrappedElement e) {
+        final var net = IconBuilder.anInternet(e);
 
-            final Internet net = GridBuilder.netIconFromElement(wInet);
-
-            this.vertices.add(net);
-            this.icons.put(net.getId().getGlobalId(), net);
-            net.getId().setName(wInet.id());
-
-            net.setBandwidth(wInet.bandwidth());
-            net.setLoadFactor(wInet.load());
-            net.setLatency(wInet.latency());
-        }
+        this.vertices.add(net);
+        this.icons.put(e.globalIconId(), net);
     }
 
-    private void processCluster(final NodeList clusters) {
-        for (int i = 0; i < clusters.getLength(); i++) {
-            final var c = new WrappedElement((Element) clusters.item(i));
+    private void processClusterElement(WrappedElement e) {
+        final Cluster cluster = IconBuilder.aCluster(e);
 
-            final var info = IconInfo.fromElement(c);
-
-            final var cluster = new Cluster(
-                    info.x(), info.y(),
-                    info.localId(), info.globalId(),
-                    c.power() // TODO: Supposed to be .energy()?
-            );
-
-            cluster.setSelected(false);
-            this.vertices.add(cluster);
-
-            this.icons.put(cluster.getId().getGlobalId(), cluster);
-            cluster.getId().setName(c.id());
-            cluster.setComputationalPower(c.power());
-            GridBuilder.setGridItemCharacteristics(cluster, c);
-            cluster.setSlaveCount(c.nodes());
-            cluster.setBandwidth(c.bandwidth());
-            cluster.setLatency(c.latency());
-            cluster.setSchedulingAlgorithm(c.scheduler());
-            cluster.setVmmAllocationPolicy(c.vmAlloc());
-            cluster.setOwner(c.owner());
-            cluster.setMaster(c.isMaster());
-        }
+        this.vertices.add(cluster);
+        this.icons.put(e.globalIconId(), cluster);
     }
 
-    private record IconInfo(int x, int y, int globalId, int localId) {
-        private static IconInfo fromElement(final WrappedElement e) {
-            final var position = e.position();
-            final var iconId = e.iconId();
-
-            return new IconInfo(
-                    position.x(), position.y(),
-                    iconId.global(), iconId.local()
-            );
-        }
-    }
 }
