@@ -27,7 +27,7 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
     private final NodeList docVms;
     private final HashMap<CentroServico, List<CS_MaquinaCloud>> clusterSlaves =
             new HashMap<>(0);
-    private final List<CS_MaquinaCloud> machines = new ArrayList<>(0);
+    private final List<CS_MaquinaCloud> cloudMachines = new ArrayList<>(0);
     private final List<CS_VirtualMac> virtualMachines = new ArrayList<>(0);
     private final List<CS_Processamento> virtualMachineMasters =
             new ArrayList<>(0);
@@ -62,160 +62,7 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
     private void processClusters() {
         for (int i = 0; i < this.docClusters.getLength(); i++) {
             final Element cluster = (Element) this.docClusters.item(i);
-            final Element id =
-                    GridBuilder.getFirstTagElement(cluster, "icon_id");
-            final Element carac = GridBuilder.getFirstTagElement(cluster,
-                    "characteristic");
-            final Element proc =
-                    GridBuilder.getFirstTagElement(carac, "process");
-            final Element mem =
-                    GridBuilder.getFirstTagElement(carac, "memory");
-            final Element disc =
-                    GridBuilder.getFirstTagElement(carac, "hard_disk");
-
-            final int global = Integer.parseInt(id.getAttribute("global"));
-            if (Boolean.parseBoolean(cluster.getAttribute("master"))) {
-                final CS_VMM clust = new CS_VMM(
-                        cluster.getAttribute("id"),
-                        cluster.getAttribute("owner"),
-                        Double.parseDouble(proc.getAttribute("power")),
-                        Double.parseDouble(mem.getAttribute("size")),
-                        Double.parseDouble(disc.getAttribute("size")),
-                        0.0,
-                        cluster.getAttribute("scheduler")/*Escalonador*/,
-                        cluster.getAttribute("vm_alloc"));
-                this.virtualMachineMasters.add(clust);
-                this.serviceCenters.put(global, clust);
-                //Contabiliza para o usuario poder computacional do mestre
-                final int numeroEscravos =
-                        Integer.parseInt(cluster.getAttribute(
-                                "nodes"));
-                final double total =
-                        clust.getPoderComputacional() + (clust.getPoderComputacional() * numeroEscravos);
-                this.powerLimits.put(clust.getProprietario(),
-                        total + this.powerLimits.get(clust.getProprietario()));
-                final CS_Switch Switch = new CS_Switch(
-                        (cluster.getAttribute("id") + "switch"),
-                        Double.parseDouble(cluster.getAttribute(
-                                "bandwidth")),
-                        0.0,
-                        Double.parseDouble(cluster.getAttribute("latency")));
-                this.links.add(Switch);
-                clust.addConexoesEntrada(Switch);
-                clust.addConexoesSaida(Switch);
-                Switch.addConexoesEntrada(clust);
-                Switch.addConexoesSaida(clust);
-                for (int j = 0; j < numeroEscravos; j++) {
-                    final Element caracteristica =
-                            GridBuilder.getFirstTagElement(cluster,
-                                    "characteristic");
-                    final Element custo =
-                            GridBuilder.getFirstTagElement(caracteristica,
-                                    "cost");
-                    final Element processamento =
-                            GridBuilder.getFirstTagElement(caracteristica,
-                                    "process");
-                    final Element memoria =
-                            GridBuilder.getFirstTagElement(caracteristica,
-                                    "memory");
-                    final Element disco =
-                            GridBuilder.getFirstTagElement(caracteristica,
-                                    "hard_disk");
-                    final var maq =
-                            new CS_MaquinaCloud(
-                                    "%s.%d".formatted(cluster.getAttribute(
-                                            "id"), j),
-                                    cluster.getAttribute("owner"),
-                                    Double.parseDouble(processamento.getAttribute("power")),
-                                    Integer.parseInt(processamento.getAttribute("number")),
-                                    Double.parseDouble(memoria.getAttribute(
-                                            "size")),
-                                    Double.parseDouble(disco.getAttribute(
-                                            "size")),
-                                    Double.parseDouble(custo.getAttribute(
-                                            "cost_proc")),
-                                    Double.parseDouble(custo.getAttribute(
-                                            "cost_mem")),
-                                    Double.parseDouble(custo.getAttribute(
-                                            "cost_disk")),
-                                    0.0,
-                                    j + 1
-                            );
-
-                    SwitchConnection.toCloudMachine(maq, Switch);
-
-                    maq.addMestre(clust);
-                    clust.addEscravo(maq);
-                    this.machines.add(maq);
-                    //não adicionei referencia ao switch nem aos escrevos do
-                    // cluster aos centros de serviços
-                }
-            } else {
-                final CS_Switch Switch = new CS_Switch(
-                        (cluster.getAttribute("id") + "switch"),
-                        Double.parseDouble(cluster.getAttribute(
-                                "bandwidth")),
-                        0.0,
-                        Double.parseDouble(cluster.getAttribute("latency")));
-                this.links.add(Switch);
-                this.serviceCenters.put(global, Switch);
-                //Contabiliza para o usuario poder computacional do mestre
-                final double total =
-                        Double.parseDouble(cluster.getAttribute(
-                                "power"))
-                        * Integer.parseInt(cluster.getAttribute(
-                                "nodes"
-                        ));
-                this.powerLimits.put(cluster.getAttribute("owner"),
-                        total + this.powerLimits.get(cluster.getAttribute(
-                                "owner")));
-                final List<CS_MaquinaCloud> maqTemp =
-                        new ArrayList<>();
-                final int numeroEscravos =
-                        Integer.parseInt(cluster.getAttribute(
-                                "nodes"));
-                for (int j = 0; j < numeroEscravos; j++) {
-                    final Element caracteristica =
-                            (Element) cluster.getElementsByTagName(
-                                    "characteristic");
-                    final Element custo =
-                            (Element) caracteristica.getElementsByTagName(
-                                    "cost");
-                    final Element processamento =
-                            (Element) caracteristica.getElementsByTagName(
-                                    "process");
-                    final Element memoria =
-                            (Element) caracteristica.getElementsByTagName(
-                                    "memory");
-                    final Element disco =
-                            (Element) caracteristica.getElementsByTagName(
-                                    "hard_disk");
-                    final var maq =
-                            new CS_MaquinaCloud(
-                                    "%s.%d".formatted(cluster.getAttribute(
-                                            "id"), j),
-                                    cluster.getAttribute("owner"),
-                                    Double.parseDouble(processamento.getAttribute("power")),
-                                    Integer.parseInt(processamento.getAttribute("number")),
-                                    Double.parseDouble(memoria.getAttribute(
-                                            "size")),
-                                    Double.parseDouble(disco.getAttribute(
-                                            "size")),
-                                    Double.parseDouble(custo.getAttribute(
-                                            "cost_proc")),
-                                    Double.parseDouble(custo.getAttribute(
-                                            "cost_mem")),
-                                    Double.parseDouble(custo.getAttribute(
-                                            "cost_disk")),
-                                    0.0,
-                                    j + 1
-                            );
-                    SwitchConnection.toCloudMachine(maq, Switch);
-                    maqTemp.add(maq);
-                    this.machines.add(maq);
-                }
-                this.clusterSlaves.put(Switch, maqTemp);
-            }
+            this.processClusterElement(cluster);
         }
     }
 
@@ -286,6 +133,115 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
         }
     }
 
+    private void processClusterElement(final Element cluster) {
+        final var e = new WrappedElement(cluster);
+
+        if (e.isMaster()) {
+            final var clust = ServiceCenterBuilder.aVmmNoLoad(e);
+
+            this.virtualMachineMasters.add(clust);
+            this.serviceCenters.put(e.globalIconId(), clust);
+
+            final int slaveCount = e.nodes();
+
+            final double power =
+                    clust.getPoderComputacional() * (slaveCount + 1);
+
+            this.increaseUserPower(clust.getProprietario(), power);
+
+            final var theSwitch = new CS_Switch(
+                    (e.id() + "switch"),
+                    e.bandwidth(),
+                    0.0,
+                    e.latency()
+            );
+
+            this.links.add(theSwitch);
+
+            clust.addConexoesEntrada(theSwitch);
+            clust.addConexoesSaida(theSwitch);
+            theSwitch.addConexoesEntrada(clust);
+            theSwitch.addConexoesSaida(clust);
+
+            for (int j = 0; j < slaveCount; j++) {
+                final var machine =
+                        ServiceCenterBuilder.aCloudMachineWithId(e, j);
+                SwitchConnection.toCloudMachine(machine, theSwitch);
+
+                machine.addMestre(clust);
+                clust.addEscravo(machine);
+
+                this.cloudMachines.add(machine);
+            }
+        } else {
+            final CS_Switch Switch = new CS_Switch(
+                    (cluster.getAttribute("id") + "switch"),
+                    Double.parseDouble(cluster.getAttribute(
+                            "bandwidth")),
+                    0.0,
+                    Double.parseDouble(cluster.getAttribute("latency")));
+            this.links.add(Switch);
+            this.serviceCenters.put(e.globalIconId(), Switch);
+            //Contabiliza para o usuario poder computacional do mestre
+            final double total =
+                    Double.parseDouble(cluster.getAttribute(
+                            "power"))
+                    * Integer.parseInt(cluster.getAttribute(
+                            "nodes"
+                    ));
+            this.powerLimits.put(cluster.getAttribute("owner"),
+                    total + this.powerLimits.get(cluster.getAttribute(
+                            "owner")));
+            final List<CS_MaquinaCloud> maqTemp =
+                    new ArrayList<>();
+            final int numeroEscravos =
+                    Integer.parseInt(cluster.getAttribute(
+                            "nodes"));
+            for (int j = 0; j < numeroEscravos; j++) {
+                final Element caracteristica =
+                        (Element) cluster.getElementsByTagName(
+                                "characteristic");
+                final Element custo =
+                        (Element) caracteristica.getElementsByTagName(
+                                "cost");
+                final Element processamento =
+                        (Element) caracteristica.getElementsByTagName(
+                                "process");
+                final Element memoria =
+                        (Element) caracteristica.getElementsByTagName(
+                                "memory");
+                final Element disco =
+                        (Element) caracteristica.getElementsByTagName(
+                                "hard_disk");
+                final var maq =
+                        new CS_MaquinaCloud(
+                                "%s.%d".formatted(cluster.getAttribute(
+                                        "id"), j),
+                                cluster.getAttribute("owner"),
+                                Double.parseDouble(processamento.getAttribute("power")),
+                                Integer.parseInt(processamento.getAttribute(
+                                        "number")),
+                                Double.parseDouble(memoria.getAttribute(
+                                        "size")),
+                                Double.parseDouble(disco.getAttribute(
+                                        "size")),
+                                Double.parseDouble(custo.getAttribute(
+                                        "cost_proc")),
+                                Double.parseDouble(custo.getAttribute(
+                                        "cost_mem")),
+                                Double.parseDouble(custo.getAttribute(
+                                        "cost_disk")),
+                                0.0,
+                                j + 1
+                        );
+                SwitchConnection.toCloudMachine(maq, Switch);
+                maqTemp.add(maq);
+                this.cloudMachines.add(maq);
+            }
+            this.clusterSlaves.put(Switch, maqTemp);
+        }
+    }
+
     @Override
     protected CS_Processamento makeAndAddMachine(final WrappedElement e) {
         final CS_Processamento machine;
@@ -295,7 +251,7 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
             this.virtualMachineMasters.add(machine);
         } else {
             machine = ServiceCenterBuilder.aCloudMachine(e);
-            this.machines.add((CS_MaquinaCloud) machine);
+            this.cloudMachines.add((CS_MaquinaCloud) machine);
         }
 
         return machine;
@@ -319,7 +275,7 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
         }
         final RedeDeFilasCloud rdf =
                 new RedeDeFilasCloud(this.virtualMachineMasters,
-                        this.machines, this.virtualMachines,
+                        this.cloudMachines, this.virtualMachines,
                         this.links,
                         this.internets);
         //cria as métricas de usuarios globais da rede de filas

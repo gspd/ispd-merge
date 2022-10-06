@@ -70,4 +70,33 @@ public class ServiceCenterBuilder {
                 e.master().vmAlloc()
         );
     }
+
+    public static CS_VMM aVmmNoLoad(WrappedElement e) {
+        return new CS_VMM(
+                e.id(),
+                e.owner(),
+                e.characteristics().processor().power(),
+                e.characteristics().memory().size(),
+                e.characteristics().hardDisk().size(),
+                0.0,
+                e.scheduler(),
+                e.vmAlloc()
+        );
+    }
+
+    public static CS_MaquinaCloud aCloudMachineWithId(WrappedElement e, int j) {
+        return new CS_MaquinaCloud(
+                "%s.%d".formatted(e.id(), j),
+                e.owner(),
+                e.characteristics().processor().power(),
+                e.characteristics().processor().number(),
+                e.characteristics().memory().size(),
+                e.characteristics().hardDisk().size(),
+                e.characteristics().costs().costProcessing(),
+                e.characteristics().costs().costMemory(),
+                e.characteristics().costs().costDisk(),
+                0.0,
+                j + 1
+        );
+    }
 }
