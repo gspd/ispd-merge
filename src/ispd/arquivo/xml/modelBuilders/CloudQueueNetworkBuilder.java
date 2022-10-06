@@ -1,5 +1,7 @@
-package ispd.arquivo.xml;
+package ispd.arquivo.xml.modelBuilders;
 
+import ispd.arquivo.xml.WrappedDocument;
+import ispd.arquivo.xml.WrappedElement;
 import ispd.arquivo.xml.utils.ServiceCenterBuilder;
 import ispd.arquivo.xml.utils.SwitchConnection;
 import ispd.motor.filas.RedeDeFilasCloud;

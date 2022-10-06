@@ -1,5 +1,7 @@
-package ispd.arquivo.xml;
+package ispd.arquivo.xml.modelBuilders;
 
+import ispd.arquivo.xml.WrappedDocument;
+import ispd.arquivo.xml.WrappedElement;
 import ispd.arquivo.xml.utils.ServiceCenterBuilder;
 import ispd.arquivo.xml.utils.SwitchConnection;
 import ispd.arquivo.xml.utils.UserPowerLimit;
@@ -20,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-class QueueNetworkBuilder {
+public class QueueNetworkBuilder {
     protected final HashMap<Integer, CentroServico> serviceCenters =
             new HashMap<>(0);
     private final HashMap<CentroServico, List<CS_Maquina>> clusterSlaves =

@@ -1,5 +1,7 @@
-package ispd.arquivo.xml;
+package ispd.arquivo.xml.modelBuilders;
 
+import ispd.arquivo.xml.WrappedDocument;
+import ispd.arquivo.xml.WrappedElement;
 import ispd.gui.iconico.Edge;
 import ispd.gui.iconico.Vertex;
 import ispd.gui.iconico.grade.Cluster;
@@ -18,7 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-class GridBuilder {
+public class GridBuilder {
 
     private final Collection<? super Vertex> vertices;
     private final Collection<? super Edge> edges;
