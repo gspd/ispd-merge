@@ -28,7 +28,7 @@ class QueueNetworkBuilder {
     private final List<CS_Processamento> masters = new ArrayList<>(0);
     private final List<CS_Maquina> machines = new ArrayList<>(0);
     protected final List<CS_Comunicacao> links = new ArrayList<>(0);
-    private final List<CS_Internet> internets = new ArrayList<>(0);
+    protected final List<CS_Internet> internets = new ArrayList<>(0);
     private final Map<String, Double> powerLimits;
 
     public QueueNetworkBuilder(final WrappedDocument doc) {
@@ -121,7 +121,7 @@ class QueueNetworkBuilder {
         }
     }
 
-    private void processInternetElement(final WrappedElement e) {
+    protected void processInternetElement(final WrappedElement e) {
         final var net = ServiceCenterBuilder.anInternet(e);
 
         this.internets.add(net);

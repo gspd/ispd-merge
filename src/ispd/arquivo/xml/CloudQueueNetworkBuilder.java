@@ -4,7 +4,6 @@ import ispd.arquivo.xml.utils.SwitchConnection;
 import ispd.motor.filas.RedeDeFilasCloud;
 import ispd.motor.filas.servidores.CS_Processamento;
 import ispd.motor.filas.servidores.CentroServico;
-import ispd.motor.filas.servidores.implementacao.CS_Internet;
 import ispd.motor.filas.servidores.implementacao.CS_MaquinaCloud;
 import ispd.motor.filas.servidores.implementacao.CS_Switch;
 import ispd.motor.filas.servidores.implementacao.CS_VMM;
@@ -22,14 +21,12 @@ import java.util.Map;
 public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
     private final NodeList docMachines;
     private final NodeList docClusters;
-    private final NodeList docInternet;
     private final NodeList docOwners;
     private final NodeList docVms;
     private final HashMap<CentroServico, List<CS_MaquinaCloud>> clusterSlaves =
             new HashMap<>(0);
     private final List<CS_MaquinaCloud> machines = new ArrayList<>(0);
     private final List<CS_VirtualMac> virtualMachines = new ArrayList<>(0);
-    private final List<CS_Internet> internets = new ArrayList<>(0);
     private final List<CS_Processamento> virtualMachineMasters =
             new ArrayList<>(0);
     private final HashMap<String, Double> users = new HashMap<>(0);
@@ -44,7 +41,6 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
 
         this.docMachines = model.getElementsByTagName("machine");
         this.docClusters = model.getElementsByTagName("cluster");
-        this.docInternet = model.getElementsByTagName("internet");
         this.docOwners = model.getElementsByTagName("owner");
         this.docVms = model.getElementsByTagName("virtualMac");
 
@@ -55,14 +51,7 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
         //Realiza leitura dos icones de cluster
         processClusters();
 
-        //Realiza leitura dos icones de internet
-        processInternets();
-
-
-
-
-
-
+        doc.internets().forEach(this::processInternetElement);
 
 
         doc.links().forEach(this::processLinkElement);
@@ -313,22 +302,6 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
                 }
                 this.clusterSlaves.put(Switch, maqTemp);
             }
-        }
-    }
-
-    private void processInternets() {
-        for (int i = 0; i < this.docInternet.getLength(); i++) {
-            final Element inet = (Element) this.docInternet.item(i);
-            final Element id =
-                    GridBuilder.getFirstTagElement(inet, "icon_id");
-            final int global = Integer.parseInt(id.getAttribute("global"));
-            final CS_Internet net = new CS_Internet(
-                    inet.getAttribute("id"),
-                    Double.parseDouble(inet.getAttribute("bandwidth")),
-                    Double.parseDouble(inet.getAttribute("load")),
-                    Double.parseDouble(inet.getAttribute("latency")));
-            this.internets.add(net);
-            this.serviceCenters.put(global, net);
         }
     }
 
