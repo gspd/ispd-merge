@@ -21,18 +21,16 @@ import java.util.List;
 import java.util.Map;
 
 public class GridBuilder {
-    private final Collection<Vertex> vertices;
-    private final Collection<Edge> edges;
+    private final Collection<Vertex> vertices = new ArrayList<>(0);
+    private final Collection<Edge> edges = new ArrayList<>(0);
     private final WrappedDocument doc;
     private final Map<Integer, Object> icons = new HashMap<>(0);
 
-    public GridBuilder(final Document doc) {
-        this.doc = new WrappedDocument(doc);
-        this.vertices = new ArrayList<>(0);
-        this.edges = new ArrayList<>(0);
+    public GridBuilder(final WrappedDocument doc) {
+        this.doc = doc;
     }
 
-    public IconicModel buildGrid() {
+    public IconicModel build() {
         final Document doc = this.doc.document();
 
         final var machines = doc.getElementsByTagName("machine");

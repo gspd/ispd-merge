@@ -153,7 +153,8 @@ public class IconicoXML {
             final Document doc,
             final Collection<? super Vertex> vertices,
             final Collection<? super Edge> edges) {
-        final var model = new GridBuilder(doc).buildGrid();
+        final var model = new GridBuilder(
+                new WrappedDocument(doc)).build();
         vertices.addAll(model.vertices());
         edges.addAll(model.edges());
     }
