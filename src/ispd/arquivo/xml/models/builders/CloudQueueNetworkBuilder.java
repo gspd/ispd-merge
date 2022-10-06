@@ -1,7 +1,7 @@
 package ispd.arquivo.xml.models.builders;
 
-import ispd.arquivo.xml.WrappedDocument;
-import ispd.arquivo.xml.WrappedElement;
+import ispd.arquivo.xml.utils.WrappedDocument;
+import ispd.arquivo.xml.utils.WrappedElement;
 import ispd.arquivo.xml.utils.ServiceCenterBuilder;
 import ispd.arquivo.xml.utils.SwitchConnection;
 import ispd.arquivo.xml.utils.UserPowerLimit;

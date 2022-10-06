@@ -1,4 +1,4 @@
-package ispd.arquivo.xml;
+package ispd.arquivo.xml.utils;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;

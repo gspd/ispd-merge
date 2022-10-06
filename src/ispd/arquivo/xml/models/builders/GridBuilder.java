@@ -1,7 +1,7 @@
 package ispd.arquivo.xml.models.builders;
 
-import ispd.arquivo.xml.WrappedDocument;
-import ispd.arquivo.xml.WrappedElement;
+import ispd.arquivo.xml.utils.WrappedDocument;
+import ispd.arquivo.xml.utils.WrappedElement;
 import ispd.arquivo.xml.models.IconicModel;
 import ispd.gui.iconico.Edge;
 import ispd.gui.iconico.Vertex;

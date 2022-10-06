@@ -1,6 +1,5 @@
 package ispd.arquivo.xml.utils;
 
-import ispd.arquivo.xml.WrappedElement;
 import ispd.motor.filas.servidores.implementacao.CS_Internet;
 import ispd.motor.filas.servidores.implementacao.CS_Link;
 import ispd.motor.filas.servidores.implementacao.CS_Maquina;

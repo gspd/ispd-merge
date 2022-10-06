@@ -3,6 +3,8 @@ package ispd.arquivo.xml;
 import ispd.arquivo.xml.models.builders.CloudQueueNetworkBuilder;
 import ispd.arquivo.xml.models.builders.GridBuilder;
 import ispd.arquivo.xml.models.builders.QueueNetworkBuilder;
+import ispd.arquivo.xml.utils.WrappedDocument;
+import ispd.arquivo.xml.utils.WrappedElement;
 import ispd.gui.PickModelTypeDialog;
 import ispd.gui.iconico.Edge;
 import ispd.gui.iconico.Vertex;
