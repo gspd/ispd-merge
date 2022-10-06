@@ -13,7 +13,6 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMResult;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
@@ -102,45 +101,6 @@ public class ManipuladorXML {
                     , null, ex);
             return null;
         }
-    }
-
-    public static Document[] clone(final Document doc, final int number) throws TransformerException {
-        final Document[] documento = new Document[number];
-        final TransformerFactory tfactory = TransformerFactory.newInstance();
-        final Transformer tx = tfactory.newTransformer();
-        final DOMSource source = new DOMSource(doc);
-        final DOMResult result = new DOMResult();
-        tx.transform(source, result);
-        for (int i = 0; i < number; i++) {
-            documento[i] = (Document) result.getNode();
-        }
-        return documento;
-    }
-
-    public static Document[] clone(final File file, final int number) throws ParserConfigurationException, IOException, SAXException {
-        final Document[] documento = new Document[number];
-        final DocumentBuilderFactory factory =
-                DocumentBuilderFactory.newInstance();
-        factory.setNamespaceAware(true);
-        factory.setValidating(true);
-        final DocumentBuilder builder = factory.newDocumentBuilder();
-        //Indicar local do arquivo .dtd
-        builder.setEntityResolver(new EntityResolver() {
-            final InputSource substitute =
-                    new InputSource(IconicoXML.class.getResourceAsStream(
-                            "iSPD.dtd"));
-
-            @Override
-            public InputSource resolveEntity(final String publicId,
-                                             final String systemId) throws SAXException, IOException {
-                return this.substitute;
-            }
-        });
-        for (int i = 0; i < number; i++) {
-            documento[i] = builder.parse(file);
-        }
-        //inputStream.close();
-        return documento;
     }
 
 }
