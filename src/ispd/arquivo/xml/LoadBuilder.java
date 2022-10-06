@@ -10,41 +10,38 @@ import ispd.motor.carga.GerarCarga;
 import org.w3c.dom.Document;
 
 import java.io.File;
+import java.util.Optional;
 
 public class LoadBuilder {
-    static GerarCarga build(final Document doc) {
+    public static Optional<? extends GerarCarga> build(final Document doc) {
         final var load =
                 new WrappedDocument(doc).loads().findFirst();
 
         if (load.isEmpty()) {
-            return null;
+            return Optional.empty();
         }
 
         final var c = load.get();
 
         final var randomLoad = c.randomLoads()
                 .findFirst()
-                .map(LoadBuilder::randomLoadFromElement)
-                .orElse(null);
+                .map(LoadBuilder::randomLoadFromElement);
 
-        if (randomLoad != null) {
+        if (randomLoad.isPresent()) {
             return randomLoad;
         }
 
-        final var nodeLoad = LoadBuilder.perNodeLoadFromElement(c);
+        final var nodeLoad = LoadBuilder.nodeLoadsFromElement(c);
 
-        if (nodeLoad != null)
+        if (nodeLoad.isPresent()) {
             return nodeLoad;
+        }
 
         final var traceLoad = c.traceLoads()
                 .findFirst()
                 .map(LoadBuilder::traceLoadFromElement);
 
-        if (traceLoad.isEmpty()){
-            return null;
-        }
-
-        return traceLoad.get();
+        return traceLoad;
     }
 
     private static CargaRandom randomLoadFromElement(final WrappedElement e) {
@@ -70,16 +67,16 @@ public class LoadBuilder {
         );
     }
 
-    private static CargaList perNodeLoadFromElement(final WrappedElement e) {
+    private static Optional<CargaList> nodeLoadsFromElement(final WrappedElement e) {
         final var nodeLoads = e.nodeLoads()
                 .map(LoadBuilder::nodeLoadFromElement)
                 .toList();
 
         if (nodeLoads.isEmpty()) {
-            return null;
+            return Optional.empty();
         }
 
-        return new CargaList(nodeLoads, GerarCarga.FORNODE);
+        return Optional.of(new CargaList(nodeLoads, GerarCarga.FORNODE));
     }
 
     private static CargaTrace traceLoadFromElement(final WrappedElement e) {
