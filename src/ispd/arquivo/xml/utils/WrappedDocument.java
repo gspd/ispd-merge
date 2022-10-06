@@ -1,34 +1,48 @@
 package ispd.arquivo.xml.utils;
 
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public record WrappedDocument(Document document) {
 
-    public Stream<Element> elementsWithTag(final String tag) {
-        final var list = this.document.getElementsByTagName(tag);
-        return IntStream.range(0, list.getLength())
-                .mapToObj(list::item)
-                .map(Element.class::cast);
+    public boolean hasNoOwners() {
+        return this.hasEmptyTag("owner");
     }
 
-    public Stream<WrappedElement> wElementsWithTag(final String tag){
-        return this.elementsWithTag(tag).map(WrappedElement::new);
-    }
-
-    public boolean hasEmptyTag(final String tag) {
+    private boolean hasEmptyTag(final String tag) {
         return this.document.getElementsByTagName(tag).getLength() == 0;
     }
 
-    public Stream<WrappedElement> owners() {
-        return this.wElementsWithTag("owner");
+    public boolean hasNoMachines() {
+        return this.hasEmptyTag("machine");
+    }
+
+    public boolean hasNoMasters() {
+        return this.machines()
+                .noneMatch(WrappedElement::hasMasterAttribute);
     }
 
     public Stream<WrappedElement> machines() {
-        return this.wElementsWithTag("machine");
+        return this.elementsWithTag("machine");
+    }
+
+    public Stream<WrappedElement> elementsWithTag(final String tag) {
+        return WrappedElement.nodeListToWrappedElementStream(
+                this.document.getElementsByTagName(tag)
+        );
+    }
+
+    public boolean hasNoClusters() {
+        return this.hasEmptyTag("cluster");
+    }
+
+    public boolean hasNoLoads() {
+        return this.hasEmptyTag("load");
+    }
+
+    public Stream<WrappedElement> owners() {
+        return this.elementsWithTag("owner");
     }
 
     public Stream<WrappedElement> masters() {
@@ -37,18 +51,18 @@ public record WrappedDocument(Document document) {
     }
 
     public Stream<WrappedElement> clusters() {
-        return this.wElementsWithTag("cluster");
+        return this.elementsWithTag("cluster");
     }
 
     public Stream<WrappedElement> internets() {
-        return this.wElementsWithTag("internet");
+        return this.elementsWithTag("internet");
     }
 
     public Stream<WrappedElement> links() {
-        return this.wElementsWithTag("link");
+        return this.elementsWithTag("link");
     }
 
     public Stream<WrappedElement> virtualMachines() {
-        return this.wElementsWithTag("virtualMac");
+        return this.elementsWithTag("virtualMac");
     }
 }

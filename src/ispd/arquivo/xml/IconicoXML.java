@@ -102,25 +102,20 @@ public class IconicoXML {
     public static void validarModelo(final Document doc) {
         final var document = new WrappedDocument(doc);
 
-        if (document.hasEmptyTag("owner")) {
+        if (document.hasNoOwners()) {
             throw new IllegalArgumentException("The model has no users.");
         }
 
-        if (document.hasEmptyTag("machine") &&
-            document.hasEmptyTag("cluster")) {
+        if (document.hasNoMachines() && document.hasNoClusters()) {
             throw new IllegalArgumentException("The model has no icons.");
         }
 
-        if (document.hasEmptyTag("load")) {
+        if (document.hasNoLoads()) {
             throw new IllegalArgumentException(
                     "One or more workloads have not been configured.");
         }
 
-        final boolean hasNoValidMaster =
-                document.wElementsWithTag("machine")
-                        .noneMatch(WrappedElement::hasMasterAttribute);
-
-        if (hasNoValidMaster) {
+        if (document.hasNoMasters()) {
             throw new IllegalArgumentException(
                     "One or more parameters have not been configured.");
         }
@@ -162,19 +157,19 @@ public class IconicoXML {
     }
 
     public static HashSet<String> newSetUsers(final Document doc) {
-        return new WrappedDocument(doc).wElementsWithTag("owner")
+        return new WrappedDocument(doc).elementsWithTag("owner")
                 .map(WrappedElement::id)
                 .collect(Collectors.toCollection(HashSet::new));
     }
 
     public static List<String> newListUsers(final Document doc) {
-        return new WrappedDocument(doc).wElementsWithTag("owner")
+        return new WrappedDocument(doc).elementsWithTag("owner")
                 .map(WrappedElement::id)
                 .toList();
     }
 
     public static HashSet<VirtualMachine> newListVirtualMachines(final Document doc) {
-        return new WrappedDocument(doc).wElementsWithTag("virtualMac")
+        return new WrappedDocument(doc).elementsWithTag("virtualMac")
                 .map(IconicoXML::virtualMachineFromElement)
                 .collect(Collectors.toCollection(HashSet::new));
     }
@@ -208,7 +203,7 @@ public class IconicoXML {
     }
 
     public static HashMap<String, Double> newListPerfil(final Document doc) {
-        return new WrappedDocument(doc).wElementsWithTag("owner")
+        return new WrappedDocument(doc).elementsWithTag("owner")
                 .collect(Collectors.toMap(
                         WrappedElement::id,
                         WrappedElement::powerLimit,
