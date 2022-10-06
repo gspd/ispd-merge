@@ -35,69 +35,55 @@ public class GridBuilder {
         final var machines = doc.getElementsByTagName("machine");
         final var clusters = doc.getElementsByTagName("cluster");
         final var internet = doc.getElementsByTagName("internet");
-        final var links = doc.getElementsByTagName("link");
         //Realiza leitura dos icones de cluster
-        for (int i = 0; i < clusters.getLength(); i++) {
-            final var c = new WrappedElement((Element) clusters.item(i));
-
-            final var info = IconInfo.fromElement(c);
-
-            final var cluster = new Cluster(
-                    info.x(), info.y(),
-                    info.localId(), info.globalId(),
-                    c.power() // TODO: Supposed to be .energy()?
-            );
-
-            cluster.setSelected(false);
-            this.vertices.add(cluster);
-
-            this.icons.put(cluster.getId().getGlobalId(), cluster);
-            cluster.getId().setName(c.id());
-            cluster.setComputationalPower(c.power());
-            GridBuilder.setGridItemCharacteristics(cluster, c);
-            cluster.setSlaveCount(c.nodes());
-            cluster.setBandwidth(c.bandwidth());
-            cluster.setLatency(c.latency());
-            cluster.setSchedulingAlgorithm(c.scheduler());
-            cluster.setVmmAllocationPolicy(c.vmAlloc());
-            cluster.setOwner(c.owner());
-            cluster.setMaster(c.isMaster());
-        }
+        this.processCluster(clusters);
         //Realiza leitura dos icones de internet
-        for (int i = 0; i < internet.getLength(); i++) {
-            final Element inet = (Element) internet.item(i);
-            final var wInet = new WrappedElement(inet);
-
-            final Internet net = GridBuilder.netIconFromElement(wInet);
-
-            this.vertices.add(net);
-            this.icons.put(net.getId().getGlobalId(), net);
-            net.getId().setName(wInet.id());
-
-            net.setBandwidth(wInet.bandwidth());
-            net.setLoadFactor(wInet.load());
-            net.setLatency(wInet.latency());
-        }
+        this.processInternet(internet);
         //Realiza leitura dos icones de máquina
-        for (int i = 0; i < machines.getLength(); i++) {
-            final Element maquina = (Element) machines.item(i);
-            final var m = new WrappedElement(maquina);
-
-            if (maquina.getElementsByTagName("master").getLength() <= 0) {
-
-
-                final Machine maq1 = GridBuilder.machineIconFromElement(m);
-
-                this.icons.put(maq1.getId().getGlobalId(), maq1);
-                this.vertices.add(maq1);
-                GridBuilder.machineFromElement(maq1, m);
-            } else {
-                final Machine maq = GridBuilder.machineIconFromElement(m);
-
-                this.icons.put(maq.getId().getGlobalId(), maq);
-            }
-        }
+        this.processMachine(machines);
         //Realiza leitura dos mestres
+        this.processMaster(machines);
+
+        this.doc.links().forEach(this::processLinkElement);
+
+        return new IconicModel(this.vertices, this.edges);
+    }
+
+    private void processLinkElement(final WrappedElement e) {
+        final var lk = this.linkFromElement(e);
+
+        this.edges.add(lk);
+    }
+
+    private Link linkFromElement(final WrappedElement e) {
+        final var origination =
+                this.getVertex(e.origination());
+        final var destination =
+                this.getVertex(e.destination());
+
+        final var link = new Link(
+                origination, destination,
+                e.iconId().local(), e.globalIconId()
+        );
+
+        link.setSelected(false);
+
+        ((GridItem) origination).getOutboundConnections().add(link);
+        ((GridItem) destination).getInboundConnections().add(link);
+
+        link.getId().setName(e.id());
+        link.setBandwidth(e.bandwidth());
+        link.setLoadFactor(e.load());
+        link.setLatency(e.latency());
+
+        return link;
+    }
+
+    private Vertex getVertex(final int e) {
+        return (Vertex) this.icons.get(e);
+    }
+
+    private void processMaster(final NodeList machines) {
         for (int i = 0; i < machines.getLength(); i++) {
             final Element maquina = (Element) machines.item(i);
             if (new WrappedElement(maquina).hasMasterAttribute()) {
@@ -127,33 +113,73 @@ public class GridBuilder {
                 maq.setSlaves(escravos);
             }
         }
-        //Realiza leitura dos icones de rede
-        for (int i = 0; i < links.getLength(); i++) {
-            final Element link = (Element) links.item(i);
-            final Element id =
-                    GridBuilder.getFirstTagElement(link, "icon_id");
-            final int global = Integer.parseInt(id.getAttribute("global"));
-            final int local = Integer.parseInt(id.getAttribute("local"));
-            final Element connect =
-                    GridBuilder.getFirstTagElement(link, "connect");
-            final Vertex origem =
-                    (Vertex) this.icons.get(Integer.parseInt(connect.getAttribute(
-                            "origination")));
-            final Vertex destino =
-                    (Vertex) this.icons.get(Integer.parseInt(connect.getAttribute(
-                            "destination")));
-            final Link lk = new Link(origem, destino, local, global);
-            lk.setSelected(false);
-            ((GridItem) origem).getOutboundConnections().add(lk);
-            ((GridItem) destino).getInboundConnections().add(lk);
-            this.edges.add(lk);
-            lk.getId().setName(link.getAttribute("id"));
-            lk.setBandwidth(Double.parseDouble(link.getAttribute("bandwidth")));
-            lk.setLoadFactor(Double.parseDouble(link.getAttribute("load")));
-            lk.setLatency(Double.parseDouble(link.getAttribute("latency")));
-        }
+    }
 
-        return new IconicModel(this.vertices, this.edges);
+    private void processMachine(final NodeList machines) {
+        for (int i = 0; i < machines.getLength(); i++) {
+            final Element maquina = (Element) machines.item(i);
+            final var m = new WrappedElement(maquina);
+
+            if (maquina.getElementsByTagName("master").getLength() <= 0) {
+
+
+                final Machine maq1 = GridBuilder.machineIconFromElement(m);
+
+                this.icons.put(maq1.getId().getGlobalId(), maq1);
+                this.vertices.add(maq1);
+                GridBuilder.machineFromElement(maq1, m);
+            } else {
+                final Machine maq = GridBuilder.machineIconFromElement(m);
+
+                this.icons.put(maq.getId().getGlobalId(), maq);
+            }
+        }
+    }
+
+    private void processInternet(final NodeList internet) {
+        for (int i = 0; i < internet.getLength(); i++) {
+            final Element inet = (Element) internet.item(i);
+            final var wInet = new WrappedElement(inet);
+
+            final Internet net = GridBuilder.netIconFromElement(wInet);
+
+            this.vertices.add(net);
+            this.icons.put(net.getId().getGlobalId(), net);
+            net.getId().setName(wInet.id());
+
+            net.setBandwidth(wInet.bandwidth());
+            net.setLoadFactor(wInet.load());
+            net.setLatency(wInet.latency());
+        }
+    }
+
+    private void processCluster(final NodeList clusters) {
+        for (int i = 0; i < clusters.getLength(); i++) {
+            final var c = new WrappedElement((Element) clusters.item(i));
+
+            final var info = IconInfo.fromElement(c);
+
+            final var cluster = new Cluster(
+                    info.x(), info.y(),
+                    info.localId(), info.globalId(),
+                    c.power() // TODO: Supposed to be .energy()?
+            );
+
+            cluster.setSelected(false);
+            this.vertices.add(cluster);
+
+            this.icons.put(cluster.getId().getGlobalId(), cluster);
+            cluster.getId().setName(c.id());
+            cluster.setComputationalPower(c.power());
+            GridBuilder.setGridItemCharacteristics(cluster, c);
+            cluster.setSlaveCount(c.nodes());
+            cluster.setBandwidth(c.bandwidth());
+            cluster.setLatency(c.latency());
+            cluster.setSchedulingAlgorithm(c.scheduler());
+            cluster.setVmmAllocationPolicy(c.vmAlloc());
+            cluster.setOwner(c.owner());
+            cluster.setMaster(c.isMaster());
+        }
     }
 
     private static void setGridItemCharacteristics(
@@ -200,26 +226,21 @@ public class GridBuilder {
 
     private static Internet netIconFromElement(final WrappedElement e) {
         final var info = IconInfo.fromElement(e);
-        final Internet net = new Internet(
+
+        return new Internet(
                 info.x(), info.y(),
                 info.localId(), info.globalId()
         );
-
-        net.setSelected(false);
-        return net;
     }
 
     private static Machine machineIconFromElement(final WrappedElement m) {
         final var info = IconInfo.fromElement(m);
 
-        final var maq = new Machine(
+        return new Machine(
                 info.x(), info.y(),
                 info.localId(), info.globalId(),
                 m.energy()
         );
-
-        maq.setSelected(false);
-        return maq;
     }
 
     private static void machineFromElement(
@@ -251,8 +272,8 @@ public class GridBuilder {
 
     private record IconInfo(int x, int y, int globalId, int localId) {
         private static IconInfo fromElement(final WrappedElement e) {
-            final var position = e.wFirstTagElement("position");
-            final var iconId = e.wFirstTagElement("icon_id");
+            final var position = e.position();
+            final var iconId = e.iconId();
 
             return new IconInfo(
                     position.x(), position.y(),

@@ -26,6 +26,10 @@ public class WrappedElement {
         return Integer.parseInt(this.getAttribute(attributeName));
     }
 
+    public WrappedElement position() {
+        return this.wFirstTagElement("position");
+    }
+
     public WrappedElement connection() {
         return this.wFirstTagElement("connect");
     }
