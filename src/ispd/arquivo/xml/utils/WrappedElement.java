@@ -223,4 +223,60 @@ public class WrappedElement {
     public WrappedElement costs() {
         return this.firstTagElement("cost");
     }
+
+    public int tasks() {
+        return this.getInt("tasks");
+    }
+
+    public int arrivalTime() {
+        return this.getInt("time_arrival");
+    }
+
+    public Stream<WrappedElement> sizes() {
+        return this.elementsWithTag("size");
+    }
+
+    private String type() {
+        return this.getAttribute("type");
+    }
+
+    public boolean isComputingType() {
+        return "computing".equals(this.type());
+    }
+
+    public boolean isCommunicationType() {
+        return "communication".equals(this.type());
+    }
+
+    public double minimum() {
+        return this.getDouble("minimum");
+    }
+
+    public double maximum() {
+        return this.getDouble("maximum");
+    }
+
+    public double average() {
+        return this.getDouble("average");
+    }
+
+    public double probability() {
+        return this.getDouble("probability");
+    }
+
+    private boolean hasEmptyTag(final String tag) {
+        return this.element.getElementsByTagName(tag).getLength() == 0;
+    }
+
+    public boolean hasRandomLoads() {
+        return this.hasEmptyTag("random");
+    }
+
+    public Stream<WrappedElement> randomLoad() {
+        return this.elementsWithTag("random");
+    }
+
+    public Stream<WrappedElement> nodeLoads () {
+        return this.elementsWithTag("node");
+    }
 }
