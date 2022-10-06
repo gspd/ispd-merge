@@ -27,7 +27,7 @@ public class IconBuilder {
         return link;
     }
 
-    static Cluster aCluster(WrappedElement e) {
+    public static Cluster aCluster(final WrappedElement e) {
         final var info = IconInfo.fromElement(e);
 
         final var cluster = new Cluster(
@@ -38,7 +38,7 @@ public class IconBuilder {
 
         cluster.getId().setName(e.id());
         cluster.setComputationalPower(e.power());
-        setProcessingCenterCharacteristics(cluster, e);
+        IconBuilder.setProcessingCenterCharacteristics(cluster, e);
         cluster.setSlaveCount(e.nodes());
         cluster.setBandwidth(e.bandwidth());
         cluster.setLatency(e.latency());
@@ -46,10 +46,11 @@ public class IconBuilder {
         cluster.setVmmAllocationPolicy(e.vmAlloc());
         cluster.setOwner(e.owner());
         cluster.setMaster(e.isMaster());
+
         return cluster;
     }
 
-    public static void setProcessingCenterCharacteristics(
+    private static void setProcessingCenterCharacteristics(
             final GridItem item, final WrappedElement e) {
         if (!e.hasCharacteristicAttribute()) {
             return;
@@ -91,7 +92,7 @@ public class IconBuilder {
         }
     }
 
-    static Internet anInternet(WrappedElement e) {
+    public static Internet anInternet(final WrappedElement e) {
         final var info = IconInfo.fromElement(e);
 
         final Internet net = new Internet(
@@ -107,8 +108,25 @@ public class IconBuilder {
         return net;
     }
 
-    public record IconInfo(int x, int y, int globalId, int localId) {
-        public static IconInfo fromElement(final WrappedElement e) {
+    public static Machine aMachine(final WrappedElement m) {
+        final var info = IconInfo.fromElement(m);
+
+        final var machine = new Machine(
+                info.x(), info.y(),
+                info.localId(), info.globalId(),
+                m.energy()
+        );
+
+        machine.getId().setName(m.id());
+        machine.setComputationalPower(m.power());
+        IconBuilder.setProcessingCenterCharacteristics(machine, m);
+        machine.setLoadFactor(m.load());
+        machine.setOwner(m.owner());
+        return machine;
+    }
+
+    private record IconInfo(int x, int y, int globalId, int localId) {
+        private static IconInfo fromElement(final WrappedElement e) {
             final var position = e.position();
             final var iconId = e.iconId();
 
