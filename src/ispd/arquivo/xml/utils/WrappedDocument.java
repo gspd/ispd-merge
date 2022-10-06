@@ -32,7 +32,7 @@ public class WrappedDocument {
         return this.elementsWithTag("machine");
     }
 
-    public Stream<WrappedElement> elementsWithTag(final String tag) {
+    private Stream<WrappedElement> elementsWithTag(final String tag) {
         return WrappedElement.nodeListToWrappedElementStream(
                 this.document.getElementsByTagName(tag)
         );

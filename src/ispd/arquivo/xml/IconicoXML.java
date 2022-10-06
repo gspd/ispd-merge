@@ -3,6 +3,7 @@ package ispd.arquivo.xml;
 import ispd.arquivo.xml.models.builders.CloudQueueNetworkBuilder;
 import ispd.arquivo.xml.models.builders.GridBuilder;
 import ispd.arquivo.xml.models.builders.QueueNetworkBuilder;
+import ispd.arquivo.xml.models.builders.ServiceCenterBuilder;
 import ispd.arquivo.xml.utils.WrappedDocument;
 import ispd.arquivo.xml.utils.WrappedElement;
 import ispd.gui.PickModelTypeDialog;
@@ -157,26 +158,21 @@ public class IconicoXML {
     }
 
     public static HashSet<String> newSetUsers(final Document doc) {
-        return new WrappedDocument(doc).elementsWithTag("owner")
+        return new WrappedDocument(doc).owners()
                 .map(WrappedElement::id)
                 .collect(Collectors.toCollection(HashSet::new));
     }
 
     public static List<String> newListUsers(final Document doc) {
-        return new WrappedDocument(doc).elementsWithTag("owner")
+        return new WrappedDocument(doc).owners()
                 .map(WrappedElement::id)
                 .toList();
     }
 
     public static HashSet<VirtualMachine> newListVirtualMachines(final Document doc) {
-        return new WrappedDocument(doc).elementsWithTag("virtualMac")
-                .map(IconicoXML::virtualMachineFromElement)
+        return new WrappedDocument(doc).virtualMachines()
+                .map(ServiceCenterBuilder::aVirtualMachineWithVmm)
                 .collect(Collectors.toCollection(HashSet::new));
-    }
-
-    private static VirtualMachine virtualMachineFromElement(final WrappedElement e) {
-        return new VirtualMachine(e.id(), e.owner(), e.vmm(), e.powerAsInt(),
-                e.memAlloc(), e.diskAlloc(), e.opSystem());
     }
 
     public static Document[] clone(final File file, final int number)
@@ -203,7 +199,7 @@ public class IconicoXML {
     }
 
     public static HashMap<String, Double> newListPerfil(final Document doc) {
-        return new WrappedDocument(doc).elementsWithTag("owner")
+        return new WrappedDocument(doc).owners()
                 .collect(Collectors.toMap(
                         WrappedElement::id,
                         WrappedElement::powerLimit,
@@ -643,5 +639,4 @@ public class IconicoXML {
             return this.substitute;
         }
     }
-
 }

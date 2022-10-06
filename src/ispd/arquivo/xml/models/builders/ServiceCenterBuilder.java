@@ -1,6 +1,7 @@
 package ispd.arquivo.xml.models.builders;
 
 import ispd.arquivo.xml.utils.WrappedElement;
+import ispd.gui.iconico.grade.VirtualMachine;
 import ispd.motor.filas.servidores.implementacao.CS_Internet;
 import ispd.motor.filas.servidores.implementacao.CS_Link;
 import ispd.motor.filas.servidores.implementacao.CS_Maquina;
@@ -72,7 +73,7 @@ public class ServiceCenterBuilder {
         );
     }
 
-    public static CS_VMM aVmmNoLoad(WrappedElement e) {
+    public static CS_VMM aVmmNoLoad(final WrappedElement e) {
         return new CS_VMM(
                 e.id(),
                 e.owner(),
@@ -85,7 +86,8 @@ public class ServiceCenterBuilder {
         );
     }
 
-    public static CS_MaquinaCloud aCloudMachineWithId(WrappedElement e, int j) {
+    public static CS_MaquinaCloud aCloudMachineWithId(
+            final WrappedElement e, final int j) {
         return new CS_MaquinaCloud(
                 "%s.%d".formatted(e.id(), j),
                 e.owner(),
@@ -101,13 +103,19 @@ public class ServiceCenterBuilder {
         );
     }
 
-    public static CS_VirtualMac aVirtualMachine(WrappedElement e) {
-        return new CS_VirtualMac(e.id(),
+    public static CS_VirtualMac aVirtualMachine(final WrappedElement e) {
+        return new CS_VirtualMac(
+                e.id(),
                 e.owner(),
                 e.powerAsInt(),
                 e.memAlloc(),
                 e.diskAlloc(),
                 e.opSystem()
         );
+    }
+
+    public static VirtualMachine aVirtualMachineWithVmm(final WrappedElement e) {
+        return new VirtualMachine(e.id(), e.owner(), e.vmm(), e.powerAsInt(),
+                e.memAlloc(), e.diskAlloc(), e.opSystem());
     }
 }
