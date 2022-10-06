@@ -2,16 +2,13 @@ package ispd.arquivo.xml;
 
 import ispd.arquivo.xml.utils.SwitchConnection;
 import ispd.motor.filas.RedeDeFilasCloud;
-import ispd.motor.filas.servidores.CS_Comunicacao;
 import ispd.motor.filas.servidores.CS_Processamento;
 import ispd.motor.filas.servidores.CentroServico;
 import ispd.motor.filas.servidores.implementacao.CS_Internet;
-import ispd.motor.filas.servidores.implementacao.CS_Link;
 import ispd.motor.filas.servidores.implementacao.CS_MaquinaCloud;
 import ispd.motor.filas.servidores.implementacao.CS_Switch;
 import ispd.motor.filas.servidores.implementacao.CS_VMM;
 import ispd.motor.filas.servidores.implementacao.CS_VirtualMac;
-import ispd.motor.filas.servidores.implementacao.Vertice;
 import ispd.motor.metricas.MetricasUsuarios;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -26,16 +23,12 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
     private final NodeList docMachines;
     private final NodeList docClusters;
     private final NodeList docInternet;
-    private final NodeList docLinks;
     private final NodeList docOwners;
     private final NodeList docVms;
-    private final HashMap<Integer, CentroServico> serviceCenters =
-            new HashMap<>(0);
     private final HashMap<CentroServico, List<CS_MaquinaCloud>> clusterSlaves =
             new HashMap<>(0);
     private final List<CS_MaquinaCloud> machines = new ArrayList<>(0);
     private final List<CS_VirtualMac> virtualMachines = new ArrayList<>(0);
-    private final List<CS_Comunicacao> links = new ArrayList<>(0);
     private final List<CS_Internet> internets = new ArrayList<>(0);
     private final List<CS_Processamento> virtualMachineMasters =
             new ArrayList<>(0);
@@ -46,10 +39,12 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
 
     public CloudQueueNetworkBuilder(final Document model) {
         super(new WrappedDocument(model));
+
+        final var doc = new WrappedDocument(model);
+
         this.docMachines = model.getElementsByTagName("machine");
         this.docClusters = model.getElementsByTagName("cluster");
         this.docInternet = model.getElementsByTagName("internet");
-        this.docLinks = model.getElementsByTagName("link");
         this.docOwners = model.getElementsByTagName("owner");
         this.docVms = model.getElementsByTagName("virtualMac");
 
@@ -62,8 +57,17 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
 
         //Realiza leitura dos icones de internet
         processInternets();
-        //cria os links e realiza a conexão entre os recursos
-        processLinks();
+
+
+
+
+
+
+
+
+        doc.links().forEach(this::processLinkElement);
+
+
         //adiciona os escravos aos mestres
         processMasters();
 
@@ -325,31 +329,6 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
                     Double.parseDouble(inet.getAttribute("latency")));
             this.internets.add(net);
             this.serviceCenters.put(global, net);
-        }
-    }
-
-    private void processLinks() {
-        for (int i = 0; i < this.docLinks.getLength(); i++) {
-            final Element link = (Element) this.docLinks.item(i);
-
-            final CS_Link cslink = new CS_Link(
-                    link.getAttribute("id"),
-                    Double.parseDouble(link.getAttribute("bandwidth")),
-                    Double.parseDouble(link.getAttribute("load")),
-                    Double.parseDouble(link.getAttribute("latency")));
-            this.links.add(cslink);
-
-            //adiciona entrada e saida desta conexão
-            final Element connect =
-                    GridBuilder.getFirstTagElement(link, "connect");
-            final Vertice origem =
-                    (Vertice) this.serviceCenters.get(Integer.parseInt(connect.getAttribute("origination")));
-            final Vertice destino =
-                    (Vertice) this.serviceCenters.get(Integer.parseInt(connect.getAttribute("destination")));
-            cslink.setConexoesSaida((CentroServico) destino);
-            destino.addConexoesEntrada(cslink);
-            cslink.setConexoesEntrada((CentroServico) origem);
-            origem.addConexoesSaida(cslink);
         }
     }
 

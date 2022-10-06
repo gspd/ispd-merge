@@ -21,13 +21,13 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 class QueueNetworkBuilder {
-    private final HashMap<Integer, CentroServico> serviceCenters =
+    protected final HashMap<Integer, CentroServico> serviceCenters =
             new HashMap<>(0);
     private final HashMap<CentroServico, List<CS_Maquina>> clusterSlaves =
             new HashMap<>(0);
     private final List<CS_Processamento> masters = new ArrayList<>(0);
     private final List<CS_Maquina> machines = new ArrayList<>(0);
-    private final List<CS_Comunicacao> links = new ArrayList<>(0);
+    protected final List<CS_Comunicacao> links = new ArrayList<>(0);
     private final List<CS_Internet> internets = new ArrayList<>(0);
     private final Map<String, Double> powerLimits;
 
@@ -128,7 +128,7 @@ class QueueNetworkBuilder {
         this.serviceCenters.put(e.globalIconId(), net);
     }
 
-    private void processLinkElement(final WrappedElement e) {
+    protected void processLinkElement(final WrappedElement e) {
         final var link = ServiceCenterBuilder.aLink(e);
 
         this.links.add(link);
