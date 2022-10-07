@@ -28,8 +28,6 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-/* TODO: Extract superclass (PolicyManager?) from this and Alocadores */
-
 /**
  * Manages storing, retrieving and compiling scheduling policies
  */
@@ -38,29 +36,18 @@ public class Escalonadores implements ManipularArquivos {
     private static final String NO_POLICY = "---";
 
     /**
-     * guarda a lista de escalonadores implementados no iSPD, e que já estão
-     * disponiveis para o usuario por padrão
+     * Scheduling policies available by default
      */
     public static final String[] ESCALONADORES = { Escalonadores.NO_POLICY,
             "RoundRobin", "Workqueue", "WQR",
             "DynamicFPLTF", "HOSEP", "OSEP", "EHOSEP" };
     private static final String DIRECTORY_PATH = "ispd/externo";
-    /**
-     * mantem o caminho do pacote escalonador
-     */
     private static final File DIRECTORY =
             new File(Carregar.DIRETORIO_ISPD, Escalonadores.DIRECTORY_PATH);
-    /**
-     * guarda a lista de escalonadores disponiveis
-     */
     private final ArrayList<String> policies = new ArrayList<>(0);
     private final List<String> addedPolicies = new ArrayList<>(0);
     private final List<String> removedPolicies = new ArrayList<>(0);
 
-    /**
-     * Atribui o caminho do pacote escalonador e os escalonadores (.class)
-     * contidos nele
-     */
     public Escalonadores() {
         if (Escalonadores.DIRECTORY.exists()) {
             this.findDotClassSchedulers();
@@ -113,7 +100,10 @@ public class Escalonadores implements ManipularArquivos {
     }
 
     /**
-     * extrai arquivos que são necessarios fora do jar
+     * Extracts given dir from jar file given by file
+     *
+     * @param dir  Directory name to be extracted
+     * @param file Jar file from which to extract the directory
      */
     private static void extractDirFromJar(final String dir, final File file) throws IOException {
         try (final var jar = new JarFile(file)) {
@@ -138,7 +128,6 @@ public class Escalonadores implements ManipularArquivos {
             Escalonadores.createDirectory(file.getParentFile());
         }
 
-        // TODO: Discuss possibility of Files.copy()
         try (final var is = zip.getInputStream(entry);
              final var os = new FileOutputStream(file)) {
             is.transferTo(os);
@@ -146,8 +135,7 @@ public class Escalonadores implements ManipularArquivos {
     }
 
     /**
-     * @return conteudo básico para criar uma classe que implemente um
-     * escalonador
+     * @return Basic template for writing a scheduling policy's source code
      */
     public static String getEscalonadorJava(final String policyName) {
         return """
@@ -190,9 +178,9 @@ public class Escalonadores implements ManipularArquivos {
     }
 
     /**
-     * Método responsável por listar os escalonadores existentes no simulador
-     * ele retorna o nome de cada escalonador contido no pacote com arquivo
-     * .class
+     * Lists all available scheduling policies.
+     *
+     * @return {@code ArrayList} with all scheduling policies' names.
      */
     @Override
     public ArrayList<String> listar() {
@@ -200,7 +188,8 @@ public class Escalonadores implements ManipularArquivos {
     }
 
     /**
-     * @return diretório onde fica os arquivos dos escalonadores
+     * @return Directory in which scheduling policies sources and compiled
+     * classes are saved
      */
     @Override
     public File getDiretorio() {
@@ -208,8 +197,12 @@ public class Escalonadores implements ManipularArquivos {
     }
 
     /**
-     * Este método sobrescreve o arquivo .java do escalonador informado com o
-     * buffer
+     * Writes the contents of 'codigo' into the source file of the policy
+     * given by 'nome'.
+     *
+     * @param nome Name of the policy which source file will be written to
+     * @param codigo Contents to be written in the file
+     * @return {@code true} if writing was successful
      */
     @Override
     public boolean escrever(final String nome, final String codigo) {
@@ -227,11 +220,11 @@ public class Escalonadores implements ManipularArquivos {
     }
 
     /**
-     * Compila o arquivo .java do escalonador informado caso ocorra algum erro
-     * retorna o erro caso contrario retorna null
+     * Attemps to compile the source file of the policy with given name,
+     * returning the contents of {@code stderr}, if any, otherwise {@code null}
      *
-     * @param nome nome do escalonador
-     * @return erros da compilação
+     * @param nome Name of the allocation policy to be compiled
+     * @return A string with errors, if any, otherwise {@code null}
      */
     @Override
     public String compilar(final String nome) {
@@ -297,8 +290,10 @@ public class Escalonadores implements ManipularArquivos {
     }
 
     /**
-     * Realiza a leitura do arquivo .java do escalonador e retorna um String do
-     * conteudo
+     * Reads the source file from the policy 'escalonador' and returns a string with the file contents.
+     *
+     * @param escalonador Name of the policy which source file will be read
+     * @return String contents of the file
      */
     @Override
     public String ler(final String escalonador) {
@@ -317,8 +312,10 @@ public class Escalonadores implements ManipularArquivos {
     }
 
     /**
-     * Método responsável por remover um escalonador no simulador ele recebe o
-     * nome do escalonador e remove do pacote a classe .java e .class
+     * Attempts to remove .java and .class files with the name in 'escalonador' and, if successful, remove the policy from the inner list.
+     *
+     * @param escalonador Name of the policy which files will be removed
+     * @return {@code true} if removal is successful
      */
     @Override
     public boolean remover(final String escalonador) {
@@ -359,11 +356,10 @@ public class Escalonadores implements ManipularArquivos {
     }
 
     /**
-     * Método responsável por adicionar um escalonador no simulador ele recebe
-     * uma classe Java compila e adiciona ao pacote a classe .java e .class
+     * Adds scheduling policy coded in file {@code arquivo} to the configured directory, compiles it, and adds it to the inner list of scheduling policies.
      *
-     * @return true se importar corretamente e false se ocorrer algum erro no
-     * processo
+     * @param arquivo Java source file containing the allocation policy
+     * @return {@code true} if import occurred successfully and {@code false} otherwise
      */
     @Override
     public boolean importarEscalonadorJava(final File arquivo) {
@@ -404,11 +400,17 @@ public class Escalonadores implements ManipularArquivos {
         }
     }
 
+    /**
+     * @return added policies
+     */
     @Override
     public List listarAdicionados() {
         return this.addedPolicies;
     }
 
+    /**
+     * @return removed policies
+     */
     @Override
     public List listarRemovidos() {
         return this.removedPolicies;

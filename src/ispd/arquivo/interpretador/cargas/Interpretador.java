@@ -58,7 +58,6 @@ public class Interpretador {
     }
 
     private static void writeTaskAsTag(final Writer out, final Tarefa tarefa) throws IOException {
-        // TODO: Move to task?
         out.write("""
                 <task id="%d" arr="%s" sts="1" cpsz ="%s" cmsz="%s" usr="%s" />
                 """.formatted(

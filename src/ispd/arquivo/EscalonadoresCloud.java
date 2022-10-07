@@ -47,7 +47,6 @@ public class EscalonadoresCloud implements ManipularArquivosCloud {
             this.findDotClassAllocators();
         } else {
 
-            /// TODO: Find better way to do this
             try {
                 EscalonadoresCloud.createDirectory(EscalonadoresCloud.DIRECTORY);
             } catch (final IOException e) {
@@ -230,9 +229,6 @@ public class EscalonadoresCloud implements ManipularArquivosCloud {
         }
     }
 
-    /**
-     * recebe nome do escalonar e adiciona ele na lista de escalonadores
-     */
     private void addPolicy(final String policyName) {
         if (this.policies.contains(policyName)) {
             return;
@@ -245,7 +241,6 @@ public class EscalonadoresCloud implements ManipularArquivosCloud {
     private static String compileManually(final File target) throws IOException {
         final var proc = Runtime.getRuntime().exec("javac " + target.getPath());
 
-        // TODO: Extract commonalities with method ler()
         try (final var err = new BufferedReader(new InputStreamReader(
                 proc.getErrorStream(), StandardCharsets.UTF_8))
         ) {
@@ -306,8 +301,6 @@ public class EscalonadoresCloud implements ManipularArquivosCloud {
 
     @Override
     public boolean importarEscalonadorJava(final File arquivo) {
-        // TODO: Merge this and method compilar() into one
-
         final var target = new File(EscalonadoresCloud.DIRECTORY,
                 arquivo.getName());
         EscalonadoresCloud.copyFile(target, arquivo);

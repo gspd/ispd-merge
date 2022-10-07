@@ -12,14 +12,16 @@ import java.util.NoSuchElementException;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+/**
+ * Utility class to convert an iSPD file to GridSim java file.
+ * Construct it and call method {@link #export()}.
+ */
 class GridSimExporter {
     private static final String ID_GLOBAL = "global";
 
-    // TODO: Map<String, String> to avoid ParseInts?
     private final HashMap<Integer, String> resources
             = new HashMap<>(0);
 
-    // TODO: Convert to ArrayList?
     private final NodeList users;
     private final NodeList machines;
     private final NodeList clusters;
@@ -52,6 +54,9 @@ class GridSimExporter {
         return IntStream.range(0, list.getLength()).mapToObj(list::item).map(Element.class::cast);
     }
 
+    /**
+     * Export model to FilePrinter {@link #out} passed in the constructor.
+     */
     public void export() {
         this.printHeader();
 

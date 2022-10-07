@@ -27,11 +27,6 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-// TODO: Perhaps this class could be fully static, loading everything only once
-//  when needed.
-
-// TODO: Runtime compilation may not be the best way to do this
-
 /**
  * Manages storing, retrieving and compiling allocation policies
  */
@@ -43,8 +38,6 @@ public class Alocadores implements ManipularArquivosAlloc {
      */
     public static final String[] ALOCACAO = { Alocadores.NO_POLICY,
             "RoundRobin", "FirstFit", "FirstFitDecreasing", "Volume" };
-
-    // TODO: This directory should be in the configuration file
     private static final String DIRECTORY_PATH = "ispd/externo/cloudAlloc";
     private static final File DIRECTORY = new File(Alocadores.DIRECTORY_PATH);
     private final ArrayList<String> policies = new ArrayList<>(0);
@@ -107,7 +100,7 @@ public class Alocadores implements ManipularArquivosAlloc {
      * Extracts given dir from jar file given by file.
      *
      * @param dir  Directory name to be extracted
-     * @param file Jar file from which to extracted the directory
+     * @param file Jar file from which to extract the directory
      */
     private static void extractDirFromJar(final String dir, final File file) throws IOException {
         try (final var jar = new JarFile(file)) {
@@ -132,7 +125,6 @@ public class Alocadores implements ManipularArquivosAlloc {
             Alocadores.createDirectory(file.getParentFile());
         }
 
-        // TODO: Discuss possibility of Files.copy()
         try (final var is = zip.getInputStream(entry);
              final var os = new FileOutputStream(file)) {
             is.transferTo(os);
@@ -207,8 +199,8 @@ public class Alocadores implements ManipularArquivosAlloc {
     }
 
     /**
-     * Writes the contents of String codigo into the source file of the policy
-     * given by nome.
+     * Writes the contents of 'codigo' into the source file of the policy
+     * given by 'nome'.
      *
      * @param nome   Name of the policy which source file will be written to
      * @param codigo Contents to be written in the file
@@ -270,7 +262,6 @@ public class Alocadores implements ManipularArquivosAlloc {
             } catch (final IOException ex) {
                 Logger.getLogger(Alocadores.class.getName())
                         .log(Level.SEVERE, null, ex);
-                // TODO: More useful error messages
                 return "Não foi possível compilar";
             }
         }
@@ -291,7 +282,6 @@ public class Alocadores implements ManipularArquivosAlloc {
     private static String compileManually(final File target) throws IOException {
         final var proc = Runtime.getRuntime().exec("javac " + target.getPath());
 
-        // TODO: Extract commonalities with method ler()
         try (final var err = new BufferedReader(new InputStreamReader(
                 proc.getErrorStream(), StandardCharsets.UTF_8))
         ) {
@@ -300,7 +290,7 @@ public class Alocadores implements ManipularArquivosAlloc {
     }
 
     /**
-     * Reads the source file from the policy alocador and returns a string
+     * Reads the source file from the policy 'alocador' and returns a string
      * with the file contents.
      *
      * @param alocador Name of the policy which source file will be read
@@ -325,7 +315,7 @@ public class Alocadores implements ManipularArquivosAlloc {
      * Attempts to remove .java and .class files with the name in "alocador"
      * and, if successful, removes the policy from the inner list.
      *
-     * @param alocador Name of the policy which files be removed
+     * @param alocador Name of the policy which files will be removed
      * @return {@code true} if removal is successful
      */
     @Override
@@ -368,7 +358,7 @@ public class Alocadores implements ManipularArquivosAlloc {
      * directory, compiles it, and adds it to the list of allocation policies.
      *
      * @param arquivo Java source file containing the allocation policy
-     * @return {@code true} if import ocurred succesfully and {@code false}
+     * @return {@code true} if import occurred successfully and {@code false}
      * otherwise
      */
     @Override
@@ -396,7 +386,6 @@ public class Alocadores implements ManipularArquivosAlloc {
         return true;
     }
 
-    // TODO: Check if Files.copy works
     private static void copyFile(final File dest, final File src) {
         if (dest.getPath().equals(src.getPath())) {
             return;
