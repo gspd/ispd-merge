@@ -18,9 +18,11 @@ import java.util.regex.Pattern;
  * @author Diogo Tavares
  */
 public class TraceXML {
-    private static final char PATH_SPLIT_DELIMITER = '.';
+    private static final char PATH_DELIMITER = '\\';
+    private static final char FILE_DELIMITER = '.';
     private static final Pattern TABS = Pattern.compile("\t");
     private static final Pattern WHITE_SPACE = Pattern.compile("\\s\\s++");
+    private static final int NON_TASK_RELATED_LINES = 7;
     private final String path;
     private String type;
     private String output;
@@ -29,17 +31,19 @@ public class TraceXML {
     public TraceXML(final String path) {
         this.path = path;
 
-        final var split = TraceXML.splitPath(path);
+        final var split = TraceXML.splitAtLast(path,
+                TraceXML.FILE_DELIMITER);
 
         this.output = split[0] + ".wmsx";
         this.type = split[1].toUpperCase();
     }
 
-    private static String[] splitPath(final String filePath) {
-        final int i = filePath.lastIndexOf(TraceXML.PATH_SPLIT_DELIMITER);
+    private static String[] splitAtLast(final String str,
+                                        final char delimiter) {
+        final int i = str.lastIndexOf(delimiter);
         return new String[] {
-                filePath.substring(0, i),
-                filePath.substring(i + 1) // Skip delimiter
+                str.substring(0, i),
+                str.substring(i + 1) // Skip delimiter
         };
     }
 
@@ -89,9 +93,9 @@ public class TraceXML {
 
             final String str;
 
-            if ("SWF".equals(this.type)) {
+            if (this.isSwfType()) {
                 str = TraceXML.makeSwfTaskTag(line);
-            } else if ("GWF".equals(this.type)) {
+            } else if (this.isGwfType()) {
                 if (firstTaskArrival.isEmpty()) {
                     firstTaskArrival =
                             Optional.of(TraceXML.parseArrivalTime(line));
@@ -115,6 +119,10 @@ public class TraceXML {
         return str.charAt(0) == ';' || str.charAt(0) == '#';
     }
 
+    private boolean isSwfType() {
+        return "SWF".equals(this.type);
+    }
+
     private static String makeSwfTaskTag(final String str) {
         final var fields =
                 TraceXML.WHITE_SPACE.matcher(str).replaceAll(" ")
@@ -127,6 +135,10 @@ public class TraceXML {
                 .formatted(fields[0],
                         fields[1],
                         fields[10], fields[3], fields[11]);
+    }
+
+    private boolean isGwfType() {
+        return "GWF".equals(this.type);
     }
 
     private static int parseArrivalTime(final String line) {
@@ -160,49 +172,56 @@ public class TraceXML {
 
     @Override
     public String toString() {
-        final int i = this.output.lastIndexOf('\\');
-        this.output = this.output.substring(i + 1);
-        return ("File " + this.output + " was generated sucessfully:\n"
-                + "\t- Generated from the format: " + this.type
-                + "\n\t- File has a workload of " + this.taskCount + " tasks");
+        this.output = TraceXML.splitAtLast(
+                this.output, TraceXML.PATH_DELIMITER)[1];
 
+        return ("""
+                File %s was generated sucessfully:
+                    - Generated from the format: %s
+                    - File has a workload of %d tasks""".formatted(
+                this.output, this.type, this.taskCount));
     }
 
     public String LerCargaWMS() {
-        try {
-            final BufferedReader in =
-                    new BufferedReader(new FileReader(this.path,
-                            StandardCharsets.UTF_8));
-            String texto = "";
-            final int j = this.path.lastIndexOf('\\');
-            //pega o nome do arquivo
-            final String nome;
-            nome = this.path.substring(j + 1);
-            texto = texto + "File " + nome + " was opened sucessfully:\n";
-            String aux;
-            int i = 0;
-            while (in.ready()) {
-                aux = in.readLine();
-                if (i == 4) {
-                    String[] campos = aux.split(" ");
-                    campos = campos[1].split("\"");
-                    texto = texto + "\t- File was extracted of trace in the " +
-                            "format: " + campos[1] + "\n";
-                    this.type = campos[1];
+        try (final var in = new BufferedReader(
+                new FileReader(this.path, StandardCharsets.UTF_8))) {
+            final var fileName = TraceXML.splitAtLast(
+                    this.path, TraceXML.PATH_DELIMITER)[1];
+
+            final var sb = new StringBuilder(
+                    "File %s was opened sucessfully:\n".formatted(fileName));
+
+            int i;
+            for (i = 0; in.ready(); ++i) {
+                final var line = in.readLine();
+
+                if (i != 4) {
+                    continue;
                 }
-                i++;
+
+                final var fields = line
+                        .split(" ")[1]
+                        .split("\"");
+
+                sb.append("\t- File was extracted of trace in the format: %s\n"
+                        .formatted(fields[1]));
+
+                this.type = fields[1];
             }
-            //desconta as 7 linhas de tags que não são tarefas..
-            i -= 7;
-            this.taskCount = i;
-            texto = texto + "\t- File has a workload of " + i + " tasks";
-            return (texto);
+
+            // 7 lines on the file are not tasks, so discounted.
+            this.taskCount = i - TraceXML.NON_TASK_RELATED_LINES;
+
+            sb.append("\t- File has a workload of %d tasks".formatted(i));
+
+            return sb.toString();
 
         } catch (final IOException ex) {
-            Logger.getLogger(TraceXML.class.getName()).log(Level.SEVERE, null
-                    , ex);
+            Logger.getLogger(TraceXML.class.getName())
+                    .log(Level.SEVERE, null, ex);
         }
-        return ("File has no correct format");
+
+        return "File has no correct format";
     }
 
     public void geraTraceSim(final List<Tarefa> tarefas) {
