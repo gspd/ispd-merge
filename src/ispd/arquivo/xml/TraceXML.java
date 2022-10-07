@@ -8,11 +8,13 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 /**
  * @author Diogo Tavares
@@ -224,40 +226,51 @@ public class TraceXML {
         return "File has no correct format";
     }
 
-    public void geraTraceSim(final List<Tarefa> tarefas) {
-        try {
+    public void geraTraceSim(final Collection<? extends Tarefa> tasks) {
+        try (final var out = new BufferedWriter(
+                new FileWriter(this.path, StandardCharsets.UTF_8))) {
             this.type = "iSPD";
-            final FileWriter fp = new FileWriter(this.path,
-                    StandardCharsets.UTF_8);
-            final BufferedWriter out = new BufferedWriter(fp);
-            out.write("<?xml version=\"1.0\" encoding=\"ISO-8859-1\" " +
-                      "standalone=\"no\"?>\n"
-                      + "<!DOCTYPE system SYSTEM \"iSPDcarga.dtd\">");
-            out.write("\n<system>");
-            out.write("\n<trace>");
-            out.write("\n<format kind=\"" + this.type + "\" />\n");
-            int i = 0;
-            for (final Tarefa tarefa : tarefas) {
-                if (!tarefa.isCopy()) {
-                    out.write("<task " + "id=\"" + tarefa.getIdentificador()
-                              + "\" arr=\"" + tarefa.getTimeCriacao()
-                              + "\" sts=\"" + "1"
-                              + "\" cpsz =\"" + tarefa.getTamProcessamento()
-                              + "\" cmsz=\"" + tarefa.getArquivoEnvio()
-                              + "\" usr=\"" + tarefa.getProprietario());
-                    out.write("\" />\n");
-                    i++;
-                }
-            }
-            out.write("</trace>");
-            out.write("\n</system>");
 
-            this.taskCount = i;
+            final var sb = new StringBuilder("""
+                    <?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+                    <!DOCTYPE system SYSTEM "iSPDcarga.dtd">
+                    <system>
+                    <trace>
+                    <format kind="%s" />
+                    """.formatted(this.type));
+
+            TraceXML.nonCopyTasksStream(tasks)
+                    .map(TraceXML::makeTaskDescription)
+                    .forEach(sb::append);
+
+            sb.append("""
+                    </trace>
+                    </system>""");
+
+            out.write(sb.toString());
+
+            this.taskCount = (int) TraceXML.nonCopyTasksStream(tasks).count();
             this.output = this.path;
-            out.close();
-            fp.close();
+
         } catch (final IOException ignored) {
         }
+    }
+
+    private static Stream<? extends Tarefa> nonCopyTasksStream(
+            final Collection<? extends Tarefa> tasks) {
+        return tasks.stream()
+                .filter(Predicate.not(Tarefa::isCopy));
+    }
+
+    private static String makeTaskDescription(final Tarefa t) {
+        return ("<task id=\"%d\" arr=\"%s\" sts=\"1\" cpsz =\"%s\" " +
+                "cmsz=\"%s\" usr=\"%s\" />\n").formatted(
+                t.getIdentificador(),
+                t.getTimeCriacao(),
+                t.getTamProcessamento(),
+                t.getArquivoEnvio(),
+                t.getProprietario()
+        );
     }
 }
 
