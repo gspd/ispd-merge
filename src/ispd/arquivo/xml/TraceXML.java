@@ -14,14 +14,14 @@ import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 /**
- * @author Diogo Tavares
+ * Class responsible for converting traces into XML files.
  */
 public class TraceXML {
-    private static final char PATH_DELIMITER = '\\';
-    private static final char FILE_DELIMITER = '.';
+    private static final char FILE_PATH_DELIMITER = '\\';
+    private static final char FILE_EXT_DELIMITER = '.';
     private static final Pattern TABS = Pattern.compile("\t");
     private static final Pattern WHITE_SPACE = Pattern.compile("\\s\\s++");
     private static final int NON_TASK_RELATED_LINES = 7;
@@ -34,7 +34,7 @@ public class TraceXML {
         this.path = path;
 
         final var split = TraceXML.splitAtLast(path,
-                TraceXML.FILE_DELIMITER);
+                TraceXML.FILE_EXT_DELIMITER);
 
         this.output = split[0] + ".wmsx";
         this.type = split[1].toUpperCase();
@@ -60,6 +60,7 @@ public class TraceXML {
     public int getNum_Tasks() {
         return this.taskCount;
     }
+
 
     public void convert() {
         try (final var in = new BufferedReader(
@@ -175,7 +176,7 @@ public class TraceXML {
     @Override
     public String toString() {
         this.output = TraceXML.splitAtLast(
-                this.output, TraceXML.PATH_DELIMITER)[1];
+                this.output, TraceXML.FILE_PATH_DELIMITER)[1];
 
         return ("""
                 File %s was generated sucessfully:
@@ -184,11 +185,16 @@ public class TraceXML {
                 this.output, this.type, this.taskCount));
     }
 
+    /**
+     * Read Wms load from file path passed in constructor.
+     *
+     * @return Text describing the procedure or errors, if any
+     */
     public String LerCargaWMS() {
         try (final var in = new BufferedReader(
                 new FileReader(this.path, StandardCharsets.UTF_8))) {
             final var fileName = TraceXML.splitAtLast(
-                    this.path, TraceXML.PATH_DELIMITER)[1];
+                    this.path, TraceXML.FILE_PATH_DELIMITER)[1];
 
             final var sb = new StringBuilder(
                     "File %s was opened sucessfully:\n".formatted(fileName));
@@ -211,7 +217,7 @@ public class TraceXML {
                 this.type = fields[1];
             }
 
-            // 7 lines on the file are not tasks, so discounted.
+            // Some lines on the file are not tasks, so discounted.
             this.taskCount = i - TraceXML.NON_TASK_RELATED_LINES;
 
             sb.append("\t- File has a workload of %d tasks".formatted(i));
@@ -239,9 +245,20 @@ public class TraceXML {
                     <format kind="%s" />
                     """.formatted(this.type));
 
-            TraceXML.nonCopyTasksStream(tasks)
+            record Result(String str, Long count) {
+            }
+
+            final var res = tasks.stream()
+                    .filter(Predicate.not(Tarefa::isCopy))
                     .map(TraceXML::makeTaskDescription)
-                    .forEach(sb::append);
+                    .collect(Collectors.teeing(
+                            Collectors.joining(""),
+                            Collectors.counting(),
+                            Result::new
+                    ));
+
+            sb.append(res.str());
+            this.taskCount = res.count().intValue();
 
             sb.append("""
                     </trace>
@@ -249,17 +266,10 @@ public class TraceXML {
 
             out.write(sb.toString());
 
-            this.taskCount = (int) TraceXML.nonCopyTasksStream(tasks).count();
             this.output = this.path;
 
         } catch (final IOException ignored) {
         }
-    }
-
-    private static Stream<? extends Tarefa> nonCopyTasksStream(
-            final Collection<? extends Tarefa> tasks) {
-        return tasks.stream()
-                .filter(Predicate.not(Tarefa::isCopy));
     }
 
     private static String makeTaskDescription(final Tarefa t) {
