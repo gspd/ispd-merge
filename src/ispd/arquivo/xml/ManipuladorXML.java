@@ -21,12 +21,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class ManipuladorXML {
-    public static Document ler(final File file, final String dtdPath)
+    public static Document read(final File file, final String dtdPath)
             throws ParserConfigurationException, IOException, SAXException {
 
         final var factory = ManipuladorXML.makeFactory();
-        final var builder = ManipuladorXML.makeDocBuilder(dtdPath, factory);
-        return builder.parse(file);
+        return ManipuladorXML.makeDocBuilder(dtdPath, factory)
+                .parse(file);
     }
 
     private static DocumentBuilderFactory makeFactory() {
@@ -46,18 +46,15 @@ public class ManipuladorXML {
     /**
      * Este método sobrescreve ou cria arquivo xml
      */
-    public static boolean escrever(final Document doc,
-                                   final File outputFile,
-                                   final String docTypeSystem,
-                                   final Boolean omitXmlDecl) {
+    public static boolean write(
+            final Document doc, final File outputFile,
+            final String docTypeSystem, final Boolean omitXmlDecl) {
         try {
-            final var transformer =
-                    ManipuladorXML.makeTransformer(docTypeSystem, omitXmlDecl);
-
             final var source = new DOMSource(doc);
             final var result = new StreamResult(outputFile);
 
-            transformer.transform(source, result);
+            ManipuladorXML.makeTransformer(docTypeSystem, omitXmlDecl)
+                    .transform(source, result);
 
             return true;
         } catch (final TransformerException ex) {
@@ -71,8 +68,8 @@ public class ManipuladorXML {
     private static Transformer makeTransformer(
             final String docTypeSystem, final Boolean omitXmlDecl)
             throws TransformerConfigurationException {
-        final var transformer =
-                TransformerFactory.newInstance().newTransformer();
+        final var transformer = TransformerFactory.newInstance()
+                .newTransformer();
 
         transformer.setOutputProperty(OutputKeys.ENCODING, "ISO-8859-1");
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
@@ -93,11 +90,11 @@ public class ManipuladorXML {
      *
      * @return novo documento xml iconico
      */
-    public static Document novoDocumento() {
+    public static Document newDocument() {
         try {
-            final var factory = DocumentBuilderFactory.newInstance();
-            final var builder = factory.newDocumentBuilder();
-            return builder.newDocument();
+            return DocumentBuilderFactory.newInstance()
+                    .newDocumentBuilder()
+                    .newDocument();
         } catch (final ParserConfigurationException ex) {
             Logger.getLogger(ManipuladorXML.class.getName())
                     .log(Level.SEVERE, null, ex);

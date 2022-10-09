@@ -36,16 +36,15 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * Realiza manupulações com o arquivo xml do modelo icônico
- *
- * @author denison
+ * Class responsible for manipulating xml files into iconic or simulable models,
+ * or vice-versa.
  */
 public class IconicoXML {
     private static final Element[] NO_CHILDREN = {};
     private static final Object[][] NO_ATTRS = {};
     private static final int DEFAULT_MODEL_TYPE = -1;
     private final Document doc =
-            Objects.requireNonNull(ManipuladorXML.novoDocumento());
+            Objects.requireNonNull(ManipuladorXML.newDocument());
     private final Element system = this.doc.createElement("system");
     private Element load = null; // TODO: Don't like this
 
@@ -76,24 +75,24 @@ public class IconicoXML {
     /**
      * Este método sobrescreve ou cria arquivo xml do modelo iconico
      *
-     * @param documento modelo iconico
-     * @param arquivo   local que será salvo
+     * @param doc        modelo iconico
+     * @param outputFile local que será salvo
      * @return indica se arquivo foi salvo corretamente
      */
-    public static boolean escrever(final Document documento,
-                                   final File arquivo) {
-        return ManipuladorXML.escrever(documento, arquivo, "iSPD.dtd", false);
+    public static boolean escrever(final Document doc,
+                                   final File outputFile) {
+        return ManipuladorXML.write(doc, outputFile, "iSPD.dtd", false);
     }
 
     /**
      * Realiza a leitura de um arquivo xml contendo o modelo iconico
      * especificado pelo iSPD.dtd
      *
-     * @param xmlFile endereço do arquivo xml
+     * @param file endereço do arquivo xml
      * @return modelo iconico obtido do arquivo
      */
-    public static Document ler(final File xmlFile) throws ParserConfigurationException, IOException, SAXException {
-        return ManipuladorXML.ler(xmlFile, "iSPD.dtd");
+    public static Document ler(final File file) throws ParserConfigurationException, IOException, SAXException {
+        return ManipuladorXML.read(file, "iSPD.dtd");
     }
 
     /**
@@ -124,7 +123,8 @@ public class IconicoXML {
     }
 
     /**
-     * Convert an iconic model into a queue network, usable in motor.
+     * Convert an iconic model into a queue network, usable in the simulation
+     * motor.
      *
      * @param model Object from xml with modeled computational grid
      * @return Simulable queue network, in accordance to given model
@@ -133,6 +133,13 @@ public class IconicoXML {
         return new QueueNetworkBuilder(new WrappedDocument(model)).build();
     }
 
+    /**
+     * Convert an iconic model into a cloud queue network, usable in the cloud
+     * simulation motor.
+     *
+     * @param model Object from xml with modeled computational grid
+     * @return Simulable cloud queue network, in accordance to given model
+     */
     public static RedeDeFilasCloud newRedeDeFilasCloud(final Document model) {
         return (RedeDeFilasCloud) new CloudQueueNetworkBuilder(
                 new WrappedDocument(model)).build();
@@ -141,11 +148,11 @@ public class IconicoXML {
     /**
      * Obtem a configuração da carga de trabalho contida em um modelo iconico
      *
-     * @param modelo contem conteudo recuperado de um arquivo xml
+     * @param doc contem conteudo recuperado de um arquivo xml
      * @return carga de trabalho contida no modelo
      */
-    public static GerarCarga newGerarCarga(final Document modelo) {
-        final var model = LoadBuilder.build(modelo);
+    public static GerarCarga newGerarCarga(final Document doc) {
+        final var model = LoadBuilder.build(new WrappedDocument(doc));
         if (model.isEmpty()) {
             return null;
         }

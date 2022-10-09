@@ -11,11 +11,8 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.function.Function;
 
-// TODO: Generalize attribute read/write (perhaps with proxy objects)
-// TODO: File name and path should be configurable as well
-
 /**
- * Responsible for maintaining the software's configuration file
+ * Responsible for reading and updating the software's configuration file
  */
 public class ConfiguracaoISPD {
     // TODO: ENUM; also, why byte?
@@ -43,7 +40,7 @@ public class ConfiguracaoISPD {
      */
     public ConfiguracaoISPD() {
         try {
-            final var doc = ManipuladorXML.ler(
+            final var doc = ManipuladorXML.read(
                     this.configurationFile,
                     "configurationFile.dtd"
             );
@@ -127,7 +124,7 @@ public class ConfiguracaoISPD {
      * Saves current configurations to the file
      */
     public void saveCurrentConfig() {
-        final var doc = Objects.requireNonNull(ManipuladorXML.novoDocumento());
+        final var doc = Objects.requireNonNull(ManipuladorXML.newDocument());
 
         final var ispd = this.saveGeneralConfig(doc);
         ispd.appendChild(this.saveChartConfig(doc));
@@ -135,7 +132,7 @@ public class ConfiguracaoISPD {
 
         doc.appendChild(ispd);
 
-        ManipuladorXML.escrever(doc,
+        ManipuladorXML.write(doc,
                 this.configurationFile,
                 "configurationFile.dtd",
                 false

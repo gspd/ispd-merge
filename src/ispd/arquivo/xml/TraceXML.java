@@ -14,7 +14,6 @@ import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Class responsible for converting traces into XML files.
@@ -245,20 +244,14 @@ public class TraceXML {
                     <format kind="%s" />
                     """.formatted(this.type));
 
-            record Result(String str, Long count) {
-            }
-
-            final var res = tasks.stream()
+            final var descriptions = tasks.stream()
                     .filter(Predicate.not(Tarefa::isCopy))
                     .map(TraceXML::makeTaskDescription)
-                    .collect(Collectors.teeing(
-                            Collectors.joining(""),
-                            Collectors.counting(),
-                            Result::new
-                    ));
+                    .toList();
 
-            sb.append(res.str());
-            this.taskCount = res.count().intValue();
+            descriptions.forEach(sb::append);
+
+            this.taskCount = descriptions.size();
 
             sb.append("""
                     </trace>
@@ -273,8 +266,9 @@ public class TraceXML {
     }
 
     private static String makeTaskDescription(final Tarefa t) {
-        return ("<task id=\"%d\" arr=\"%s\" sts=\"1\" cpsz =\"%s\" " +
-                "cmsz=\"%s\" usr=\"%s\" />\n").formatted(
+        return """
+                <task id="%d" arr="%s" sts="1" cpsz ="%s" cmsz="%s" usr="%s" />
+                """.formatted(
                 t.getIdentificador(),
                 t.getTimeCriacao(),
                 t.getTamProcessamento(),

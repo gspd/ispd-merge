@@ -7,15 +7,29 @@ import ispd.motor.carga.CargaList;
 import ispd.motor.carga.CargaRandom;
 import ispd.motor.carga.CargaTrace;
 import ispd.motor.carga.GerarCarga;
-import org.w3c.dom.Document;
 
 import java.io.File;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
+/**
+ * Converts XML docs with simulation load information into objects usable in
+ * the simulation motor.
+ */
 public class LoadBuilder {
-    public static Optional<? extends GerarCarga> build(final Document doc) {
-        final var load =
-                new WrappedDocument(doc).loads().findFirst();
+
+    /**
+     * Attempts to convert xml document given as param to a simulation load.
+     *
+     * @param doc {@link WrappedDocument}, possibly with load information
+     * @return {@link Optional} containing parsed load, if there was a valid
+     * one in the document. Otherwise, an empty Optional.
+     * @see ispd.arquivo.xml.IconicoXML
+     * @see GerarCarga
+     */
+    public static Optional<? extends GerarCarga> build(final WrappedDocument doc) {
+        final var load = doc.loads().findFirst();
 
         if (load.isEmpty()) {
             return Optional.empty();
@@ -37,25 +51,17 @@ public class LoadBuilder {
             return nodeLoad;
         }
 
-        final var traceLoad = c.traceLoads()
+        return c.traceLoads()
                 .findFirst()
                 .map(LoadBuilder::traceLoadFromElement);
-
-        return traceLoad;
     }
 
     private static CargaRandom randomLoadFromElement(final WrappedElement e) {
-        final var computation = e.sizes()
-                .filter(WrappedElement::isComputingType)
-                .findFirst()
-                .map(SizeInfo::fromElement)
-                .orElseGet(SizeInfo::new);
+        final var computation = LoadBuilder.getSizeInfoFromElement(
+                e, WrappedElement::isComputingType, SizeInfo::from);
 
-        final var communication = e.sizes()
-                .filter(WrappedElement::isCommunicationType)
-                .findFirst()
-                .map(SizeInfo::fromElement)
-                .orElseGet(SizeInfo::new);
+        final var communication = LoadBuilder.getSizeInfoFromElement(
+                e, WrappedElement::isCommunicationType, SizeInfo::from);
 
         return new CargaRandom(
                 e.tasks(),
@@ -89,18 +95,23 @@ public class LoadBuilder {
         return null;
     }
 
-    private static CargaForNode nodeLoadFromElement(final WrappedElement e) {
-        final var computation = e.sizes()
-                .filter(WrappedElement::isComputingType)
+    private static SizeInfo getSizeInfoFromElement(
+            final WrappedElement element,
+            final Predicate<? super WrappedElement> predicate,
+            final Function<? super WrappedElement, SizeInfo> builder) {
+        return element.sizes()
+                .filter(predicate)
                 .findFirst()
-                .map(SizeInfo::rangeFromElement)
+                .map(builder)
                 .orElseGet(SizeInfo::new);
+    }
 
-        final var communication = e.sizes()
-                .filter(WrappedElement::isCommunicationType)
-                .findFirst()
-                .map(SizeInfo::rangeFromElement)
-                .orElseGet(SizeInfo::new);
+    private static CargaForNode nodeLoadFromElement(final WrappedElement e) {
+        final var computation = LoadBuilder.getSizeInfoFromElement(
+                e, WrappedElement::isComputingType, SizeInfo::rangeFrom);
+
+        final var communication = LoadBuilder.getSizeInfoFromElement(
+                e, WrappedElement::isCommunicationType, SizeInfo::rangeFrom);
 
         return new CargaForNode(e.application(),
                 e.owner(), e.masterId(), e.tasks(),
@@ -116,14 +127,14 @@ public class LoadBuilder {
             this(0, 0, 0, 0);
         }
 
-        private static SizeInfo fromElement(final WrappedElement e) {
+        private static SizeInfo from(final WrappedElement e) {
             return new SizeInfo(
                     e.minimum(), e.maximum(),
                     e.average(), e.probability()
             );
         }
 
-        private static SizeInfo rangeFromElement(final WrappedElement e) {
+        private static SizeInfo rangeFrom(final WrappedElement e) {
             return new SizeInfo(e.minimum(), e.maximum(), 0, 0);
         }
     }
