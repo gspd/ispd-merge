@@ -1,14 +1,26 @@
 package ispd.arquivo.xml.utils;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
+import java.util.Objects;
 import java.util.stream.Stream;
 
 public class WrappedDocument {
-    private final Document document;
+    public final Document document; // TODO: Encapsulate field
 
-    public WrappedDocument(final Document document) {
-        this.document = document;
+    public WrappedDocument(final Document doc) {
+        Objects.requireNonNull(doc);
+        this.document = doc;
+    }
+
+    public Element createElement(final String name) {
+        return this.document.createElement(name);
+    }
+
+    public void appendChild(final Node e) {
+        this.document.appendChild(e);
     }
 
     public boolean hasNoOwners() {

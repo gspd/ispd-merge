@@ -32,7 +32,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -43,8 +42,8 @@ public class IconicoXML {
     private static final Element[] NO_CHILDREN = {};
     private static final Object[][] NO_ATTRS = {};
     private static final int DEFAULT_MODEL_TYPE = -1;
-    private final Document doc =
-            Objects.requireNonNull(ManipuladorXML.newDocument());
+    private final WrappedDocument doc =
+            new WrappedDocument(ManipuladorXML.newDocument());
     private final Element system = this.doc.createElement("system");
     private Element load = null; // TODO: Don't like this
 
@@ -638,7 +637,7 @@ public class IconicoXML {
     }
 
     public Document getDescricao() {
-        return this.doc;
+        return this.doc.document;
     }
 
     private static class CloningEntityResolver implements EntityResolver {
