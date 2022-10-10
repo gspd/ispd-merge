@@ -8,6 +8,7 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -15,7 +16,20 @@ import java.util.function.Function;
  * Responsible for reading and updating the software's configuration file
  */
 public class ConfiguracaoISPD {
-    // TODO: ENUM; also, why byte?
+    private enum SimulationType{
+        Default((byte) 0, "default"),
+        Optimistic((byte) 1, "optimistic"),
+        Graphical((byte) 2, "graphical");
+
+        private final String xmlName;
+        private final byte asInt;
+
+        SimulationType(final byte i, final String xmlName) {
+            this.asInt = i;
+            this.xmlName = xmlName;
+        }
+    }
+
     public static final byte DEFAULT = 0;
     public static final byte OPTIMISTIC = 1;
     public static final byte GRAPHICAL = 2;
@@ -24,7 +38,8 @@ public class ConfiguracaoISPD {
             Carregar.DIRETORIO_ISPD,
             ConfiguracaoISPD.FILENAME
     );
-    private byte simulationMode = ConfiguracaoISPD.DEFAULT;
+
+    private SimulationType simulationType = SimulationType.Default;
     private Integer threadCount = 1;
     private Integer simulationCount = 1;
     private Boolean shouldChartProc = true;
@@ -62,11 +77,12 @@ public class ConfiguracaoISPD {
     }
 
     private void readGeneralConfig(final Element ispd) {
-        this.simulationMode = switch (ispd.getAttribute("simulation_mode")) {
-            case "default" -> ConfiguracaoISPD.DEFAULT;
-            case "optimistic" -> ConfiguracaoISPD.OPTIMISTIC;
-            default -> ConfiguracaoISPD.GRAPHICAL;
-        };
+        final var mode = ispd.getAttribute("simulation_mode");
+
+        this.simulationType = Arrays.stream(SimulationType.values()).
+                filter(t -> mode.equals(t.xmlName))
+                .findFirst()
+                .orElse(SimulationType.Graphical);
 
         this.threadCount = ConfiguracaoISPD.parseAttr(
                 ispd, "number_threads", Integer::valueOf);
@@ -113,11 +129,14 @@ public class ConfiguracaoISPD {
      * {@literal 2}: <b>Graphical</b>
      */
     public int getSimulationMode() {
-        return this.simulationMode;
+        return this.simulationType.asInt;
     }
 
     public void setSimulationMode(final byte simulationMode) {
-        this.simulationMode = simulationMode;
+        this.simulationType = Arrays.stream(SimulationType.values())
+                .filter(t -> t.asInt == simulationMode)
+                .findFirst()
+                .orElseThrow();
     }
 
     /**
@@ -142,12 +161,7 @@ public class ConfiguracaoISPD {
     private Element saveGeneralConfig(final Document doc) {
         final var ispd = doc.createElement("ispd");
 
-        ispd.setAttribute("simulation_mode", switch (this.simulationMode) {
-            case ConfiguracaoISPD.DEFAULT -> "default";
-            case ConfiguracaoISPD.OPTIMISTIC -> "optimistic";
-            case ConfiguracaoISPD.GRAPHICAL -> "graphical";
-            default -> throw new RuntimeException("Invalid Simulation Mode");
-        });
+        ispd.setAttribute("simulation_mode", this.simulationType.xmlName);
 
         ispd.setAttribute(
                 "number_simulations", this.simulationCount.toString());
