@@ -7,6 +7,10 @@ import org.w3c.dom.Node;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+/**
+ * Utility class to add convenience methods to manipulate XML Document objects.
+ * It functions as a wrapper, outsourcing method calls to the inner object.
+ */
 public class WrappedDocument {
     public final Document document; // TODO: Encapsulate field
 
@@ -85,5 +89,11 @@ public class WrappedDocument {
 
     public Stream<WrappedElement> loads() {
         return this.elementsWithTag("load");
+    }
+
+    public WrappedElement ispd() {
+        return this.elementsWithTag("ispd")
+                .findFirst()
+                .orElse(null); // TODO: Throw an ex?
     }
 }

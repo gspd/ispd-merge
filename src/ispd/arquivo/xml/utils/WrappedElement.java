@@ -8,8 +8,8 @@ import java.util.stream.Stream;
 
 
 /**
- * This is a class to add convenience methods to manipulate XML Element objects.
- * It functions as a wrapper, outsourcing most method calls to the inner object.
+ * Utility class to add convenience methods to manipulate XML Element objects.
+ * It functions as a wrapper, outsourcing method calls to the inner object.
  */
 public class WrappedElement {
     private final Element element;
@@ -87,7 +87,7 @@ public class WrappedElement {
         return this.getDouble("bandwidth");
     }
 
-    public double getDouble(final String attributeName) {
+    private double getDouble(final String attributeName) {
         return Double.parseDouble(this.getAttribute(attributeName));
     }
 
@@ -149,7 +149,7 @@ public class WrappedElement {
     }
 
     public boolean isMaster() {
-        return Boolean.parseBoolean(this.getAttribute("master"));
+        return this.getBoolean("master");
     }
 
     public double load() {
@@ -290,5 +290,53 @@ public class WrappedElement {
 
     public Stream<WrappedElement> traceLoads() {
         return this.elementsWithTag("trace");
+    }
+
+    public String simulationMode() {
+        return this.getAttribute("simulation_mode");
+    }
+
+    public int numberOfThreads() {
+        return this.getInt("number_threads");
+    }
+
+    public int numberOfSimulations() {
+        return this.getInt("number_simulations");
+    }
+
+    public WrappedElement chartCreate() {
+        return this.firstTagElement("chart_create");
+    }
+
+    private boolean getBoolean(final String attr) {
+        return Boolean.parseBoolean(this.getAttribute(attr));
+    }
+
+    public boolean shouldChartProcessing() {
+        return this.getBoolean("processing");
+    }
+
+    public boolean shouldChartCommunication() {
+        return this.getBoolean("communication");
+    }
+
+    public boolean shouldChartUserTime() {
+        return this.getBoolean("user_time");
+    }
+
+    public boolean shouldChartMachineTime() {
+        return this.getBoolean("machine_time");
+    }
+
+    public boolean shouldChartTaskTime() {
+        return this.getBoolean("task_time");
+    }
+
+    public WrappedElement modelOpen() {
+        return this.firstTagElement("model_open");
+    }
+
+    public String lastFile () {
+        return this.getAttribute("last_file");
     }
 }

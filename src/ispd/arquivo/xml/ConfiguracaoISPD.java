@@ -1,5 +1,7 @@
 package ispd.arquivo.xml;
 
+import ispd.arquivo.xml.utils.WrappedDocument;
+import ispd.arquivo.xml.utils.WrappedElement;
 import ispd.escalonador.Carregar;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -10,26 +12,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.function.Function;
 
 /**
  * Responsible for reading and updating the software's configuration file
  */
 public class ConfiguracaoISPD {
-    private enum SimulationType{
-        Default((byte) 0, "default"),
-        Optimistic((byte) 1, "optimistic"),
-        Graphical((byte) 2, "graphical");
-
-        private final String xmlName;
-        private final byte asInt;
-
-        SimulationType(final byte i, final String xmlName) {
-            this.asInt = i;
-            this.xmlName = xmlName;
-        }
-    }
-
     public static final byte DEFAULT = 0;
     public static final byte OPTIMISTIC = 1;
     public static final byte GRAPHICAL = 2;
@@ -38,7 +25,6 @@ public class ConfiguracaoISPD {
             Carregar.DIRETORIO_ISPD,
             ConfiguracaoISPD.FILENAME
     );
-
     private SimulationType simulationType = SimulationType.Default;
     private Integer threadCount = 1;
     private Integer simulationCount = 1;
@@ -48,17 +34,16 @@ public class ConfiguracaoISPD {
     private Boolean shouldChartMachineTime = false;
     private Boolean shouldChartTaskTime = false;
     private File lastModelOpen = Carregar.DIRETORIO_ISPD;
-
     /**
      * If the configuration file exists, reads configuration from it.
      * Otherwise, 'default' values are used
      */
     public ConfiguracaoISPD() {
         try {
-            final var doc = ManipuladorXML.read(
+            final var doc = new WrappedDocument(ManipuladorXML.read(
                     this.configurationFile,
                     "configurationFile.dtd"
-            );
+            ));
 
             this.readConfigFromDoc(doc);
         } catch (final IOException |
@@ -67,59 +52,42 @@ public class ConfiguracaoISPD {
         }
     }
 
-    private void readConfigFromDoc(final Document doc) {
-        final var ispd =
-                (Element) doc.getElementsByTagName("ispd").item(0);
+    private void readConfigFromDoc(final WrappedDocument doc) {
 
-        this.readGeneralConfig(ispd);
-        this.readChartCreationConfig(ispd);
-        this.readLastOpenModelConfig(ispd);
+        final var e = doc.ispd();
+
+        this.readGeneralConfig(e);
+        this.readChartCreationConfig(e);
+        this.readLastOpenModelConfig(e);
     }
 
-    private void readGeneralConfig(final Element ispd) {
-        final var mode = ispd.getAttribute("simulation_mode");
+    private void readGeneralConfig(final WrappedElement e) {
+        final var mode = e.simulationMode();
 
         this.simulationType = Arrays.stream(SimulationType.values()).
                 filter(t -> mode.equals(t.xmlName))
                 .findFirst()
                 .orElse(SimulationType.Graphical);
 
-        this.threadCount = ConfiguracaoISPD.parseAttr(
-                ispd, "number_threads", Integer::valueOf);
-        this.simulationCount = ConfiguracaoISPD.parseAttr(
-                ispd, "number_simulations", Integer::valueOf);
+        this.threadCount = e.numberOfThreads();
+        this.simulationCount = e.numberOfSimulations();
     }
 
-    private void readChartCreationConfig(final Element ispd) {
-        final var chart =
-                (Element) ispd.getElementsByTagName("chart_create").item(0);
+    private void readChartCreationConfig(final WrappedElement e) {
+        final var c = e.chartCreate();
 
-        this.shouldChartProc = ConfiguracaoISPD.parseAttr(
-                chart, "processing", Boolean::valueOf);
-        this.shouldChartComms = ConfiguracaoISPD.parseAttr(
-                chart, "communication", Boolean::valueOf);
-        this.shouldChartUserTime = ConfiguracaoISPD.parseAttr(
-                chart, "user_time", Boolean::valueOf);
-        this.shouldChartMachineTime = ConfiguracaoISPD.parseAttr(
-                chart, "machine_time", Boolean::valueOf);
-        this.shouldChartTaskTime = ConfiguracaoISPD.parseAttr(
-                chart, "task_time", Boolean::valueOf);
+        this.shouldChartProc = c.shouldChartProcessing();
+        this.shouldChartComms = c.shouldChartCommunication();
+        this.shouldChartUserTime = c.shouldChartUserTime();
+        this.shouldChartMachineTime = c.shouldChartMachineTime();
+        this.shouldChartTaskTime = c.shouldChartTaskTime();
     }
 
-    private void readLastOpenModelConfig(final Element ispd) {
-        final var files =
-                (Element) ispd.getElementsByTagName("model_open").item(0);
-
-        final var lastFile = files.getAttribute("last_file");
+    private void readLastOpenModelConfig(final WrappedElement e) {
+        final var lastFile = e.modelOpen().lastFile();
         if (!lastFile.isEmpty()) {
             this.lastModelOpen = new File(lastFile);
         }
-    }
-
-    private static <T> T parseAttr(final Element elem,
-                                   final String attr,
-                                   final Function<? super String, T> cast) {
-        return cast.apply(elem.getAttribute(attr));
     }
 
     /**
@@ -258,5 +226,19 @@ public class ConfiguracaoISPD {
         }
 
         this.lastModelOpen = lastDir;
+    }
+
+    private enum SimulationType {
+        Default((byte) 0, "default"),
+        Optimistic((byte) 1, "optimistic"),
+        Graphical((byte) 2, "graphical");
+
+        private final String xmlName;
+        private final byte asInt;
+
+        SimulationType(final byte i, final String xmlName) {
+            this.asInt = i;
+            this.xmlName = xmlName;
+        }
     }
 }
