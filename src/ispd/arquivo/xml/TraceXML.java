@@ -48,19 +48,31 @@ public class TraceXML {
         };
     }
 
+    /**
+     * @return output path of convertions
+     */
     public String getSaida() {
         return this.output;
     }
 
+    /**
+     * @return type of last conversion
+     */
     public String getTipo() {
         return this.type;
     }
 
+    /**
+     * @return number of tasks parsed in last conversion
+     */
     public int getNum_Tasks() {
         return this.taskCount;
     }
 
 
+    /**
+     * Convert task file into simulation trace
+     */
     public void convert() {
         try (final var in = new BufferedReader(
                 new FileReader(this.path, StandardCharsets.UTF_8));
@@ -75,7 +87,6 @@ public class TraceXML {
                     <format kind="%s" />%s
                     </trace>
                     </system>""".formatted(this.type, this.joinTasksTags(in)));
-
 
         } catch (final IOException ignored) {
         }
@@ -172,16 +183,19 @@ public class TraceXML {
                         fields[10], fields[3], fields[20], fields[11]);
     }
 
+    /**
+     * @return debug info from last conversion (if successful)
+     */
     @Override
     public String toString() {
         this.output = TraceXML.splitAtLast(
                 this.output, TraceXML.FILE_PATH_DELIMITER)[1];
 
-        return ("""
+        return """
                 File %s was generated sucessfully:
                     - Generated from the format: %s
-                    - File has a workload of %d tasks""".formatted(
-                this.output, this.type, this.taskCount));
+                    - File has a workload of %d tasks"""
+                .formatted(this.output, this.type, this.taskCount);
     }
 
     /**
@@ -231,6 +245,10 @@ public class TraceXML {
         return "File has no correct format";
     }
 
+    /**
+     * Output simulation trace from collection of tasks
+     * @see ispd.arquivo.interpretador.cargas.Interpretador
+     */
     public void geraTraceSim(final Collection<? extends Tarefa> tasks) {
         try (final var out = new BufferedWriter(
                 new FileWriter(this.path, StandardCharsets.UTF_8))) {

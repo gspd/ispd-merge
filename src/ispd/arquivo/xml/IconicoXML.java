@@ -72,31 +72,34 @@ public class IconicoXML {
     }
 
     /**
-     * Este método sobrescreve ou cria arquivo xml do modelo iconico
+     * Write iconic model in {@link Document} to path
      *
-     * @param doc        modelo iconico
-     * @param outputFile local que será salvo
-     * @return indica se arquivo foi salvo corretamente
+     * @param doc  {@link Document} containing an iconic model
+     * @param path path in which to save the file
+     * @return {@code true} if the file was saved successfully, {@code false}
+     * otherwise
      */
-    public static boolean escrever(final Document doc,
-                                   final File outputFile) {
-        return ManipuladorXML.write(doc, outputFile, "iSPD.dtd", false);
+    public static boolean escrever(final Document doc, final File path) {
+        return ManipuladorXML.write(doc, path, "iSPD.dtd", false);
     }
 
     /**
-     * Realiza a leitura de um arquivo xml contendo o modelo iconico
-     * especificado pelo iSPD.dtd
+     * Reads xml file in path and parses it into a {@link Document}
+     * containing an iconic model
      *
-     * @param file endereço do arquivo xml
-     * @return modelo iconico obtido do arquivo
+     * @param path path to xml file with an iconic model
+     * @return {@link Document} with the iconic model in the file
      */
-    public static Document ler(final File file) throws ParserConfigurationException, IOException, SAXException {
-        return ManipuladorXML.read(file, "iSPD.dtd");
+    public static Document ler(final File path) throws ParserConfigurationException, IOException, SAXException {
+        return ManipuladorXML.read(path, "iSPD.dtd");
     }
 
     /**
-     * Verifica se modelo está completo
+     * Checks the integrity of the model in the {@link Document}.
+     * Performs very simple checks such as if the model has at least one user
+     * and machine.
      *
+     * @param doc {@link Document} containing iconic model
      * @throws IllegalArgumentException if the model is incomplete
      */
     public static void validarModelo(final Document doc) {
@@ -145,10 +148,15 @@ public class IconicoXML {
     }
 
     /**
-     * Obtem a configuração da carga de trabalho contida em um modelo iconico
+     * Get load configuration containing in the iconic model present in the
+     * {@link Document}
      *
-     * @param doc contem conteudo recuperado de um arquivo xml
-     * @return carga de trabalho contida no modelo
+     * @return {@link GerarCarga} with load configuration from the model, if
+     * a valid one is present, {@code null} otherwise
+     * @see LoadBuilder
+     * @see ispd.motor.carga.CargaTrace
+     * @see ispd.motor.carga.CargaList
+     * @see ispd.motor.carga.CargaRandom
      */
     public static GerarCarga newGerarCarga(final Document doc) {
         final var model = LoadBuilder.build(new WrappedDocument(doc));
@@ -158,6 +166,13 @@ public class IconicoXML {
         return model.get();
     }
 
+    /**
+     * Add iconic model vertices and edges to the collections passed as
+     * arguments. <b>The collections are modified.</b>
+     *
+     * @param doc {@link Document} containing the iconic model
+     * @see IconicModelBuilder
+     */
     public static void newGrade(
             final Document doc,
             final Collection<? super Vertex> vertices,
@@ -168,24 +183,55 @@ public class IconicoXML {
         edges.addAll(model.edges());
     }
 
+    /**
+     * @return set with all user ids from the iconic model
+     */
     public static HashSet<String> newSetUsers(final Document doc) {
         return new WrappedDocument(doc).owners()
                 .map(WrappedElement::id)
                 .collect(Collectors.toCollection(HashSet::new));
     }
 
+    /**
+     * @return list with all user ids from the iconic model
+     */
     public static List<String> newListUsers(final Document doc) {
         return new WrappedDocument(doc).owners()
                 .map(WrappedElement::id)
                 .toList();
     }
 
+    /**
+     * @return set with all virtual machines from the (cloud) iconic model
+     */
     public static HashSet<VirtualMachine> newListVirtualMachines(final Document doc) {
         return new WrappedDocument(doc).virtualMachines()
                 .map(ServiceCenterBuilder::aVirtualMachineWithVmm)
                 .collect(Collectors.toCollection(HashSet::new));
     }
 
+    /**
+     * @return map with all user power limits, indexed by id
+     */
+    public static HashMap<String, Double> newListPerfil(final Document doc) {
+        return new WrappedDocument(doc).owners()
+                .collect(Collectors.toMap(
+                        WrappedElement::id,
+                        WrappedElement::powerLimit,
+                        (prev, next) -> next,
+                        HashMap::new
+                ));
+    }
+
+    /**
+     * Parse xml file multiple times, producing copies of the resulting
+     * {@link Document}
+     *
+     * @param file   file to be parsed
+     * @param number number of copies to be produced
+     * @return array of length {@code number} of identical {@link Document}s
+     * @throws SAXException if the file is ill-formed
+     */
     public static Document[] clone(final File file, final int number)
             throws ParserConfigurationException, IOException, SAXException {
 
@@ -194,7 +240,6 @@ public class IconicoXML {
         final var docs = new Document[number];
 
         for (int i = 0; i < number; i++) {
-            // TODO: can EntityResolver be set outside loop?
             builder.setEntityResolver(new CloningEntityResolver());
             docs[i] = builder.parse(file);
         }
@@ -207,16 +252,6 @@ public class IconicoXML {
         factory.setNamespaceAware(true);
         factory.setValidating(true);
         return factory.newDocumentBuilder();
-    }
-
-    public static HashMap<String, Double> newListPerfil(final Document doc) {
-        return new WrappedDocument(doc).owners()
-                .collect(Collectors.toMap(
-                        WrappedElement::id,
-                        WrappedElement::powerLimit,
-                        (prev, next) -> next,
-                        HashMap::new
-                ));
     }
 
     public void addUsers(final Collection<String> users,

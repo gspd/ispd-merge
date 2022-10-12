@@ -20,7 +20,22 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Responsible for low-level xml file parsing, writing and creation calls
+ *
+ * @see IconicoXML
+ * @see ConfiguracaoISPD
+ */
 public class ManipuladorXML {
+    /**
+     * Read a xml file using the dtd pointed to by the path
+     *
+     * @param file    file to be read
+     * @param dtdPath path to dtd file with the xml specification to be used
+     * @return {@link Document} with the structured file information
+     * @throws ParserConfigurationException if the dtd is ill-formed
+     * @throws SAXException                 if the file is ill-formed
+     */
     public static Document read(final File file, final String dtdPath)
             throws ParserConfigurationException, IOException, SAXException {
 
@@ -44,7 +59,14 @@ public class ManipuladorXML {
     }
 
     /**
-     * Este método sobrescreve ou cria arquivo xml
+     * Write xml {@link Document} to file in {@code outputFile}
+     *
+     * @param doc           document to be written
+     * @param outputFile    path in which to write resulting file
+     * @param docTypeSystem type system to be used
+     * @param omitXmlDecl   whether to omit the xml declarations or not
+     * @return {@code true} if the file was saved successfully, {@code false}
+     * otherwise
      */
     public static boolean write(
             final Document doc, final File outputFile,
@@ -86,9 +108,9 @@ public class ManipuladorXML {
     }
 
     /**
-     * Cria novo documento
+     * Create empty xml {@link Document} in which elements can be inserted
      *
-     * @return novo documento xml iconico
+     * @return new, empty xml {@link Document}
      */
     public static Document newDocument() {
         try {

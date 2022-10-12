@@ -10,6 +10,10 @@ import java.util.Collection;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+/**
+ * Responsible for outputting a simulation trace to a file path, from a
+ * collection of tasks
+ */
 public class Interpretador {
     private static final char FILE_TYPE_SEPARATOR = '.';
     private final String path;
@@ -21,6 +25,9 @@ public class Interpretador {
         this.type = path.substring(i + 1).toUpperCase();
     }
 
+    /**
+     * Output simulation trace from collection of tasks
+     */
     public void geraTraceSim(final Collection<? extends Tarefa> tasks) {
         this.type = "iSPD";
 
