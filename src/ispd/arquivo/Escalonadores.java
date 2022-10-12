@@ -231,7 +231,6 @@ public class Escalonadores implements ManipularArquivos {
         final var target = new File(Escalonadores.DIRECTORY, nome + ".java");
         final var err = Escalonadores.compile(target);
 
-        // TODO: What?
         try {
             Thread.sleep(1000);
         } catch (final InterruptedException ex) {
@@ -260,15 +259,11 @@ public class Escalonadores implements ManipularArquivos {
             } catch (final IOException ex) {
                 Logger.getLogger(Escalonadores.class.getName())
                         .log(Level.SEVERE, null, ex);
-                // TODO: More useful error messages
                 return "Não foi possível compilar";
             }
         }
     }
 
-    /**
-     * recebe nome do escalonar e adiciona ele na lista de escalonadores
-     */
     private void addPolicy(final String policyName) {
         if (this.policies.contains(policyName)) {
             return;
@@ -281,7 +276,6 @@ public class Escalonadores implements ManipularArquivos {
     private static String compileManually(final File target) throws IOException {
         final var proc = Runtime.getRuntime().exec("javac " + target.getPath());
 
-        // TODO: Extract commonalities with method ler()
         try (final var err = new BufferedReader(new InputStreamReader(
                 proc.getErrorStream(), StandardCharsets.UTF_8))
         ) {

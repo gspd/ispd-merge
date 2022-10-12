@@ -116,7 +116,6 @@ public class EscalonadoresCloud implements ManipularArquivosCloud {
             EscalonadoresCloud.createDirectory(file.getParentFile());
         }
 
-        // TODO: Discuss possibility of Files.copy()
         try (final var is = zip.getInputStream(entry);
              final var os = new FileOutputStream(file)) {
             is.transferTo(os);
@@ -194,9 +193,8 @@ public class EscalonadoresCloud implements ManipularArquivosCloud {
                                                                   ".java");
         final var err = EscalonadoresCloud.compile(target);
 
-        // TODO: What?
         try {
-            Thread.sleep(1000);
+            Thread.sleep(1000); // TODO: Find alternative
         } catch (final InterruptedException ex) {
             Logger.getLogger(EscalonadoresCloud.class.getName())
                     .log(Level.SEVERE, null, ex);
@@ -223,7 +221,6 @@ public class EscalonadoresCloud implements ManipularArquivosCloud {
             } catch (final IOException ex) {
                 Logger.getLogger(EscalonadoresCloud.class.getName())
                         .log(Level.SEVERE, null, ex);
-                // TODO: More useful error messages
                 return "Não foi possível compilar";
             }
         }

@@ -49,7 +49,6 @@ public class Alocadores implements ManipularArquivosAlloc {
             this.findDotClassAllocators();
         } else {
 
-            /// TODO: Find better way to do this
             try {
                 Alocadores.createDirectory(Alocadores.DIRECTORY);
             } catch (final IOException e) {
@@ -233,7 +232,6 @@ public class Alocadores implements ManipularArquivosAlloc {
         final var target = new File(Alocadores.DIRECTORY, nome + ".java");
         final var err = Alocadores.compile(target);
 
-        // TODO: What?
         try {
             Thread.sleep(1000);
         } catch (final InterruptedException ex) {
@@ -363,8 +361,6 @@ public class Alocadores implements ManipularArquivosAlloc {
      */
     @Override
     public boolean importarAlocadoresJava(final File arquivo) {
-        // TODO: Merge this and method compilar() into one
-
         final var target = new File(Alocadores.DIRECTORY, arquivo.getName());
         Alocadores.copyFile(target, arquivo);
 
