@@ -10,21 +10,20 @@ import java.io.PrintWriter;
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 /**
  * Utility class to convert an iSPD file to GridSim java file.
  * Construct it and call method {@link #export()}.
  */
-class GridSimExporter {
-    private final HashMap<Integer, String> resources = new HashMap<>(0);
+/* package-private */ class GridSimExporter {
+    private final Map<Integer, String> resources = new HashMap<>(0);
 
     private final NodeList machines;
     private final NodeList clusters;
-    private final NodeList internet;
     private final NodeList loads;
 
     private final PrintWriter out;
@@ -40,7 +39,6 @@ class GridSimExporter {
 
         this.machines = model.getElementsByTagName("machine");
         this.clusters = model.getElementsByTagName("cluster");
-        this.internet = model.getElementsByTagName("internet");
         this.loads = model.getElementsByTagName("load");
 
         this.printHeader();
@@ -126,24 +124,23 @@ class GridSimExporter {
 
     private void printMain() {
         this.out.print(MessageFormat.format("""
-                                        
-                        class Modelo'{'
+                                
+                class Modelo'{'
 
-                          	public static void main(String[] args) '{'
+                  	public static void main(String[] args) '{'
 
-                        		try '{'
-                        			Calendar calendar = Calendar.getInstance();
-                        			 boolean trace_flag = true;
-                        			String[] exclude_from_file = '{'""'}';
-                        			 String[] exclude_from_processing = '{'""'}';
-                        			GridSim.init({0},calendar, true, exclude_from_file,exclude_from_processing, null);
+                		try '{'
+                			Calendar calendar = Calendar.getInstance();
+                			 boolean trace_flag = true;
+                			String[] exclude_from_file = '{'""'}';
+                			 String[] exclude_from_processing = '{'""'}';
+                			GridSim.init({0},calendar, true, exclude_from_file,exclude_from_processing, null);
 
-                        			FIFOScheduler resSched = new FIFOScheduler( " GridResSched ");
-                                    double baud_rate = 100.0;
-                                    double delay =0.1;
-                                    int MTU = 100;""",
-
-                this.userCount));
+                			FIFOScheduler resSched = new FIFOScheduler( " GridResSched ");
+                            double baud_rate = 100.0;
+                            double delay =0.1;
+                            int MTU = 100;""", this.userCount
+        ));
 
         this.printResources();
 
@@ -156,7 +153,7 @@ class GridSimExporter {
                             ResourceUserList userList = createGridUser();
                 """);
 
-        this.printInternet();
+        this.doc.internets().forEach(this::processNet);
         this.printNonMasterConnection();
 
         this.out.print("""
@@ -211,23 +208,17 @@ class GridSimExporter {
                 """);
 
         for (int i = 0; i < this.machines.getLength(); i++)
-            this.printMaster((Element) this.machines.item(i), i);
+            this.processMaster(i, new WrappedElement((Element) this.machines.item(i)));
     }
 
-    private void printInternet() {
-        GridSimExporter.asStream(this.internet)
-                .forEach(net -> {
-                    final var id = net.getAttribute("id");
+    private void processNet(final WrappedElement e) {
+        final var id = e.id();
 
-                    this.resources.put(
-                            GridSimExporter.globalId(net),
-                            id
-                    );
+        this.resources.put(e.globalIconId(), id);
 
-                    this.out.print("""
-                            Router r_%s = new RIPRouter(%s, trace_flag);
-                            """.formatted(id, id));
-                });
+        this.out.print("""
+                Router r_%s = new RIPRouter(%s, trace_flag);
+                """.formatted(id, id));
     }
 
     private void printNonMasterConnection() {
@@ -238,43 +229,30 @@ class GridSimExporter {
 
         final var ls = this.doc.links().toList();
 
-        for (int i = 0; i < ls.size(); ++i)
-        {
+        for (int i = 0; i < ls.size(); ++i) {
             this.printLink(ls.get(i), i);
         }
-    }
-
-    private void printLink(final WrappedElement e, final int id) {
-        this.out.print(String.format("""
-                            
-                                    Link %s = new SimpleLink("link_%d", %s*1000, %s*1000,1500  );
-                        """,
-                e.id(),
-                id,
-                e.bandwidth(),
-                e.latency()
-        ));
     }
 
     private void printMachines() {
         for (int i = 0; i < this.machines.getLength(); i++) {
             final var machine = (Element) this.machines.item(i);
-            if (machine.getElementsByTagName("master").getLength() == 0)
-                this.printResource(machine, i, 1);
+            final var e = new WrappedElement(machine);
+            if (!e.hasMasterAttribute()) {
+                this.printResource(i, 1, e);
+            }
         }
     }
 
     private void printClusters() {
         for (int j = 0, i = this.machines.getLength(); i < this.machines.getLength() + this.clusters.getLength(); i++, j++) {
             final var cluster = (Element) this.clusters.item(j);
-            final int nodes = Integer.parseInt(cluster.getAttribute("nodes"));
-            this.printResource(cluster, i, nodes);
+            final var e = new WrappedElement(cluster);
+            this.printResource(i, e.nodes(), e);
         }
     }
 
-    private void printMaster(final Element machine, final int id) {
-        final var e = new WrappedElement(machine);
-
+    private void processMaster(final int id, final WrappedElement e) {
         if (!e.hasMasterAttribute())
             return;
 
@@ -314,18 +292,20 @@ class GridSimExporter {
                         """).formatted(e.id(), this.resources.get(i))));
     }
 
-    private static Stream<Element> asStream(final NodeList list) {
-        return IntStream.range(0, list.getLength()).mapToObj(list::item).map(Element.class::cast);
+    private void printLink(final WrappedElement e, final int id) {
+        this.out.print(String.format("""
+                            
+                                    Link %s = new SimpleLink("link_%d", %s*1000, %s*1000,1500  );
+                        """,
+                e.id(),
+                id,
+                e.bandwidth(),
+                e.latency()
+        ));
     }
 
-    private static int globalId(final Element machine) {
-        return new WrappedElement(machine).globalIconId();
-    }
-
-    private void printResource(final Element machine,
-                               final int index,
-                               final int nodes) {
-        final var e = new WrappedElement(machine);
+    private void printResource(final int index,
+                               final int nodes, final WrappedElement e) {
 
         this.resources.put(e.globalIconId(), e.id());
 
