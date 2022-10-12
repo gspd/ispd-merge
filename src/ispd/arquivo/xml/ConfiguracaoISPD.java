@@ -53,7 +53,6 @@ public class ConfiguracaoISPD {
     }
 
     private void readConfigFromDoc(final WrappedDocument doc) {
-
         final var e = doc.ispd();
 
         this.readGeneralConfig(e);
