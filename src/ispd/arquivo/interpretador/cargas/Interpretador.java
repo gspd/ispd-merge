@@ -5,27 +5,23 @@ import ispd.motor.filas.Tarefa;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class Interpretador {
     private static final char FILE_TYPE_SEPARATOR = '.';
     private final String path;
     private String type;
-    private String exit;
 
     public Interpretador(final String path) {
         this.path = path;
         final int i = path.lastIndexOf(Interpretador.FILE_TYPE_SEPARATOR);
-        this.exit = (path.substring(0, i) + ".wmsx");
         this.type = path.substring(i + 1).toUpperCase();
-        // TODO: Remove
-        System.out.printf("%s-%s-%s%n", this.path, this.exit, this.type);
     }
 
     public void geraTraceSim(final Collection<? extends Tarefa> tasks) {
-
         this.type = "iSPD";
 
         try (final var out = new BufferedWriter(
@@ -37,35 +33,33 @@ public class Interpretador {
                     <system>
                     <trace>
                     <format kind="%s" />
-                    """.formatted(this.type));
-
-            for (final var task : tasks) {
-                if (!task.isCopy()) {
-                    Interpretador.writeTaskAsTag(out, task);
-                }
-            }
-
-            out.write("""
+                    %s
                     </trace>
-                    </system>""");
+                    </system>""".formatted(
+                    this.type, Interpretador.makeTasksDescription(tasks)
+            ));
 
-            this.exit = this.path;
-
-        } catch (final IOException ex) {
-            // TODO: Move exception handling up, remove debug print
-            System.out.println("ERROR");
+        } catch (final IOException ignored) {
         }
     }
 
-    private static void writeTaskAsTag(final Writer out, final Tarefa tarefa) throws IOException {
-        out.write("""
+    private static String makeTasksDescription(final Collection<?
+            extends Tarefa> tasks) {
+        return tasks.stream()
+                .filter(Predicate.not(Tarefa::isCopy))
+                .map(Interpretador::makeTaskDescription)
+                .collect(Collectors.joining());
+    }
+
+    private static String makeTaskDescription(final Tarefa task) {
+        return """
                 <task id="%d" arr="%s" sts="1" cpsz ="%s" cmsz="%s" usr="%s" />
                 """.formatted(
-                tarefa.getIdentificador(),
-                tarefa.getTimeCriacao(),
-                tarefa.getTamProcessamento(),
-                tarefa.getArquivoEnvio(),
-                tarefa.getProprietario()
-        ));
+                task.getIdentificador(),
+                task.getTimeCriacao(),
+                task.getTamProcessamento(),
+                task.getArquivoEnvio(),
+                task.getProprietario()
+        );
     }
 }
