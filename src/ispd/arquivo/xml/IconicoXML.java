@@ -1,7 +1,7 @@
 package ispd.arquivo.xml;
 
 import ispd.arquivo.xml.models.builders.CloudQueueNetworkBuilder;
-import ispd.arquivo.xml.models.builders.GridBuilder;
+import ispd.arquivo.xml.models.builders.IconicModelBuilder;
 import ispd.arquivo.xml.models.builders.LoadBuilder;
 import ispd.arquivo.xml.models.builders.QueueNetworkBuilder;
 import ispd.arquivo.xml.models.builders.ServiceCenterBuilder;
@@ -162,7 +162,7 @@ public class IconicoXML {
             final Document doc,
             final Collection<? super Vertex> vertices,
             final Collection<? super Edge> edges) {
-        final var model = new GridBuilder(
+        final var model = new IconicModelBuilder(
                 new WrappedDocument(doc)).build();
         vertices.addAll(model.vertices());
         edges.addAll(model.edges());

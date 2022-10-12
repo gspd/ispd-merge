@@ -326,8 +326,6 @@ import java.util.stream.IntStream;
      * Export model to FilePrinter {@link #out} passed in the constructor.
      */
     public void export() {
-
-
         this.printCreateGridUser();
         this.printCreateResource();
         this.printCreateGridlet();

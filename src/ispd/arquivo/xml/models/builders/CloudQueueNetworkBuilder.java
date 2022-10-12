@@ -17,6 +17,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * Build cloud queue networks.
+ * @see QueueNetworkBuilder
+ * @see ispd.arquivo.xml.IconicoXML
+ */
 public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
     private final HashMap<CentroServico, List<CS_MaquinaCloud>> clusterSlaves =
             new HashMap<>(0);

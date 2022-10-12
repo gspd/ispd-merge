@@ -15,12 +15,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class GridBuilder {
+/**
+ * Builds iconic models from a {@link WrappedDocument} representing the system.
+ * Instantiate and call {@link #build()}
+ */
+public class IconicModelBuilder {
     private final Collection<Vertex> vertices = new ArrayList<>(0);
     private final Collection<Edge> edges = new ArrayList<>(0);
     private final Map<Integer, Object> icons = new HashMap<>(0);
 
-    public GridBuilder(final WrappedDocument doc) {
+    public IconicModelBuilder(final WrappedDocument doc) {
         doc.clusters().forEach(this::processClusterElement);
         doc.internets().forEach(this::processInternetElement);
         doc.machines().forEach(this::processMachineElement);
@@ -79,7 +83,7 @@ public class GridBuilder {
 
         final var link = IconBuilder.aLink(e, origination, destination);
 
-        GridBuilder.connectLinkAndVertices(
+        IconicModelBuilder.connectLinkAndVertices(
                 link, (GridItem) origination, (GridItem) destination);
 
         return link;

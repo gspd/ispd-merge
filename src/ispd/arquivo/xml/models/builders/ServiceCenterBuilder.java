@@ -11,6 +11,10 @@ import ispd.motor.filas.servidores.implementacao.CS_Switch;
 import ispd.motor.filas.servidores.implementacao.CS_VMM;
 import ispd.motor.filas.servidores.implementacao.CS_VirtualMac;
 
+/**
+ * Utility class with static methods to build service centers for simulable
+ * models and, exceptionally, virtual machines for cloud models
+ */
 public class ServiceCenterBuilder {
     public static CS_Mestre aMaster(final WrappedElement e) {
         return new CS_Mestre(e.id(), e.owner(), e.power(), e.load(),

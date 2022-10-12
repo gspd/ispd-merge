@@ -21,6 +21,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Class to build a queue network from a model in a {@link WrappedDocument}.
+ * Construct an instance and call the method {@link #build()}
+ * @see ispd.arquivo.xml.IconicoXML
+ */
 public class QueueNetworkBuilder {
     protected final HashMap<Integer, CentroServico> serviceCenters =
             new HashMap<>(0);

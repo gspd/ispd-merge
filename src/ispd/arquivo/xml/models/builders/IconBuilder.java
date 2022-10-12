@@ -8,6 +8,11 @@ import ispd.gui.iconico.grade.Internet;
 import ispd.gui.iconico.grade.Link;
 import ispd.gui.iconico.grade.Machine;
 
+/**
+ * Utility class with static methods to build icon elements for iconic models
+ * from {@link WrappedElement}s
+ * @see IconicModelBuilder
+ */
 public class IconBuilder {
     public static Link aLink(
             final WrappedElement e,

@@ -5,6 +5,13 @@ import ispd.gui.iconico.Vertex;
 
 import java.util.Collection;
 
+/**
+ * Simple tuple-like object to represent an iconic model, with vertices and
+ * edges
+ *
+ * @param vertices
+ * @param edges
+ */
 public record IconicModel(
         Collection<Vertex> vertices,
         Collection<Edge> edges) {
