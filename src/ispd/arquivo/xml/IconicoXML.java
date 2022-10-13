@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 
 /**
  * Class responsible for manipulating xml files into iconic or simulable models,
- * or vice-versa.
+ * and building a document with a model from an iconic one.
  */
 public class IconicoXML {
     private static final Element[] NO_CHILDREN = {};
@@ -254,6 +254,14 @@ public class IconicoXML {
         return factory.newDocumentBuilder();
     }
 
+    /**
+     * Add users' ids and power limit info to the current model being built.
+     *
+     * @param users  collection of userIds
+     * @param limits map with users' power limits
+     * @throws NullPointerException if a user id given in the collection is
+     *                              missing from the map of power limits
+     */
     public void addUsers(final Collection<String> users,
                          final Map<String, Double> limits) {
         users.stream()
@@ -264,6 +272,13 @@ public class IconicoXML {
                 .forEach(this.system::appendChild);
     }
 
+    /**
+     * Create an element with only two attributes, k1 and k2, with values v1
+     * and v2, respectively.
+     * See {@link #anElement(String, Object[][], Node[])} for further info.
+     *
+     * @return element with two attributes k1, k2 of value v1, v2
+     */
     private Element anElement(
             final String name,
             final String k1, final Object v1,
@@ -274,13 +289,30 @@ public class IconicoXML {
         });
     }
 
+    /**
+     * Create an element with no children.
+     * See {@link #anElement(String, Object[][], Node[])} for further info.
+     *
+     * @return children-less element.
+     */
     private Element anElement(
             final String name, final Object[][] attrs) {
         return this.anElement(name, attrs, IconicoXML.NO_CHILDREN);
     }
 
+    /**
+     * Create an element in the {@link Document} being currently built.
+     * The element needs a name, a map of attributes, and (optionally) children.
+     *
+     * @param name     name of the element
+     * @param attrs    array of width 2 (key, value) with the attributes to
+     *                 be added to the element
+     * @param children children to be appended to the built element
+     * @return Element with the given name, attributes and children
+     */
     private Element anElement(
-            final String name, final Object[][] attrs,
+            final String name,
+            final Object[][] attrs,
             final Node[] children) {
         final var e = this.doc.createElement(name);
 
@@ -296,6 +328,10 @@ public class IconicoXML {
         return e;
     }
 
+    /**
+     * Add internet icon with the given attributes to the current model being
+     * built.
+     */
     public void addInternet(
             final int x, final int y,
             final int idLocal, final int idGlobal, final String name,
@@ -314,6 +350,11 @@ public class IconicoXML {
         ));
     }
 
+    /**
+     * Add cluster icon with the given attributes to the current model being
+     * built.
+     * <b>Note:</b> its computational, storage and memory costs are set to 0.
+     */
     public void addCluster(
             final Integer x, final Integer y,
             final Integer localId, final Integer globalId, final String name,
@@ -347,6 +388,11 @@ public class IconicoXML {
         ));
     }
 
+    /**
+     * Add IaaS cluster icon with the given attributes to the current model
+     * being built.
+     * <B>Note:</B> no 'energy' attribute is added to the element.
+     */
     public void addClusterIaaS(
             final Integer x, final Integer y,
             final Integer localId, final Integer globalId, final String name,
@@ -380,10 +426,18 @@ public class IconicoXML {
         ));
     }
 
+    /**
+     * Create an element with icon id information: those being the local and
+     * global ids.
+     */
     private Element anIconIdElement(final int global, final int local) {
         return this.anElement("icon_id", "global", global, "local", local);
     }
 
+    /**
+     * Create an element with attributes describing the characteristics of a
+     * processing center, such as computational power and cost, storage, etc.
+     */
     private Node newCharacteristic(final Double power, final Integer coreCount,
                                    final Double memory, final Double disk,
                                    final Double processingCost,
@@ -405,6 +459,10 @@ public class IconicoXML {
         );
     }
 
+    /**
+     * Add a machine icon with the given attributes to the current model being
+     * built.
+     */
     public void addMachine(
             final Integer x, final Integer y,
             final Integer localId, final Integer globalId, final String name,
@@ -420,6 +478,12 @@ public class IconicoXML {
         );
     }
 
+    /**
+     * Create an element with attributes describing the characteristics of a
+     * processing center, but without costs.
+     * See
+     * {@link #newCharacteristic(Double, Integer, Double, Double, Double, Double, Double)} for further info.
+     */
     private Node newCharacteristic(final Double power, final Integer coreCount,
                                    final Double memory, final Double disk) {
         return this.anElement(
@@ -433,6 +497,9 @@ public class IconicoXML {
                 });
     }
 
+    /**
+     * Create a simple element with just a name and one attribute
+     */
     private Element anElement(
             final String name, final String key, final Object value) {
         return this.anElement(name, new Object[][] {
@@ -440,6 +507,14 @@ public class IconicoXML {
         });
     }
 
+    /**
+     * Add a machine icon with the given attributes to the current model being
+     * built.
+     * <b>Notes:</b> No 'energy' attribute is added to the element; costs are
+     * set to 0.
+     * See
+     * {@link #addMachine(Integer, Integer, Integer, Integer, String, Double, Double, String, String, Integer, Double, Double, boolean, Collection, Double)}.
+     */
     public void addMachine(
             final Integer x, final Integer y,
             final Integer localId, final Integer globalId, final String name,
@@ -454,6 +529,15 @@ public class IconicoXML {
         );
     }
 
+    /**
+     * Add a IaaS machine icon with the given attributes to the current model
+     * being built.
+     * <b>Notes:</b> No 'energy' attribute is added to the element; an extra
+     * 'vm_alloc' attribute is added, compared to the other machine-adding
+     * methods.
+     * See
+     * {@link #addMachine(Integer, Integer, Integer, Integer, String, Double, Double, String, String, Integer, Double, Double, boolean, Collection, Double)}.
+     */
     public void addMachineIaaS(
             final Integer x, final Integer y,
             final Integer localId, final Integer globalId, final String name,
@@ -471,6 +555,24 @@ public class IconicoXML {
         );
     }
 
+    /**
+     * Helper method to abstract away the addition of a machine element to
+     * the model being built. It takes in all attributes in common between
+     * the methods
+     * {@link #addMachine(Integer, Integer, Integer, Integer, String, Double, Double, String, String, Integer, Double, Double, boolean, Collection)},
+     * {@link #addMachine(Integer, Integer, Integer, Integer, String, Double, Double, String, String, Integer, Double, Double, boolean, Collection, Double)},
+     * and
+     * {@link #addMachineIaaS(Integer, Integer, Integer, Integer, String, Double, Double, String, String, String, Integer, Double, Double, Double, Double, Double, boolean, Collection)},
+     * but also two extra params, {@code extraAttrs} and {@code
+     * extraMasterAttrs}, which are arrays containing the specific attributes
+     * of each of the outer methods.
+     *
+     * @param isMaster         indicates whether or not to include a inner
+     *                         'master' element
+     * @param extraAttrs       extra attributes to be added ot the element
+     * @param extraMasterAttrs extra attributes to be added ot the inner
+     *                         'master' element, if the element is a master
+     */
     private void addMachineInner(
             final Integer x, final Integer y,
             final Integer localId, final Integer globalId, final String name,
@@ -482,7 +584,7 @@ public class IconicoXML {
             final Double costPerDisk,
             final boolean isMaster, final Collection<Integer> slaves,
             final Object[][] extraAttrs, final Object[][] extraMasterAttrs) {
-        // Note: Arrays.asList returns an abstract list, which throws on .add()
+        // Note: Arrays.asList returns a fixed-size list, which throws on .add()
         final var attrList = Arrays.stream(new Object[][] {
                 { "id", name },
                 { "power", power },
@@ -522,12 +624,19 @@ public class IconicoXML {
         this.system.appendChild(machine);
     }
 
+    /**
+     * Create a master element with given scheduling policy, and slaves as
+     * children.
+     *
+     * @param extraAttrs potential extra attributes to add to the element
+     */
     private Element aMasterElement(final String scheduler,
                                    final Collection<Integer> slaves,
                                    final Object[][] extraAttrs) {
-        final var attrList = Arrays.asList(new Object[][] {
+        // Note: Arrays.asList returns a fixed-size list, which throws on .add()
+        final var attrList = Arrays.stream(new Object[][] {
                 { "scheduler", scheduler },
-        });
+        }).collect(Collectors.toList());
 
         attrList.addAll(Arrays.asList(extraAttrs));
 
@@ -539,10 +648,17 @@ public class IconicoXML {
         );
     }
 
+    /**
+     * Simple slave element with given id
+     */
     private Element aSlaveElement(final Integer id) {
         return this.anElement("slave", "id", id);
     }
 
+    /**
+     * Add a link icon with the given attributes to the current model being
+     * built.
+     */
     public void addLink(
             final int x0, final int y0,
             final int x1, final int y1,
@@ -567,10 +683,17 @@ public class IconicoXML {
         ));
     }
 
+    /**
+     * Create a position element with position information (x, y)
+     */
     private Element aPositionElement(final int x, final int y) {
         return this.anElement("position", "x", x, "y", y);
     }
 
+    /**
+     * Add a virtual machine icon with the given attributes to the current
+     * model being built.
+     */
     public void addVirtualMachines(
             final String id, final String owner, final String vmm,
             final int power, final double memory, final double disk,
@@ -588,6 +711,14 @@ public class IconicoXML {
         ));
     }
 
+    /**
+     * Add a random load to the current model being built.
+     *
+     * @apiNote This method just be called at most <b>once</b>> per instance,
+     * and not mixed with calls to
+     * {@link #setLoadTrace(String, String, String)} or
+     * {@link #addLoadNo(String, String, String, Integer, Double, Double, Double, Double)}
+     */
     public void setLoadRandom(
             final Integer taskCount, final Integer arrivalTime,
             final Integer compMax, final Integer compAvg,
@@ -629,6 +760,14 @@ public class IconicoXML {
         }
     }
 
+    /**
+     * Add a per-node load to the current model being built.
+     *
+     * @apiNote This method may be called more than once per instance,
+     * however it should be mixed with calls to
+     * {@link #setLoadTrace(String, String, String)} or
+     * {@link #setLoadRandom(Integer, Integer, Integer, Integer, Integer, Double, Integer, Integer, Integer, Double)}.
+     */
     public void addLoadNo(
             final String application,
             final String owner,
@@ -657,6 +796,14 @@ public class IconicoXML {
         ));
     }
 
+    /**
+     * Add a trace load to the current model being built.
+     *
+     * @apiNote This method just be called at most <b>once</b>> per instance,
+     * and not mixed with calls to
+     * {@link #setLoadRandom(Integer, Integer, Integer, Integer, Integer, Double, Integer, Integer, Integer, Double)} or
+     * {@link #addLoadNo(String, String, String, Integer, Double, Double, Double, Double)}
+     */
     public void setLoadTrace(
             final String file, final String tasks, final String format) {
         this.addElementToLoad(this.anElement(
@@ -668,6 +815,9 @@ public class IconicoXML {
         ));
     }
 
+    /**
+     * Get {@link Document} with iconic model generated.
+     */
     public Document getDescricao() {
         return this.doc.document;
     }
