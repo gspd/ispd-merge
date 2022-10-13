@@ -81,7 +81,7 @@ public class EscalonadoresCloud implements ManipularArquivosCloud {
                 System.getProperty("java.class.path"));
 
         try {
-            EscalonadoresCloud.extractDirFromJar("alocacaoVM", jar);
+            EscalonadoresCloud.extractDirFromJar("escalonadorCloud", jar);
             EscalonadoresCloud.extractDirFromJar("motor", jar);
         } catch (final IOException ex) {
             Logger.getLogger(EscalonadoresCloud.class.getName())
@@ -93,6 +93,12 @@ public class EscalonadoresCloud implements ManipularArquivosCloud {
         return s.substring(0, s.length() - ".class".length());
     }
 
+    /**
+     * Extracts given dir from jar file given by file.
+     *
+     * @param dir  Directory name to be extracted
+     * @param file Jar file from which to extract the directory
+     */
     private static void extractDirFromJar(final String dir, final File file) throws IOException {
         try (final var jar = new JarFile(file)) {
             for (final var entry : new JarEntryIterable(jar)) {
@@ -122,6 +128,10 @@ public class EscalonadoresCloud implements ManipularArquivosCloud {
         }
     }
 
+    /**
+     * @return Basic template for writing a cloud scheduling policy's source
+     * code
+     */
     public static String getEscalonadorJava(final String escalonador) {
         return """
                 package ispd.externo;
@@ -162,16 +172,33 @@ public class EscalonadoresCloud implements ManipularArquivosCloud {
                 }""".formatted(escalonador);
     }
 
+    /**
+     * Lists all available allocation policies.
+     *
+     * @return {@code ArrayList} with all allocation policies' names
+     */
     @Override
     public ArrayList<String> listar() {
         return this.policies;
     }
 
+    /**
+     * @return Directory in which allocation policies sources are compiled
+     * and classes are saved
+     */
     @Override
     public File getDiretorio() {
         return EscalonadoresCloud.DIRECTORY;
     }
 
+    /**
+     * Writes the contents of {@code codigo} into the source file of the
+     * policy given by {@code nome}.
+     *
+     * @param nome   Name of the policy which source file will be written to
+     * @param codigo Contents to be written in the file
+     * @return {@code true} if writing was successful
+     */
     @Override
     public boolean escrever(final String nome, final String codigo) {
         try (final var fw = new FileWriter(
@@ -187,6 +214,13 @@ public class EscalonadoresCloud implements ManipularArquivosCloud {
         }
     }
 
+    /**
+     * Attempts to compile the source file of the policy with given name,
+     * returning the contents of stderr, if any, otherwise {@code null}.
+     *
+     * @param nome Name of the allocation policy to be compiled
+     * @return A string with errors, if any, otherwise {@code null}
+     */
     @Override
     public String compilar(final String nome) {
         final var target = new File(EscalonadoresCloud.DIRECTORY, nome +
@@ -226,6 +260,9 @@ public class EscalonadoresCloud implements ManipularArquivosCloud {
         }
     }
 
+    /**
+     * Add policy to the inner list of policies
+     */
     private void addPolicy(final String policyName) {
         if (this.policies.contains(policyName)) {
             return;
@@ -245,6 +282,13 @@ public class EscalonadoresCloud implements ManipularArquivosCloud {
         }
     }
 
+    /**
+     * Reads the source file from the policy {@code escalonador} and returns a
+     * string with the file contents.
+     *
+     * @param escalonador Name of the policy which source file will be read
+     * @return String contents of the file
+     */
     @Override
     public String ler(final String escalonador) {
         try (final var br = new BufferedReader(
@@ -261,6 +305,13 @@ public class EscalonadoresCloud implements ManipularArquivosCloud {
         }
     }
 
+    /**
+     * Attempts to remove .java and .class files with the name in {@code
+     * escalonador} and, if successful, removes the policy from the inner list.
+     *
+     * @param escalonador Name of the policy which files will be removed
+     * @return {@code true} if removal is successful
+     */
     @Override
     public boolean remover(final String escalonador) {
         final var classFile = new File(
@@ -287,6 +338,9 @@ public class EscalonadoresCloud implements ManipularArquivosCloud {
         return deleted;
     }
 
+    /**
+     * Remove policy of given name from the inner list of policies
+     */
     private void removePolicy(final String policyName) {
         if (!this.policies.contains(policyName)) {
             return;
@@ -296,6 +350,14 @@ public class EscalonadoresCloud implements ManipularArquivosCloud {
         this.removedPolicies.add(policyName);
     }
 
+    /**
+     * Adds allocation policy coded in file {@code arquivo} to the configured
+     * directory, compiles it, and adds it to the list of allocation policies.
+     *
+     * @param arquivo Java source file containing the allocation policy
+     * @return {@code true} if import occurred successfully and {@code false}
+     * otherwise
+     */
     @Override
     public boolean importarEscalonadorJava(final File arquivo) {
         final var target = new File(EscalonadoresCloud.DIRECTORY,
@@ -320,6 +382,10 @@ public class EscalonadoresCloud implements ManipularArquivosCloud {
         return true;
     }
 
+    /**
+     * Copy contents of file from {@code dest} to {@code src}, if their paths
+     * are not equal
+     */
     private static void copyFile(final File dest, final File src) {
         if (dest.getPath().equals(src.getPath())) {
             return;
@@ -334,11 +400,17 @@ public class EscalonadoresCloud implements ManipularArquivosCloud {
         }
     }
 
+    /**
+     * @return added policies
+     */
     @Override
     public List listarAdicionados() {
         return this.addedPolicies;
     }
 
+    /**
+     * @return added policies
+     */
     @Override
     public List listarRemovidos() {
         return this.removedPolicies;

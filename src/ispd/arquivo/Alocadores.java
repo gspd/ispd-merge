@@ -189,7 +189,7 @@ public class Alocadores implements ManipularArquivosAlloc {
     }
 
     /**
-     * @return Directory in which allocation policies sources and compiled
+     * @return Directory in which allocation policies sources are compiled
      * classes are saved
      */
     @Override
@@ -198,8 +198,8 @@ public class Alocadores implements ManipularArquivosAlloc {
     }
 
     /**
-     * Writes the contents of 'codigo' into the source file of the policy
-     * given by 'nome'.
+     * Writes the contents of {@code codigo} into the source file of the
+     * policy given by {@code nome}.
      *
      * @param nome   Name of the policy which source file will be written to
      * @param codigo Contents to be written in the file
@@ -266,7 +266,7 @@ public class Alocadores implements ManipularArquivosAlloc {
     }
 
     /**
-     * Adds policy to the inner list of policies
+     * Add policy to the inner list of policies
      */
     private void addPolicy(final String policyName) {
         if (this.policies.contains(policyName)) {
@@ -288,11 +288,11 @@ public class Alocadores implements ManipularArquivosAlloc {
     }
 
     /**
-     * Reads the source file from the policy 'alocador' and returns a string
-     * with the file contents.
+     * Reads the source file from the policy {@code alocador} and returns a
+     * string with the file contents.
      *
      * @param alocador Name of the policy which source file will be read
-     * @return String contents of the file.
+     * @return String contents of the file
      */
     @Override
     public String ler(final String alocador) {
@@ -310,8 +310,8 @@ public class Alocadores implements ManipularArquivosAlloc {
     }
 
     /**
-     * Attempts to remove .java and .class files with the name in "alocador"
-     * and, if successful, removes the policy from the inner list.
+     * Attempts to remove .java and .class files with the name in {@code
+     * alocador} and, if successful, removes the policy from the inner list.
      *
      * @param alocador Name of the policy which files will be removed
      * @return {@code true} if removal is successful
@@ -342,6 +342,9 @@ public class Alocadores implements ManipularArquivosAlloc {
         return deleted;
     }
 
+    /**
+     * Remove policy of given name from the inner list of policies
+     */
     private void removePolicy(final String policyName) {
         if (!this.policies.contains(policyName)) {
             return;
@@ -382,6 +385,10 @@ public class Alocadores implements ManipularArquivosAlloc {
         return true;
     }
 
+    /**
+     * Copy contents of file from {@code dest} to {@code src}, if their paths
+     * are not equal
+     */
     private static void copyFile(final File dest, final File src) {
         if (dest.getPath().equals(src.getPath())) {
             return;
@@ -396,11 +403,17 @@ public class Alocadores implements ManipularArquivosAlloc {
         }
     }
 
+    /**
+     * @return added policies
+     */
     @Override
     public List listarAdicionados() {
         return this.addedPolicies;
     }
 
+    /**
+     * @return remove policies
+     */
     @Override
     public List listarRemovidos() {
         return this.removedPolicies;

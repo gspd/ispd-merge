@@ -78,7 +78,7 @@ public class Escalonadores implements ManipularArquivos {
 
     private static void createDirectory(final File dir) throws IOException {
         if (!dir.mkdirs()) {
-            throw new IOException("Faile to create directory " + dir);
+            throw new IOException("Failed to create directory " + dir);
         }
     }
 
@@ -188,7 +188,7 @@ public class Escalonadores implements ManipularArquivos {
     }
 
     /**
-     * @return Directory in which scheduling policies sources and compiled
+     * @return Directory in which scheduling policies sources are compiled
      * classes are saved
      */
     @Override
@@ -197,10 +197,10 @@ public class Escalonadores implements ManipularArquivos {
     }
 
     /**
-     * Writes the contents of 'codigo' into the source file of the policy
-     * given by 'nome'.
+     * Writes the contents of {@code codigo} into the source file of the
+     * policy given by {@code nome}.
      *
-     * @param nome Name of the policy which source file will be written to
+     * @param nome   Name of the policy which source file will be written to
      * @param codigo Contents to be written in the file
      * @return {@code true} if writing was successful
      */
@@ -264,6 +264,9 @@ public class Escalonadores implements ManipularArquivos {
         }
     }
 
+    /**
+     * Add policy to the inner list of policies
+     */
     private void addPolicy(final String policyName) {
         if (this.policies.contains(policyName)) {
             return;
@@ -284,7 +287,8 @@ public class Escalonadores implements ManipularArquivos {
     }
 
     /**
-     * Reads the source file from the policy 'escalonador' and returns a string with the file contents.
+     * Reads the source file from the policy {@code escalonador} and returns
+     * a string with the file contents.
      *
      * @param escalonador Name of the policy which source file will be read
      * @return String contents of the file
@@ -306,7 +310,8 @@ public class Escalonadores implements ManipularArquivos {
     }
 
     /**
-     * Attempts to remove .java and .class files with the name in 'escalonador' and, if successful, remove the policy from the inner list.
+     * Attempts to remove .java and .class files with the name in {@code
+     * escalonador} and, if successful, remove the policy from the inner list.
      *
      * @param escalonador Name of the policy which files will be removed
      * @return {@code true} if removal is successful
@@ -338,7 +343,7 @@ public class Escalonadores implements ManipularArquivos {
     }
 
     /**
-     * recebe nome do escalonar e remove ele da lista de escalonadores
+     * Remove policy of given name from the inner list of policies
      */
     private void removePolicy(final String policyName) {
         if (!this.policies.contains(policyName)) {
@@ -350,10 +355,13 @@ public class Escalonadores implements ManipularArquivos {
     }
 
     /**
-     * Adds scheduling policy coded in file {@code arquivo} to the configured directory, compiles it, and adds it to the inner list of scheduling policies.
+     * Adds scheduling policy coded in file {@code arquivo} to the configured
+     * directory, compiles it, and adds it to the inner list of scheduling
+     * policies.
      *
      * @param arquivo Java source file containing the allocation policy
-     * @return {@code true} if import occurred successfully and {@code false} otherwise
+     * @return {@code true} if import occurred successfully and {@code false}
+     * otherwise
      */
     @Override
     public boolean importarEscalonadorJava(final File arquivo) {
@@ -380,6 +388,10 @@ public class Escalonadores implements ManipularArquivos {
         return true;
     }
 
+    /**
+     * Copy contents of file from {@code dest} to {@code src}, if their paths
+     * are not equal
+     */
     private static void copyFile(final File dest, final File src) {
         if (dest.getPath().equals(src.getPath())) {
             return;
