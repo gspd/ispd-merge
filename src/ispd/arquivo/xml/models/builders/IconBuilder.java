@@ -9,12 +9,20 @@ import ispd.gui.iconico.grade.Link;
 import ispd.gui.iconico.grade.Machine;
 
 /**
- * Utility class with static methods to build icon elements for iconic models
- * from {@link WrappedElement}s
+ * Utility class with static methods to build grid items for the gui, from
+ * {@link WrappedElement}s
+ *
  * @see IconicModelBuilder
+ * @see WrappedElement
+ * @see GridItem
  */
-public class IconBuilder {
-    public static Link aLink(
+/* package-private */ class IconBuilder {
+    /**
+     * @return link icon from given element, with given origination and
+     * destination
+     */
+    /* package-private */
+    static Link aLink(
             final WrappedElement e,
             final Vertex origination, final Vertex destination) {
         final var link = new Link(
@@ -32,7 +40,11 @@ public class IconBuilder {
         return link;
     }
 
-    public static Cluster aCluster(final WrappedElement e) {
+    /**
+     * @return cluster icon from given element
+     */
+    /* package-private */
+    static Cluster aCluster(final WrappedElement e) {
         final var info = IconInfo.fromElement(e);
 
         final var cluster = new Cluster(
@@ -97,7 +109,11 @@ public class IconBuilder {
         }
     }
 
-    public static Internet anInternet(final WrappedElement e) {
+    /**
+     * @return internet icon from given element
+     */
+    /* package-private */
+    static Internet anInternet(final WrappedElement e) {
         final var info = IconInfo.fromElement(e);
 
         final Internet net = new Internet(
@@ -113,7 +129,11 @@ public class IconBuilder {
         return net;
     }
 
-    public static Machine aMachine(final WrappedElement m) {
+    /**
+     * @return machine icon from given element
+     */
+    /* package-private */
+    static Machine aMachine(final WrappedElement m) {
         final var info = IconInfo.fromElement(m);
 
         final var machine = new Machine(
@@ -130,6 +150,9 @@ public class IconBuilder {
         return machine;
     }
 
+    /**
+     * Simple record to contain information in common between all icon objects
+     */
     private record IconInfo(int x, int y, int globalId, int localId) {
         private static IconInfo fromElement(final WrappedElement e) {
             final var position = e.position();
