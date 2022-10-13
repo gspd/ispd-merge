@@ -111,7 +111,7 @@ public class ServiceCenterBuilder {
         return new CS_VirtualMac(
                 e.id(),
                 e.owner(),
-                e.powerAsInt(),
+                (int) e.power(),
                 e.memAlloc(),
                 e.diskAlloc(),
                 e.opSystem()
@@ -119,7 +119,7 @@ public class ServiceCenterBuilder {
     }
 
     public static VirtualMachine aVirtualMachineWithVmm(final WrappedElement e) {
-        return new VirtualMachine(e.id(), e.owner(), e.vmm(), e.powerAsInt(),
+        return new VirtualMachine(e.id(), e.owner(), e.vmm(), (int) e.power(),
                 e.memAlloc(), e.diskAlloc(), e.opSystem());
     }
 }

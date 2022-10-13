@@ -45,7 +45,7 @@ public class IconicoXML {
     private final WrappedDocument doc =
             new WrappedDocument(ManipuladorXML.newDocument());
     private final Element system = this.doc.createElement("system");
-    private Element load = null; // TODO: Don't like this
+    private Element load = null;
 
     public IconicoXML() {
         this(IconicoXML.DEFAULT_MODEL_TYPE);
@@ -256,7 +256,6 @@ public class IconicoXML {
 
     public void addUsers(final Collection<String> users,
                          final Map<String, Double> limits) {
-        // TODO: Could I iterate over the map instead? Why need arg 'users'?
         users.stream()
                 .map(user -> this.anElement("owner",
                         "id", user,
@@ -495,7 +494,6 @@ public class IconicoXML {
 
         final Node characteristic;
 
-        // TODO: Generalize method newCharacteristic instead, this is ugly
         if (costPerProcessing != null) {
             characteristic = this.newCharacteristic(
                     power, coreCount, memory, disk,
@@ -552,7 +550,6 @@ public class IconicoXML {
             final String name, final double bandwidth,
             final double linkLoad, final double latency,
             final int origination, final int destination) {
-        // TODO: During refactoring steps were reordered. Need to test.
         this.system.appendChild(this.anElement(
                 "link", new Object[][] {
                         { "id", name },
@@ -676,7 +673,6 @@ public class IconicoXML {
     }
 
     private static class CloningEntityResolver implements EntityResolver {
-        // TODO: Resolve cyclic dependency
         private final InputSource substitute = new InputSource(
                 IconicoXML.class.getResourceAsStream("iSPD.dtd"));
 

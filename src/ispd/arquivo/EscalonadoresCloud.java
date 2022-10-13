@@ -194,7 +194,7 @@ public class EscalonadoresCloud implements ManipularArquivosCloud {
         final var err = EscalonadoresCloud.compile(target);
 
         try {
-            Thread.sleep(1000); // TODO: Find alternative
+            Thread.sleep(1000);
         } catch (final InterruptedException ex) {
             Logger.getLogger(EscalonadoresCloud.class.getName())
                     .log(Level.SEVERE, null, ex);

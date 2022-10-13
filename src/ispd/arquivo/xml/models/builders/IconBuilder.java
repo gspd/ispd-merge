@@ -38,7 +38,7 @@ public class IconBuilder {
         final var cluster = new Cluster(
                 info.x(), info.y(),
                 info.localId(), info.globalId(),
-                e.power() // TODO: Supposed to be .energy()?
+                e.power()
         );
 
         cluster.getId().setName(e.id());

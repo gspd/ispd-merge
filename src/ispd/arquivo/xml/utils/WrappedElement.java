@@ -115,11 +115,6 @@ public class WrappedElement {
         return this.getDouble("power");
     }
 
-    public int powerAsInt() {
-        // TODO: Is this function necessary?
-        return this.getInt("power");
-    }
-
     public double memAlloc() {
         return this.getDouble("mem_alloc");
     }
