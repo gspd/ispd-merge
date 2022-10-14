@@ -1,9 +1,9 @@
 package ispd.arquivo.xml.models.builders;
 
-import ispd.arquivo.xml.utils.WrappedDocument;
-import ispd.arquivo.xml.utils.WrappedElement;
 import ispd.arquivo.xml.utils.SwitchConnection;
 import ispd.arquivo.xml.utils.UserPowerLimit;
+import ispd.arquivo.xml.utils.WrappedDocument;
+import ispd.arquivo.xml.utils.WrappedElement;
 import ispd.motor.filas.RedeDeFilas;
 import ispd.motor.filas.servidores.CS_Comunicacao;
 import ispd.motor.filas.servidores.CS_Processamento;
@@ -24,17 +24,18 @@ import java.util.stream.Collectors;
 /**
  * Class to build a queue network from a model in a {@link WrappedDocument}.
  * Construct an instance and call the method {@link #build()}
+ *
  * @see ispd.arquivo.xml.IconicoXML
  */
 public class QueueNetworkBuilder {
-    protected final HashMap<Integer, CentroServico> serviceCenters =
+    protected final Map<Integer, CentroServico> serviceCenters =
             new HashMap<>(0);
-    private final HashMap<CentroServico, List<CS_Maquina>> clusterSlaves =
+    protected final List<CS_Comunicacao> links = new ArrayList<>(0);
+    protected final List<CS_Internet> internets = new ArrayList<>(0);
+    private final Map<CentroServico, List<CS_Maquina>> clusterSlaves =
             new HashMap<>(0);
     private final List<CS_Processamento> masters = new ArrayList<>(0);
     private final List<CS_Maquina> machines = new ArrayList<>(0);
-    protected final List<CS_Comunicacao> links = new ArrayList<>(0);
-    protected final List<CS_Internet> internets = new ArrayList<>(0);
     private final Map<String, Double> powerLimits;
 
     public QueueNetworkBuilder(final WrappedDocument doc) {
@@ -50,7 +51,7 @@ public class QueueNetworkBuilder {
         doc.masters().forEach(this::addSlavesToMachine);
     }
 
-    protected void processMachineElement(final WrappedElement e) {
+    private void processMachineElement(final WrappedElement e) {
         final var machine = this.makeAndAddMachine(e);
 
         this.serviceCenters.put(e.globalIconId(), machine);
@@ -59,20 +60,6 @@ public class QueueNetworkBuilder {
                 machine.getProprietario(),
                 machine.getPoderComputacional()
         );
-    }
-
-    protected CS_Processamento makeAndAddMachine(final WrappedElement e) {
-        final CS_Processamento machine;
-
-        if (e.hasMasterAttribute()) {
-            machine = ServiceCenterBuilder.aMaster(e);
-            this.masters.add(machine);
-        } else {
-            machine = ServiceCenterBuilder.aMachine(e);
-            this.machines.add((CS_Maquina) machine);
-        }
-
-        return machine;
     }
 
     protected void processClusterElement(final WrappedElement e) {
@@ -129,14 +116,14 @@ public class QueueNetworkBuilder {
         }
     }
 
-    protected void processInternetElement(final WrappedElement e) {
+    private void processInternetElement(final WrappedElement e) {
         final var net = ServiceCenterBuilder.anInternet(e);
 
         this.internets.add(net);
         this.serviceCenters.put(e.globalIconId(), net);
     }
 
-    protected void processLinkElement(final WrappedElement e) {
+    private void processLinkElement(final WrappedElement e) {
         final var link = ServiceCenterBuilder.aLink(e);
 
         QueueNetworkBuilder.connectLinkAndVertices(link,
@@ -147,7 +134,7 @@ public class QueueNetworkBuilder {
         this.links.add(link);
     }
 
-    protected void addSlavesToMachine(final WrappedElement e) {
+    private void addSlavesToMachine(final WrappedElement e) {
         final var master =
                 (CS_Processamento) this.serviceCenters.get(e.globalIconId());
 
@@ -158,7 +145,22 @@ public class QueueNetworkBuilder {
                 .forEach(sc -> this.addServiceCenterSlaves(sc, master));
     }
 
-    protected void increaseUserPower(final String user, final double increment) {
+    protected CS_Processamento makeAndAddMachine(final WrappedElement e) {
+        final CS_Processamento machine;
+
+        if (e.hasMasterAttribute()) {
+            machine = ServiceCenterBuilder.aMaster(e);
+            this.masters.add(machine);
+        } else {
+            machine = ServiceCenterBuilder.aMachine(e);
+            this.machines.add((CS_Maquina) machine);
+        }
+
+        return machine;
+    }
+
+    protected void increaseUserPower(final String user,
+                                     final double increment) {
         final var oldValue = this.powerLimits.get(user);
         this.powerLimits.put(user, oldValue + increment);
     }
@@ -192,6 +194,13 @@ public class QueueNetworkBuilder {
         }
     }
 
+    /**
+     * Create a {@link RedeDeFilas} with the collections parsed from the
+     * document.
+     *
+     * @return {@link RedeDeFilas} with the appropriate service centers,
+     * links, and user configurations found in the document.
+     */
     public RedeDeFilas build() {
         final var helper = new UserPowerLimit(this.powerLimits);
         this.setSchedulersUserMetrics(helper);
