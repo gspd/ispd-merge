@@ -13,6 +13,9 @@ import java.nio.charset.StandardCharsets;
  * Convert iSPD model to other programs
  */
 public class Exportador {
+    /**
+     * {@link Document} with iconic model to be exported
+     */
     private final Document model;
 
     public Exportador(final Document model) {

@@ -1,5 +1,6 @@
 package ispd.arquivo.exportador;
 
+import ispd.arquivo.xml.utils.SizeInfo;
 import ispd.arquivo.xml.utils.WrappedDocument;
 import ispd.arquivo.xml.utils.WrappedElement;
 import org.w3c.dom.Document;
@@ -9,11 +10,10 @@ import org.w3c.dom.NodeList;
 import java.io.PrintWriter;
 import java.text.MessageFormat;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 /**
  * Utility class to convert an iSPD file to GridSim java file.
@@ -24,7 +24,6 @@ import java.util.stream.IntStream;
 
     private final NodeList machines;
     private final NodeList clusters;
-    private final NodeList loads;
 
     private final PrintWriter out;
     private final WrappedDocument doc;
@@ -39,10 +38,20 @@ import java.util.stream.IntStream;
 
         this.machines = model.getElementsByTagName("machine");
         this.clusters = model.getElementsByTagName("cluster");
-        this.loads = model.getElementsByTagName("load");
+    }
 
+    /**
+     * Export model to FilePrinter {@link #out} passed in the constructor.
+     */
+    public void export() {
         this.printHeader();
         this.printMain();
+
+        this.printCreateGridUser();
+        this.printCreateResource();
+        this.printCreateGridlet();
+
+        this.printFooter();
     }
 
     private void printHeader() {
@@ -144,7 +153,7 @@ import java.util.stream.IntStream;
 
         this.printResources();
 
-        this.out.print(this.getLoadTraceString());
+        this.out.print(this.getTraceLoadString());
 
         this.printMasters();
 
@@ -167,24 +176,115 @@ import java.util.stream.IntStream;
                 """);
     }
 
+    private void printCreateGridUser() {
+        final var code = String.format("""
+
+                    private static ResourceUserList createGridUser(){
+                        ResourceUserList userList = new ResourceUserList();
+                        %s
+                        return userList;
+                    }
+                    
+                """, this.userAdds());
+
+        this.out.print(code);
+    }
+
+    private void printCreateResource() {
+        this.out.print("""
+                    
+                    private static GridResource createResource(String name, double baud_rate, double delay, int MTU, int n_maq, int cap){
+                    
+                            MachineList mList = new MachineList();
+                            for(int i = 0; i < n_maq; i++){
+                                
+                             mList.add( new Machine(i, 1, cap));
+                        }
+                    
+                            String arch = "Sun Ultra";
+                            String os = "Solaris";
+                            double time_zone = 9.0;
+                            double cost = 3.0;
+                    
+                        ResourceCharacteristics resConfig = new ResourceCharacteristics(arch, os, mList, ResourceCharacteristics.TIME_SHARED,time_zone, cost);
+                    
+                        long seed = 11L*13*17*19*23+1;
+                        double peakLoad = 0.0;
+                        double offPeakLoad = 0.0;
+                        double holidayLoad = 0.0;
+                    
+                        LinkedList Weekends = new LinkedList();
+                        Weekends.add(new Integer(Calendar.SATURDAY));
+                        Weekends.add(new Integer(Calendar.SUNDAY));
+                        LinkedList Holidays = new LinkedList();
+                        GridResource gridRes=null;
+                    
+                        try
+                         {
+                             gridRes = new GridResource(name, new SimpleLink(name + "_link", baud_rate, delay, MTU),seed, resConfig, peakLoad, offPeakLoad, holidayLoad,Weekends, Holidays);
+                    
+                        }
+                        catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    
+                        return gridRes;
+                    }
+                """);
+    }
+
+    private void printCreateGridlet() {
+        this.out.print("""
+
+
+                    private static GridletList createGridlet(){
+                        double length;
+                        long file_size;
+                        Random random = new Random();
+
+                        GridletList list = new GridletList();
+                """);
+
+        this.doc.loads().forEach(
+                l -> LongStream.range(0, l.sizes().count())
+                        .forEach(i -> this.processElementSizes(i, l))
+        );
+
+        this.out.print("""
+
+                        return list;
+                """);
+    }
+
+    private void printFooter() {
+        this.out.print("""
+
+                    }
+                }
+                """);
+    }
+
     private void printResources() {
         this.printMachines();
         this.printClusters();
     }
 
-    private String getLoadTraceString() {
-        if (this.loads.getLength() == 0)
+    private String getTraceLoadString() {
+        final var load = this.doc.loads().findFirst();
+
+        if (load.isEmpty()) {
             return "";
+        }
 
-        final var trace =
-                ((Element) this.loads.item(0)).getElementsByTagName("trace");
+        final var traceLoad = load.get().traceLoads().findFirst();
 
-        if (trace.getLength() == 0)
+        if (traceLoad.isEmpty()) {
             return """
                         
                                 GridletList list = createGridlet();
                         
                     """;
+        }
 
         return MessageFormat.format("""
 
@@ -198,7 +298,7 @@ import java.util.stream.IntStream;
                                 Workload w = new Workload("Load_"+i, fileName[i], resList[], rating);
                                 load.add(w);
                             '}'
-                """, ((Element) trace.item(0)).getAttribute("file_path"));
+                """, traceLoad.get().filePath());
     }
 
     private void printMasters() {
@@ -208,7 +308,8 @@ import java.util.stream.IntStream;
                 """);
 
         for (int i = 0; i < this.machines.getLength(); i++)
-            this.processMaster(i, new WrappedElement((Element) this.machines.item(i)));
+            this.processMaster(i,
+                    new WrappedElement((Element) this.machines.item(i)));
     }
 
     private void processNet(final WrappedElement e) {
@@ -232,6 +333,47 @@ import java.util.stream.IntStream;
         for (int i = 0; i < ls.size(); ++i) {
             this.printLink(ls.get(i), i);
         }
+    }
+
+    private String userAdds() {
+        return IntStream.range(0, this.userCount)
+                .mapToObj(GridSimExporter::addUserId)
+                .collect(Collectors.joining());
+    }
+
+    private void processElementSizes(final long i, final WrappedElement e) {
+        final var computation = e.sizes()
+                .filter(WrappedElement::isComputingType)
+                .findFirst()
+                .map(SizeInfo::noProbability)
+                .map(SizeInfo::rangeNormalized)
+                .orElseGet(SizeInfo::new);
+
+        final var communication = e.sizes()
+                .filter(WrappedElement::isCommunicationType)
+                .findFirst()
+                .map(SizeInfo::noProbability)
+                .map(SizeInfo::rangeNormalized)
+                .orElseGet(SizeInfo::new);
+
+        final var msg = MessageFormat.format("""
+                                length = GridSimRandom.real({0},{1},{2},random.nextDouble());
+                                file_size = (long) GridSimRandom.real({3},{4},{5},random.nextDouble());
+                                Gridlet gridlet{6} = new Gridlet({6}, length, file_size,file_size);
+                                list.add(gridlet{6});
+
+                                gridlet{6}.setUserID(0);
+                        """,
+                computation.average(),
+                computation.minimum(),
+                computation.maximum(),
+                communication.average(),
+                communication.minimum(),
+                communication.maximum(),
+                i
+        );
+
+        this.out.print(msg);
     }
 
     private void printMachines() {
@@ -304,8 +446,14 @@ import java.util.stream.IntStream;
         ));
     }
 
-    private void printResource(final int index,
-                               final int nodes, final WrappedElement e) {
+    private static String addUserId(final int i) {
+        return String.format("""
+                        userList.add(%d);
+                """, i);
+    }
+
+    private void printResource(
+            final int index, final int nodes, final WrappedElement e) {
 
         this.resources.put(e.globalIconId(), e.id());
 
@@ -320,192 +468,5 @@ import java.util.stream.IntStream;
                 e.power(),
                 index
         ));
-    }
-
-    /**
-     * Export model to FilePrinter {@link #out} passed in the constructor.
-     */
-    public void export() {
-        this.printCreateGridUser();
-        this.printCreateResource();
-        this.printCreateGridlet();
-
-        this.printFooter();
-    }
-
-    private void printCreateGridUser() {
-        this.out.print(String.format("""
-
-                    private static ResourceUserList createGridUser(){
-                        ResourceUserList userList = new ResourceUserList();
-                        %s
-                        return userList;
-                    }
-                    
-                """, this.userAdds())
-        );
-    }
-
-    private void printCreateResource() {
-        this.out.print("""
-                    
-                    private static GridResource createResource(String name, double baud_rate, double delay, int MTU, int n_maq, int cap){
-                    
-                            MachineList mList = new MachineList();
-                            for(int i = 0; i < n_maq; i++){
-                                
-                             mList.add( new Machine(i, 1, cap));
-                        }
-                    
-                            String arch = "Sun Ultra";
-                            String os = "Solaris";
-                            double time_zone = 9.0;
-                            double cost = 3.0;
-                    
-                        ResourceCharacteristics resConfig = new ResourceCharacteristics(arch, os, mList, ResourceCharacteristics.TIME_SHARED,time_zone, cost);
-                    
-                        long seed = 11L*13*17*19*23+1;
-                        double peakLoad = 0.0;
-                        double offPeakLoad = 0.0;
-                        double holidayLoad = 0.0;
-                    
-                        LinkedList Weekends = new LinkedList();
-                        Weekends.add(new Integer(Calendar.SATURDAY));
-                        Weekends.add(new Integer(Calendar.SUNDAY));
-                        LinkedList Holidays = new LinkedList();
-                        GridResource gridRes=null;
-                    
-                        try
-                         {
-                             gridRes = new GridResource(name, new SimpleLink(name + "_link", baud_rate, delay, MTU),seed, resConfig, peakLoad, offPeakLoad, holidayLoad,Weekends, Holidays);
-                    
-                        }
-                        catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    
-                        return gridRes;
-                    }
-                """);
-    }
-
-    private void printCreateGridlet() {
-        this.out.print("""
-
-
-                    private static GridletList createGridlet(){
-                        double length;
-                        long file_size;
-                        Random random = new Random();
-
-                        GridletList list = new GridletList();
-                """);
-
-        GridSimExporter.iter(this.loads)
-                .forEach(e -> this.processLoadValues(
-                        e.getElementsByTagName("size")));
-
-        this.out.print("""
-
-                        return list;
-                """);
-    }
-
-    private void printFooter() {
-        this.out.print("""
-
-                    }
-                }
-                """);
-    }
-
-    private String userAdds() {
-        return IntStream.range(0, this.userCount)
-                .mapToObj(GridSimExporter::addUserId)
-                .collect(Collectors.joining());
-    }
-
-    private static Iterable<Element> iter(final NodeList list) {
-        return () -> new NodeListIterator(list);
-    }
-
-    private void processLoadValues(final NodeList sizes) {
-        double minComputation = 0;
-        double maxComputation = 0;
-        double computationValue = 0;
-        double communicationValue = 0;
-        double mincp = 0;
-        double maxcp = 0;
-        double mincm = 0;
-        double maxcm = 0;
-
-        for (int i = 0; i < sizes.getLength(); i++) {
-            final Element size = (Element) sizes.item(i);
-
-            final var e = new WrappedElement(size);
-
-            if (e.isComputingType()) {
-                minComputation = e.minimum();
-                maxComputation = e.maximum();
-                computationValue = e.average();
-                mincp = (computationValue - minComputation) / computationValue;
-                mincp = Math.min(1.0, mincp);
-                maxcp = (maxComputation - computationValue) / computationValue;
-                maxcp = Math.min(1.0, maxcp);
-            } else if (e.isCommunicationType()) {
-                communicationValue = e.average();
-                mincm = (communicationValue - minComputation) / communicationValue;
-                mincp = Math.min(1.0, mincm);
-                maxcm = (maxComputation - communicationValue) / communicationValue;
-                maxcp = Math.min(1.0, maxcm);
-            }
-
-            this.out.print(MessageFormat.format("""
-                                    length = GridSimRandom.real({0},{1},{2},random.nextDouble());
-                                    file_size = (long) GridSimRandom.real({3},{4},{5},random.nextDouble());
-                                    Gridlet gridlet{6} = new Gridlet({6}, length, file_size,file_size);
-                                    list.add(gridlet{6});
-
-                                    gridlet{6}.setUserID(0);
-                            """,
-                    computationValue, mincp, maxcp,
-                    communicationValue, mincm, maxcm,
-                    i
-            ));
-        }
-    }
-
-    private static String addUserId(final int i) {
-        return String.format("""
-                        userList.add(%d);
-                """, i);
-    }
-
-    private static class NodeListIterator implements Iterator<Element> {
-
-        private final NodeList list;
-        private int index;
-
-        private NodeListIterator(final NodeList list) {
-            this.list = list;
-            this.index = 0;
-        }
-
-        @Override
-        public boolean hasNext() {
-            return this.index < this.list.getLength();
-        }
-
-        @Override
-        public Element next() {
-            if (!this.hasNext())
-                throw new NoSuchElementException("No more elements in list");
-
-            final var elem = (Element) this.list.item(this.index);
-
-            this.index++;
-
-            return elem;
-        }
     }
 }

@@ -1,5 +1,6 @@
 package ispd.arquivo.xml.models.builders;
 
+import ispd.arquivo.xml.utils.SizeInfo;
 import ispd.arquivo.xml.utils.WrappedDocument;
 import ispd.arquivo.xml.utils.WrappedElement;
 import ispd.motor.carga.CargaForNode;
@@ -58,10 +59,10 @@ public class LoadBuilder {
 
     private static CargaRandom randomLoadFromElement(final WrappedElement e) {
         final var computation = LoadBuilder.getSizeInfoFromElement(
-                e, WrappedElement::isComputingType, SizeInfo::from);
+                e, WrappedElement::isComputingType, SizeInfo::new);
 
         final var communication = LoadBuilder.getSizeInfoFromElement(
-                e, WrappedElement::isCommunicationType, SizeInfo::from);
+                e, WrappedElement::isCommunicationType, SizeInfo::new);
 
         return new CargaRandom(
                 e.tasks(),
@@ -120,22 +121,4 @@ public class LoadBuilder {
         );
     }
 
-    private record SizeInfo(
-            double minimum, double maximum,
-            double average, double probability) {
-        private SizeInfo() {
-            this(0, 0, 0, 0);
-        }
-
-        private static SizeInfo from(final WrappedElement e) {
-            return new SizeInfo(
-                    e.minimum(), e.maximum(),
-                    e.average(), e.probability()
-            );
-        }
-
-        private static SizeInfo rangeFrom(final WrappedElement e) {
-            return new SizeInfo(e.minimum(), e.maximum(), 0, 0);
-        }
-    }
 }
