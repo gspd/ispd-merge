@@ -7,7 +7,16 @@ import ispd.motor.filas.servidores.implementacao.CS_Mestre;
 import ispd.motor.filas.servidores.implementacao.CS_Switch;
 import ispd.motor.filas.servidores.implementacao.CS_VMM;
 
+/**
+ * Class with utility methods to interconnect service centers and switches.
+ *
+ * @see ispd.arquivo.xml.models.builders.QueueNetworkBuilder
+ * @see ispd.arquivo.xml.models.builders.CloudQueueNetworkBuilder
+ */
 public class SwitchConnection {
+    /**
+     * Connect switch to master
+     */
     public static void toMaster(
             final CS_Switch theSwitch, final CS_Mestre master) {
         master.addConexoesEntrada(theSwitch);
@@ -21,6 +30,9 @@ public class SwitchConnection {
         theSwitch.addConexoesSaida(serviceCenter);
     }
 
+    /**
+     * Connect switch to machine.
+     */
     public static void toMachine(
             final CS_Switch theSwitch, final CS_Maquina machine) {
         machine.addConexoesSaida(theSwitch);
@@ -28,6 +40,9 @@ public class SwitchConnection {
         SwitchConnection.connectSwitchToServiceCenter(theSwitch, machine);
     }
 
+    /**
+     * Connect switch to cloud machine.
+     */
     public static void toCloudMachine(
             final CS_Switch theSwitch, final CS_MaquinaCloud maq) {
         maq.addConexoesSaida(theSwitch);
@@ -36,6 +51,9 @@ public class SwitchConnection {
         theSwitch.addConexoesSaida(maq);
     }
 
+    /**
+     * Connect switch to a vmm.
+     */
     public static void toVirtualMachineMaster(
             final CS_Switch theSwitch, final CS_VMM vmm) {
         vmm.addConexoesEntrada(theSwitch);

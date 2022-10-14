@@ -29,13 +29,13 @@ import java.util.stream.Collectors;
  */
 public class QueueNetworkBuilder {
     protected final Map<Integer, CentroServico> serviceCenters =
-            new HashMap<>(0);
-    protected final List<CS_Comunicacao> links = new ArrayList<>(0);
-    protected final List<CS_Internet> internets = new ArrayList<>(0);
+            new HashMap<>();
+    protected final List<CS_Comunicacao> links = new ArrayList<>();
+    protected final List<CS_Internet> internets = new ArrayList<>();
     private final Map<CentroServico, List<CS_Maquina>> clusterSlaves =
             new HashMap<>(0);
-    private final List<CS_Processamento> masters = new ArrayList<>(0);
-    private final List<CS_Maquina> machines = new ArrayList<>(0);
+    private final List<CS_Processamento> masters = new ArrayList<>();
+    private final List<CS_Maquina> machines = new ArrayList<>();
     private final Map<String, Double> powerLimits;
 
     public QueueNetworkBuilder(final WrappedDocument doc) {

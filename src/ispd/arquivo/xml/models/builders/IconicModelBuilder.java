@@ -10,8 +10,8 @@ import ispd.gui.iconico.grade.Link;
 import ispd.gui.iconico.grade.Machine;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -20,9 +20,9 @@ import java.util.Objects;
  * Instantiate and call {@link #build()}
  */
 public class IconicModelBuilder {
-    private final Collection<Vertex> vertices = new ArrayList<>(0);
-    private final Collection<Edge> edges = new ArrayList<>(0);
-    private final Map<Integer, Object> icons = new HashMap<>(0);
+    private final List<Vertex> vertices = new ArrayList<>();
+    private final List<Edge> edges = new ArrayList<>();
+    private final Map<Integer, Object> icons = new HashMap<>();
 
     public IconicModelBuilder(final WrappedDocument doc) {
         doc.clusters().forEach(this::processClusterElement);

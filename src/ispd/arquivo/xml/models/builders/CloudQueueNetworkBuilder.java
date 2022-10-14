@@ -28,11 +28,11 @@ import java.util.Map;
  */
 public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
     private final Map<CentroServico, List<CS_MaquinaCloud>> clusterSlaves =
-            new HashMap<>(0);
-    private final List<CS_MaquinaCloud> cloudMachines = new ArrayList<>(0);
-    private final List<CS_VirtualMac> virtualMachines = new ArrayList<>(0);
+            new HashMap<>();
+    private final List<CS_MaquinaCloud> cloudMachines = new ArrayList<>();
+    private final List<CS_VirtualMac> virtualMachines = new ArrayList<>();
     private final List<CS_Processamento> virtualMachineMasters =
-            new ArrayList<>(0);
+            new ArrayList<>();
 
     public CloudQueueNetworkBuilder(final WrappedDocument doc) {
         super(doc);
@@ -54,21 +54,6 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
                 });
 
         this.virtualMachines.add(virtualMachine);
-    }
-
-    @Override
-    protected CS_Processamento makeAndAddMachine(final WrappedElement e) {
-        final CS_Processamento machine;
-
-        if (e.hasMasterAttribute()) {
-            machine = ServiceCenterBuilder.aVirtualMachineMaster(e);
-            this.virtualMachineMasters.add(machine);
-        } else {
-            machine = ServiceCenterBuilder.aCloudMachine(e);
-            this.cloudMachines.add((CS_MaquinaCloud) machine);
-        }
-
-        return machine;
     }
 
     @Override
@@ -124,6 +109,21 @@ public class CloudQueueNetworkBuilder extends QueueNetworkBuilder {
             this.cloudMachines.addAll(slaves);
             this.clusterSlaves.put(theSwitch, slaves);
         }
+    }
+
+    @Override
+    protected CS_Processamento makeAndAddMachine(final WrappedElement e) {
+        final CS_Processamento machine;
+
+        if (e.hasMasterAttribute()) {
+            machine = ServiceCenterBuilder.aVirtualMachineMaster(e);
+            this.virtualMachineMasters.add(machine);
+        } else {
+            machine = ServiceCenterBuilder.aCloudMachine(e);
+            this.cloudMachines.add((CS_MaquinaCloud) machine);
+        }
+
+        return machine;
     }
 
     @Override

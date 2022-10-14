@@ -20,7 +20,7 @@ import java.util.stream.LongStream;
  * Construct it and call method {@link #export()}.
  */
 /* package-private */ class GridSimExporter {
-    private final Map<Integer, String> resources = new HashMap<>(0);
+    private final Map<Integer, String> resources = new HashMap<>();
 
     private final NodeList machines;
     private final NodeList clusters;
@@ -29,8 +29,8 @@ import java.util.stream.LongStream;
     private final WrappedDocument doc;
     private final int userCount;
 
-    /* package-private */ GridSimExporter(final Document model,
-                                          final PrintWriter out) {
+    /* package-private */ GridSimExporter(
+            final Document model, final PrintWriter out) {
         this.doc = new WrappedDocument(model);
         this.out = out;
 

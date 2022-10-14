@@ -8,6 +8,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Utility class to process users' power limits, creating user metrics based
+ * on these values and giving such information to schedulers.
+ */
 public class UserPowerLimit {
     private final List<String> owners;
     private final List<Double> limits;
@@ -26,20 +30,38 @@ public class UserPowerLimit {
         }
     }
 
+    /**
+     * Sets the scheduler's {@link MetricasUsuarios} with an instance created
+     * internally, based on the user power limits stored internally.
+     *
+     * @param scheduler scheduler to be set with new user metrics.
+     */
     public void setSchedulerUserMetrics(final Escalonador scheduler) {
         scheduler.setMetricaUsuarios(this.makeUserMetrics());
     }
 
+    /**
+     * @return {@link MetricasUsuarios} based on the values acquired.
+     */
     private MetricasUsuarios makeUserMetrics() {
         final var metrics = new MetricasUsuarios();
         metrics.addAllUsuarios(this.owners, this.limits);
         return metrics;
     }
 
+    /**
+     * Sets the cloud scheduler's {@link MetricasUsuarios} with an instance
+     * created internally, based on the user power limits stored internally.
+     *
+     * @param scheduler cloud scheduler to be set with new user metrics.
+     */
     public void setSchedulerUserMetrics(final EscalonadorCloud scheduler) {
         scheduler.setMetricaUsuarios(this.makeUserMetrics());
     }
 
+    /**
+     * @return a reference to the list of owners (users).
+     */
     public List<String> getOwners() {
         return this.owners;
     }
