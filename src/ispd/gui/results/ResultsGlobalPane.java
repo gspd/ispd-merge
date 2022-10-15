@@ -201,12 +201,8 @@ import java.util.List;
     private ActionListener makeSaveTracesAction() {
         return (e) -> {
             final var extension = ".wmsx";
-            final var fileFilter = new MultipleExtensionFileFilter(
-                    "Workload Model of Simulation", extension, true);
             final var fileChooser = new JFileChooser();
             final var stateChooser = fileChooser.showSaveDialog(this);
-
-            fileChooser.setFileFilter(fileFilter);
 
             switch (stateChooser) {
                 case JFileChooser.APPROVE_OPTION -> {
