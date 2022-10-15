@@ -29,7 +29,7 @@ public class WrappedElement {
     }
 
     /**
-     * @return connection element
+     * @return inner element with tag "connect"
      */
     private WrappedElement connection() {
         return this.firstTagElement("connect");
@@ -46,8 +46,8 @@ public class WrappedElement {
         return new WrappedElement((Element) this.getElementsByTagName(tagName).item(0));
     }
 
-    private NodeList getElementsByTagName(final String tag) {
-        return this.element.getElementsByTagName(tag);
+    private NodeList getElementsByTagName(final String s) {
+        return this.element.getElementsByTagName(s);
     }
 
     /**
@@ -57,21 +57,30 @@ public class WrappedElement {
         return this.vertex("destination");
     }
 
+    /**
+     * @return inner element with tag "position"
+     */
     public WrappedElement position() {
         return this.firstTagElement("position");
     }
 
+    /**
+     * @return "vmm" attribute
+     */
     public String vmm() {
         return this.getAttribute("vmm");
     }
 
     /**
-     * @return inner master element
+     * @return inner element with tag "master"
      */
     public WrappedElement master() {
         return this.firstTagElement("master");
     }
 
+    /**
+     * @return {@link Stream} of all inner elements with tag name "slave"
+     */
     public Stream<WrappedElement> slaves() {
         return this.elementsWithTag("slave");
     }
@@ -98,10 +107,16 @@ public class WrappedElement {
         this.element = element;
     }
 
+    /**
+     * @return "id" attribute
+     */
     public String id() {
         return this.getAttribute("id");
     }
 
+    /**
+     * @return "bandwidth" attribute
+     */
     public double bandwidth() {
         return this.getDouble("bandwidth");
     }
@@ -110,6 +125,9 @@ public class WrappedElement {
         return Double.parseDouble(this.getAttribute(attributeName));
     }
 
+    /**
+     * @return "latency" attribute
+     */
     public double latency() {
         return this.getDouble("latency");
     }
@@ -121,6 +139,9 @@ public class WrappedElement {
         return this.iconId().global();
     }
 
+    /**
+     * @return "global" attribute
+     */
     public int global() {
         return this.getInt("global");
     }
@@ -132,10 +153,16 @@ public class WrappedElement {
         return this.firstTagElement("icon_id");
     }
 
+    /**
+     * @return "owner" attribute
+     */
     public String owner() {
         return this.getAttribute("owner");
     }
 
+    /**
+     * @return "power" attribute
+     */
     public double power() {
         return this.getDouble("power");
     }
@@ -147,6 +174,9 @@ public class WrappedElement {
         return this.getDouble("mem_alloc");
     }
 
+    /**
+     * @return "nodes" attribute
+     */
     public int nodes() {
         return this.getInt("nodes");
     }
@@ -172,10 +202,16 @@ public class WrappedElement {
         return this.getAttribute("op_system");
     }
 
+    /**
+     * @return "scheduler" attribute
+     */
     public String scheduler() {
         return this.getAttribute("scheduler");
     }
 
+    /**
+     * @return "energy" attribute
+     */
     public double energy() {
         return this.getDouble("energy");
     }
@@ -191,6 +227,9 @@ public class WrappedElement {
         return Boolean.parseBoolean(this.getAttribute(attr));
     }
 
+    /**
+     * @return "load" attribute
+     */
     public double load() {
         return this.getDouble("load");
     }
@@ -199,21 +238,25 @@ public class WrappedElement {
      * @return whether this element has a inner "master" element
      */
     public boolean hasMasterAttribute() {
-        return this.getElementsByTagName("master").getLength() > 0;
+        return this.hasElementsWithTag("master");
+    }
+
+    private boolean hasElementsWithTag(final String master) {
+        return this.getElementsByTagName(master).getLength() > 0;
     }
 
     /**
      * @return whether this element has a inner "characteristic" element
      */
     public boolean hasCharacteristicAttribute() {
-        return this.getElementsByTagName("characteristic").getLength() > 0;
+        return this.hasElementsWithTag("characteristic");
     }
 
     /**
      * @return whether this element has a inner "cost" element
      */
     public boolean hasCostAttribute() {
-        return this.getElementsByTagName("cost").getLength() > 0;
+        return this.hasElementsWithTag("cost");
     }
 
     /**
@@ -230,26 +273,44 @@ public class WrappedElement {
         return this.getDouble("cost_mem");
     }
 
+    /**
+     * @return "x" attribute
+     */
     public int x() {
         return this.getInt("x");
     }
 
+    /**
+     * @return "y" attribute
+     */
     public int y() {
         return this.getInt("y");
     }
 
+    /**
+     * @return "local" attribute
+     */
     public int local() {
         return this.getInt("local");
     }
 
+    /**
+     * @return "powerlimit" attribute
+     */
     public double powerLimit() {
         return this.getDouble("powerlimit");
     }
 
+    /**
+     * @return "cost_disk" attribute
+     */
     public double costDisk() {
         return this.getDouble("cost_disk");
     }
 
+    /**
+     * @return "size" attribute
+     */
     public double size() {
         return this.getDouble("size");
     }
@@ -276,6 +337,9 @@ public class WrappedElement {
         return this.firstTagElement("process");
     }
 
+    /**
+     * @return "memory" attribute
+     */
     public WrappedElement memory() {
         return this.firstTagElement("memory");
     }
@@ -288,12 +352,15 @@ public class WrappedElement {
     }
 
     /**
-     * @return inner "cost" element
+     * @return inner element with tag "cost"
      */
     public WrappedElement costs() {
         return this.firstTagElement("cost");
     }
 
+    /**
+     * @return "tasks" attribute
+     */
     public int tasks() {
         return this.getInt("tasks");
     }
@@ -306,7 +373,7 @@ public class WrappedElement {
     }
 
     /**
-     * @return {@link Stream} of all "size" inner elements
+     * @return {@link Stream} of all inner elements with tag name "size"
      */
     public Stream<WrappedElement> sizes() {
         return this.elementsWithTag("size");
@@ -320,6 +387,9 @@ public class WrappedElement {
         return "computing".equals(this.type());
     }
 
+    /**
+     * @return "type" attribute
+     */
     private String type() {
         return this.getAttribute("type");
     }
@@ -332,22 +402,37 @@ public class WrappedElement {
         return "communication".equals(this.type());
     }
 
+    /**
+     * @return "minimum" attribute
+     */
     public double minimum() {
         return this.getDouble("minimum");
     }
 
+    /**
+     * @return "maximum" attribute
+     */
     public double maximum() {
         return this.getDouble("maximum");
     }
 
+    /**
+     * @return "average" attribute
+     */
     public double average() {
         return this.getDouble("average");
     }
 
+    /**
+     * @return "probability" attribute
+     */
     public double probability() {
         return this.getDouble("probability");
     }
 
+    /**
+     * @return "application" attribute
+     */
     public String application() {
         return this.getAttribute("application");
     }
@@ -366,26 +451,29 @@ public class WrappedElement {
         return this.getAttribute("file_path");
     }
 
+    /**
+     * @return "format" attribute
+     */
     public String format() {
         return this.getAttribute("format");
     }
 
     /**
-     * @return {@link Stream} of inner elements with tag "random"
+     * @return {@link Stream} of all inner elements with tag name "random"
      */
     public Stream<WrappedElement> randomLoads() {
         return this.elementsWithTag("random");
     }
 
     /**
-     * @return {@link Stream} of inner elements with tag "node"
+     * @return {@link Stream} of all inner elements with tag name "node"
      */
     public Stream<WrappedElement> nodeLoads() {
         return this.elementsWithTag("node");
     }
 
     /**
-     * @return {@link Stream} of inner elements with tag "trace"
+     * @return {@link Stream} of all inner elements with tag name "trace"
      */
     public Stream<WrappedElement> traceLoads() {
         return this.elementsWithTag("trace");
