@@ -50,7 +50,7 @@ import ispd.gui.iconico.grade.Machine;
         final var cluster = new Cluster(
                 info.x(), info.y(),
                 info.localId(), info.globalId(),
-                e.power()
+                e.energy()
         );
 
         cluster.getId().setName(e.id());
