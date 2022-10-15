@@ -11,6 +11,7 @@ import ispd.utils.Pair;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.DefaultCategoryDataset;
@@ -25,16 +26,59 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * A {@link SimulationResultChartMaker} class is used to create charts of
+ * multiples types containing information from simulation results.
+ */
 public final class SimulationResultChartMaker {
 
+    /**
+     * It represents the processing bar chart, that is, a chart containing
+     * information about the performed processing for machines (including the
+     * cluster ones) in a vertical bar view.
+     */
     private final ChartPanel processingBarChart;
+
+    /**
+     * It represents the processing pie chart, that is, a chart containing
+     * information about the performed processing for machines (including the
+     * cluster ones) in a pie view.
+     */
     private final ChartPanel processingPieChart;
 
+    /**
+     * It represents the communication bar chart, that is, a chart containing
+     * information about the performed communication for machines (including the
+     * cluster ones) and links in a vertical bar view.
+     */
     private final ChartPanel communicationBarChart;
+
+    /**
+     * It represents the communication pie chart, that is, a chart containing
+     * information about the performed communication for machines (including the
+     * cluster ones) and links in a pie view.
+     */
     private final ChartPanel communicationPieChart;
 
+    /**
+     * It represents the computing power per machine through time chart, that is,
+     * a chart containing information about the computing power use through time
+     * for each machine (including the cluster ones) in a vertical bar view.
+     */
     private ChartPanel computingPowerPerMachineChart;
+
+    /**
+     * It represents the computing power per user through time chart, that is, a
+     * chart containing information about the computing power use through time
+     * for each user in a vertical bar view.
+     */
     private ChartPanel computingPowerPerUserChart;
+
+    /**
+     * It represents the computing power per task through time chart, that is, a
+     * chart containing information about the computing power use through time
+     * for each task in a vertical bar view.
+     */
     private ChartPanel computingPowerPerTaskChart;
 
     /**
@@ -138,18 +182,7 @@ public final class SimulationResultChartMaker {
                 false                                    // URL
         );
 
-        /* It rotates the bar chart's X-axis labels in 45 degrees. */
-        if (processingMap.size() > 10)
-            barChart.getCategoryPlot().getDomainAxis()
-                    .setCategoryLabelPositions(CategoryLabelPositions.UP_45);
-
-        final var barChartPanel = new ChartPanel(barChart);
-        final var pieChartPanel = new ChartPanel(pieChart);
-
-        barChartPanel.setPreferredSize(ResultsDialog.CHART_PREFERRED_SIZE);
-        pieChartPanel.setPreferredSize(ResultsDialog.CHART_PREFERRED_SIZE);
-
-        return new Pair<>(barChartPanel, pieChartPanel);
+        return makeBarPieChartPair(barChart, pieChart, processingMap);
     }
 
     /**
@@ -201,18 +234,7 @@ public final class SimulationResultChartMaker {
                 false                                        // URL
         );
 
-        /* It rotates the bar chart's X-axis labels in 45 degrees. */
-        if (communicationMap.size() > 10)
-            barChart.getCategoryPlot().getDomainAxis()
-                    .setCategoryLabelPositions(CategoryLabelPositions.UP_45);
-
-        final var barChartPanel = new ChartPanel(barChart);
-        final var pieChartPanel = new ChartPanel(pieChart);
-
-        barChartPanel.setPreferredSize(ResultsDialog.CHART_PREFERRED_SIZE);
-        pieChartPanel.setPreferredSize(ResultsDialog.CHART_PREFERRED_SIZE);
-
-        return new Pair<>(barChartPanel, pieChartPanel);
+        return makeBarPieChartPair(barChart, pieChart, communicationMap);
     }
 
     /**
@@ -456,6 +478,38 @@ public final class SimulationResultChartMaker {
         barChartPanel.setPreferredSize(ResultsDialog.CHART_PREFERRED_SIZE);
 
         return barChartPanel;
+    }
+
+    /**
+     * It returns an instance of {@link Pair} containing chart panels representing
+     * the bar and pie chart, respectively. Moreover, for both charts the chart
+     * preferred size is already set. Finally, if the amount of labels in the
+     * bar chart domain axis is greater than {@code 10}, then the labels is
+     * rotated {@code 45} degrees counterclockwise.
+     *
+     * @param barChart the bar chart
+     * @param pieChart the pie chart
+     * @param barChartMap the bar chart map containing the information that is
+     *                    used to build the bar chart
+     *
+     * @return an instance of {@link Pair} containing chart panels representing
+     *         the bar and pie chart, respectively
+     */
+    private static Pair<ChartPanel, ChartPanel> makeBarPieChartPair(final JFreeChart barChart,
+                                                             final JFreeChart pieChart,
+                                                             final Map<String, ?> barChartMap) {
+        /* It rotates the bar chart's X-axis labels in 45 degrees. */
+        if (barChartMap.size() > 10)
+            barChart.getCategoryPlot().getDomainAxis()
+                    .setCategoryLabelPositions(CategoryLabelPositions.UP_45);
+
+        final var barChartPanel = new ChartPanel(barChart);
+        final var pieChartPanel = new ChartPanel(pieChart);
+
+        barChartPanel.setPreferredSize(ResultsDialog.CHART_PREFERRED_SIZE);
+        pieChartPanel.setPreferredSize(ResultsDialog.CHART_PREFERRED_SIZE);
+
+        return new Pair<>(barChartPanel, pieChartPanel);
     }
 
     /* Getters */

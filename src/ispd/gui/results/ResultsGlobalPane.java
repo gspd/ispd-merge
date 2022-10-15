@@ -26,12 +26,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 
+/**
+ * A {@link ResultsGlobalPane} is a class used to display the general results
+ * from the performed simulation.
+ */
 /* package-private */ class ResultsGlobalPane extends JScrollPane {
 
     private final SimulationResultChartMaker charts;
-
     private final List<Tarefa> tasks;
-
     private final SalvarResultadosHTML html;
 
     /**

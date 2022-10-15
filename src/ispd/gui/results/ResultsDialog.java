@@ -13,6 +13,10 @@ import java.awt.Font;
 import java.awt.Frame;
 import java.util.List;
 
+/**
+ * A {@link ResultsDialog} class is used to display a window containing all
+ * types of information from the performed simulation.
+ */
 public class ResultsDialog extends JDialog {
 
     public static final Dimension CHART_PREFERRED_SIZE

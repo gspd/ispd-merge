@@ -6,6 +6,11 @@ import ispd.gui.utils.MultipaneButton;
 
 import java.util.List;
 
+/**
+ * A {@link ResultsComputingPowerPane} is a class that represents a multipane
+ * containing the bar charts showing the information about the computing power
+ * use for machines, users and tasks.
+ */
 /* package-private */ class ResultsComputingPowerPane extends Multipane {
 
     /**

@@ -6,6 +6,11 @@ import ispd.gui.utils.MultipaneButton;
 
 import java.util.List;
 
+/**
+ * A {@link ResultsProcessingPane} is a class that represents a multipane
+ * containing the bar and pie chart of the performed processing obtained from
+ * the performed simulation.
+ */
 /* package-private */ class ResultsProcessingPane extends Multipane {
 
     /**

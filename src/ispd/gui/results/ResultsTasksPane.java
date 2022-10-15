@@ -5,6 +5,14 @@ import ispd.motor.metricas.Metricas;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
+/**
+ * A {@link ResultsTasksPane} is a class that represents a pane containing the
+ * information about processing and communication performed for resolve the
+ * tasks.
+ *
+ * @see ResultsUsersPane for see the information about processing and communication
+ *                       performed for resolve the tasks for each user
+ */
 /* package-private */ class ResultsTasksPane extends JScrollPane {
 
     /**

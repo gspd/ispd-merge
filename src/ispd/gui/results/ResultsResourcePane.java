@@ -10,6 +10,11 @@ import javax.swing.table.DefaultTableModel;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+/**
+ * A {@link ResultsResourcePane} is a class that represents a pane containing
+ * the information about all the processing and communication performed of each
+ * simulated component.
+ */
 /* package-private */ class ResultsResourcePane extends JScrollPane {
 
     /**
@@ -32,7 +37,6 @@ import java.util.Arrays;
 
     /* Private Methods */
     /* Utility Resources Pane Methods */
-
 
     /**
      * It creates the resources table. The resources table contains results of

@@ -6,6 +6,11 @@ import ispd.motor.filas.servidores.implementacao.CS_Mestre;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
+/**
+ * A {@link ResultsUsersPane} is a class that represents a pane containing the
+ * information about processing and communication performed for resolve the tasks
+ * for each user.
+ */
 /* package-private */ class ResultsUsersPane extends JScrollPane {
 
     /**
