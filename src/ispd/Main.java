@@ -1,7 +1,7 @@
 package ispd;
 
 import ispd.application.GuiApplication;
-import ispd.application.terminal.TerminalApplication;
+import ispd.application.TerminalApplication;
 
 import java.util.Locale;
 
