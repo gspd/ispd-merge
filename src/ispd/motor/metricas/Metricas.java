@@ -47,14 +47,12 @@ import ispd.motor.filas.servidores.CS_Processamento;
 import ispd.motor.filas.servidores.implementacao.CS_MaquinaCloud;
 import ispd.motor.filas.servidores.implementacao.CS_VMM;
 import ispd.motor.filas.servidores.implementacao.CS_VirtualMac;
-import java.io.Serializable;
-import ispd.motor.filas.Tarefa;
-import ispd.motor.filas.servidores.CS_Comunicacao;
-import ispd.motor.filas.servidores.CS_Processamento;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -275,9 +273,15 @@ public class Metricas implements Serializable {
 
         Double porcentLimite;//Limite de consumo em porcentagem do consumo total da porção do usuário
 
-        for (String user : usuarios) {
+        final var limits = redeDeFilas.getLimites();
 
-            porcentLimite = redeDeFilas.getLimites().get(user) / 100;
+        for (String user : usuarios) {
+            if (!limits.containsKey(user))
+            {
+                throw new IllegalArgumentException("Unexpected user " + user);
+            }
+
+            porcentLimite = limits.get(user) / 100;
             limitesConsumoTempoSim.put(user, limitesConsumoTempoSim.get(user).multiply(BigDecimal.valueOf(porcentLimite)));
             limitesConsumoTempoUso.put(user, limitesConsumoTempoSim.get(user));
         }
@@ -353,6 +357,59 @@ public class Metricas implements Serializable {
         this.historicoTempoInicial.add(metrica.getTempoInicial());
         this.historicoTurnaroundTime.add(metrica.getTurnaroudTime());
         this.historicoTempoSim.add(metrica.getTEMPOSIM());
+    }
+
+
+    /**
+     * It creates the resources table. The resources table contains results of
+     * performed computation for each machine adn performed communication for
+     * each network link.
+     *
+     * @return a table containing information about performed computation for
+     *         each machine and performed communication for each network link.
+     */
+    public Object[][] makeResourceTable() {
+        final var table = new ArrayList<Object[]>();
+
+        /* Add table entries for processing metrics */
+        if (this.metricasProcessamento != null) {
+            for (final MetricasProcessamento processingMetrics
+                    : this.metricasProcessamento.values()) {
+                final String name;
+
+                if (processingMetrics.getnumeroMaquina() == 0)
+                    name = processingMetrics.getId();
+                else
+                    name = processingMetrics.getId() + " node " + processingMetrics.getnumeroMaquina();
+
+                table.add(Arrays.asList(
+                        name,
+                        processingMetrics.getProprietario(),
+                        processingMetrics.getSegundosDeProcessamento(),
+                        0.0d
+                ).toArray());
+            }
+        }
+
+        /* Add table entries for communication metrics */
+        if (this.metricasComunicacao != null) {
+            for (final MetricasComunicacao communicationMetrics
+                    : this.metricasComunicacao.values()) {
+
+                table.add(Arrays.asList(
+                        communicationMetrics.getId(),
+                        "---",
+                        0.0d,
+                        communicationMetrics.getSegundosDeTransmissao()
+                ).toArray());
+            }
+        }
+
+        final var tableArray = new Object[table.size()][4];
+        for (int i = 0; i < table.size(); i++)
+            tableArray[i] = table.get(i);
+
+        return tableArray;
     }
 
     public RedeDeFilas getRedeDeFilas() {
