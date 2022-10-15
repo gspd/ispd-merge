@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.logging.Logger;
 
 /**
  * Responsible for reading and updating the software's configuration file
@@ -34,9 +35,10 @@ public class ConfiguracaoISPD {
     private Boolean shouldChartMachineTime = false;
     private Boolean shouldChartTaskTime = false;
     private File lastModelOpen = Carregar.DIRETORIO_ISPD;
+
     /**
      * If the configuration file exists, reads configuration from it.
-     * Otherwise, 'default' values are used
+     * Otherwise, default values are used.
      */
     public ConfiguracaoISPD() {
         try {
@@ -49,6 +51,9 @@ public class ConfiguracaoISPD {
         } catch (final IOException |
                        ParserConfigurationException |
                        SAXException ignored) {
+            Logger.getLogger(ConfiguracaoISPD.class.getName())
+                    .warning("Error while reading configuration file '%s'"
+                            .formatted(this.configurationFile));
         }
     }
 
@@ -60,18 +65,27 @@ public class ConfiguracaoISPD {
         this.readLastOpenModelConfig(e);
     }
 
+    /**
+     * Read 'generalist' configurations from the element, such as simulation
+     * type, number of threads to be used in the simulation(s), and number of
+     * simulations to execute.
+     */
     private void readGeneralConfig(final WrappedElement e) {
         final var mode = e.simulationMode();
 
-        this.simulationType = Arrays.stream(SimulationType.values()).
-                filter(t -> mode.equals(t.xmlName))
+        this.simulationType = Arrays.stream(SimulationType.values())
+                .filter(t -> t.hasName(mode))
                 .findFirst()
-                .orElse(SimulationType.Graphical);
+                .orElseThrow(() -> new IllegalSimulationModeException(mode));
 
         this.threadCount = e.numberOfThreads();
         this.simulationCount = e.numberOfSimulations();
     }
 
+    /**
+     * Read information pertained to which charts will be created to display
+     * the results of the simulation(s).
+     */
     private void readChartCreationConfig(final WrappedElement e) {
         final var c = e.chartCreate();
 
@@ -99,6 +113,9 @@ public class ConfiguracaoISPD {
         return this.simulationType.asInt;
     }
 
+    /**
+     * Update the simulation type that will be executed.
+     */
     public void setSimulationMode(final byte simulationMode) {
         this.simulationType = Arrays.stream(SimulationType.values())
                 .filter(t -> t.asInt == simulationMode)
@@ -107,7 +124,7 @@ public class ConfiguracaoISPD {
     }
 
     /**
-     * Saves current configurations to the file
+     * Saves current state of the configurations to the configuration file
      */
     public void saveCurrentConfig() {
         final var doc = Objects.requireNonNull(ManipuladorXML.newDocument());
@@ -128,8 +145,8 @@ public class ConfiguracaoISPD {
     private Element saveGeneralConfig(final Document doc) {
         final var ispd = doc.createElement("ispd");
 
-        ispd.setAttribute("simulation_mode", this.simulationType.xmlName);
-
+        ispd.setAttribute(
+                "simulation_mode", this.simulationType.xmlName);
         ispd.setAttribute(
                 "number_simulations", this.simulationCount.toString());
         ispd.setAttribute(
@@ -159,66 +176,115 @@ public class ConfiguracaoISPD {
         return files;
     }
 
+    /**
+     * @return The number of threads that will be used in executing the
+     * simulation(s)
+     */
     public Integer getNumberOfThreads() {
         return this.threadCount;
     }
 
+    /**
+     * Set the number of threads to be used in the simulation execution.
+     */
     public void setNumberOfThreads(final Integer numberOfThreads) {
         this.threadCount = numberOfThreads;
     }
 
+    /**
+     * @return number of simulation that will be executed
+     */
     public Integer getNumberOfSimulations() {
         return this.simulationCount;
     }
 
+    /**
+     * Set the number of simulation to be executed.
+     */
     public void setNumberOfSimulations(final Integer numberOfSimulations) {
         this.simulationCount = numberOfSimulations;
     }
 
+    /**
+     * @return {@code true} if the "processing" chart will be created
+     */
     public Boolean getCreateProcessingChart() {
         return this.shouldChartProc;
     }
 
+    /**
+     * Set if the "processing" chart should be created.
+     */
     public void setCreateProcessingChart(final Boolean b) {
         this.shouldChartProc = b;
     }
 
+    /**
+     * @return {@code true} if the "communication" chart will be created
+     */
     public Boolean getCreateCommunicationChart() {
         return this.shouldChartComms;
     }
 
+    /**
+     * Set if the "communication" chart should be created.
+     */
     public void setCreateCommunicationChart(final Boolean b) {
         this.shouldChartComms = b;
     }
 
+    /**
+     * @return {@code true} if the "user through time" chart will be created
+     */
     public Boolean getCreateUserThroughTimeChart() {
         return this.shouldChartUserTime;
     }
 
+    /**
+     * Set if the "user through time" chart should be created.
+     */
     public void setCreateUserThroughTimeChart(final Boolean b) {
         this.shouldChartUserTime = b;
     }
 
+    /**
+     * @return {@code true} if the "machine through time" chart will be created
+     */
     public Boolean getCreateMachineThroughTimeChart() {
         return this.shouldChartMachineTime;
     }
 
+    /**
+     * Set if the "machine through time" chart should be created.
+     */
     public void setCreateMachineThroughTimeChart(final Boolean b) {
         this.shouldChartMachineTime = b;
     }
 
+    /**
+     * @return {@code true} if the "task through time" chart will be created
+     */
     public Boolean getCreateTaskThroughTimeChart() {
         return this.shouldChartTaskTime;
     }
 
+    /**
+     * Set if the "task through time" chart should be created.
+     */
     public void setCreateTaskThroughTimeChart(final Boolean b) {
         this.shouldChartTaskTime = b;
     }
 
+    /**
+     * @return last model opened
+     */
     public File getLastFile() {
         return this.lastModelOpen;
     }
 
+    /**
+     * Set which was the last model opened.
+     */
     public void setLastFile(final File lastDir) {
         if (lastDir == null) {
             return;
@@ -238,6 +304,16 @@ public class ConfiguracaoISPD {
         SimulationType(final byte i, final String xmlName) {
             this.asInt = i;
             this.xmlName = xmlName;
+        }
+
+        private boolean hasName(final String modeName) {
+            return this.xmlName.equals(modeName);
+        }
+    }
+
+    private static class IllegalSimulationModeException extends IllegalArgumentException {
+        private IllegalSimulationModeException(final String mode) {
+            super("Invalid simulation mode '%s' found in configuration file.".formatted(mode));
         }
     }
 }
