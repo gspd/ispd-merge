@@ -51,6 +51,7 @@ import java.util.List;
 
         this.html.setMetricasTarefas(metrics);
         this.html.setMetricasGlobais(metrics.getMetricasGlobais());
+        this.html.setTabela(metrics.makeResourceTable());
 
         final var prePane = new JPanel();
         final var toolbar = new JToolBar();
