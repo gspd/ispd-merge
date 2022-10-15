@@ -87,7 +87,7 @@ public class SalvarResultadosHTML {
     }
 
     /**
-     * Creates a string with the global statistics
+     * Creates and stores internally a string with the global statistics.
      *
      * @param metrics Global simulation metrics
      */
@@ -108,28 +108,28 @@ public class SalvarResultadosHTML {
                 metrics.getOciosidadeComputacao(),
                 metrics.getOciosidadeComunicacao(),
                 metrics.getEficiencia(),
-                SalvarResultadosHTML.getEfficiencyDescription(metrics),
+                SalvarResultadosHTML.makeEfficiencyDescriptionFromMetrics(metrics),
                 metrics.getCustoTotalProc(),
                 metrics.getCustoTotalMem(),
                 metrics.getCustoTotalDisco()
         );
     }
 
-    private static String getEfficiencyDescription(final MetricasGlobais metrics) {
+    private static String makeEfficiencyDescriptionFromMetrics(final MetricasGlobais metrics) {
         if (metrics.getEficiencia() > SalvarResultadosHTML.EFFICIENCY_GOOD) {
             return SalvarResultadosHTML.getEfficiencyDescription(
-                    "00ff00", "GOOD");
+                    "GOOD", "00ff00");
         } else if (metrics.getEficiencia() > SalvarResultadosHTML.EFFICIENCY_BAD) {
             return SalvarResultadosHTML.getEfficiencyDescription(
-                    "", "MEDIA");
+                    "MEDIA", "");
         } else {
             return SalvarResultadosHTML.getEfficiencyDescription(
-                    "ff0000", "BAD");
+                    "BAD", "ff0000");
         }
     }
 
-    private static String getEfficiencyDescription(final String color,
-                                                   final String text) {
+    private static String getEfficiencyDescription(
+            final String text, final String color) {
         final var sb =
                 new StringBuilder("<li><strong>Efficiency %s</strong></li>".formatted(text));
 
@@ -194,10 +194,12 @@ public class SalvarResultadosHTML {
     }
 
     private static void createDirIfNonexistent(final File dir) throws IOException {
-        if (!dir.exists()) {
-            if (!dir.mkdir()) {
-                throw new IOException("Could not create directory");
-            }
+        if (dir.exists()) {
+            return;
+        }
+
+        if (!dir.mkdir()) {
+            throw new IOException("Could not create directory");
         }
     }
 
